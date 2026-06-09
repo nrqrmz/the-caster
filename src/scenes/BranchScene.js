@@ -14,7 +14,7 @@ export default class BranchScene extends Phaser.Scene {
   // Runtime stats = skill-tree stats + unlocked active-skill flags.
   runtimeStats(save) {
     const stats = getStats(save);
-    stats.hasFireball = (save.unlockedSkills || []).includes('fireball');
+    stats.unlockedSkills = [...(save.unlockedSkills || [])];
     return stats;
   }
 
