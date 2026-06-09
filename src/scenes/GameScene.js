@@ -1,5 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX } from '../config.js';
-import { SCENARIO_1 } from '../data/scenarios.js';
+import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
@@ -7,18 +7,24 @@ import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
 import { applyDamage } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
+import { difficultyMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
+import { grantClear } from '../systems/Campaign.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
 import Boss from '../objects/Boss.js';
-import Temple from '../objects/Temple.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
   init(data) {
-    // stats provided by Menu/SkillTree later; fall back to base for standalone runs.
+    this.regionId = data.regionId || 'fire';
+    this.levelIndex = data.levelIndex || 0;
+    this.region = REGIONS[this.regionId];
+    this.level = this.region.levels[this.levelIndex];
     this.stats = data.stats || { ...BASE_STATS };
-    this.scenario = SCENARIO_1;
+
+    const save = new SaveSystem(window.localStorage).load();
+    this.mult = difficultyMultiplier(save);
   }
 
   create() {
@@ -32,19 +38,23 @@ export default class GameScene extends Phaser.Scene {
     this.enemies = this.physics.add.group();
 
     this.fireballCdRemaining = 0;
+    this.boss = null;
+    this.bossMechanics = null;   // set in Phase 3
+    this.poisonZones = [];       // set in Phase 3
     this.scene.launch('UI', { gameScene: this });
 
-    this.runner = new WaveRunner(this.scenario);
-    this.runnerStarted = false;
-
+    this.runner = new WaveRunner(this.level);
     this.debug = this.add.text(8, 8, '', { fontFamily: 'monospace', fontSize: '14px', color: '#fff' }).setDepth(2000);
 
     this.setupCollisions();
-    this.scene.pause();
-    this.scene.launch('Dialogue', {
-      lines: this.scenario.intro,
-      onDone: () => { this.scene.resume(); this.beginPhase(); },
-    });
+
+    const intro = this.level.dialogue && this.level.dialogue.onEnter;
+    if (intro && intro.length) {
+      this.scene.pause();
+      this.scene.launch('Dialogue', { lines: intro, onDone: () => { this.scene.resume(); this.beginPhase(); } });
+    } else {
+      this.beginPhase();
+    }
   }
 
   setupCollisions() {
@@ -56,7 +66,7 @@ export default class GameScene extends Phaser.Scene {
     });
     this.physics.add.overlap(this.caster, this.enemies, (caster, enemy) => {
       if (!enemy.active) return;
-      this.damageCaster(enemy.def.damage * 0.02 * 16); // small continuous touch damage
+      this.damageCaster(enemy.def.damage * 0.02 * 16);
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
@@ -66,70 +76,44 @@ export default class GameScene extends Phaser.Scene {
   }
 
   beginPhase() {
-    const phase = this.runner.phase;
-    if (phase === 'wave') {
-      this.spawnWave(this.runner.currentWave());
-    } else if (phase === 'miniboss') {
-      this.spawnBoss(this.scenario.miniboss);
-    } else if (phase === 'temple') {
-      this.spawnTemple();
-    } else if (phase === 'boss') {
-      this.spawnBoss(this.scenario.boss);
-    } else if (phase === 'done') {
-      this.finishScenario();
+    const phase = this.runner.currentPhase();
+    if (!phase) { this.finishLevel(); return; }
+    if (phase.type === 'wave') {
+      this.spawnWave(phase);
+    } else if (phase.type === 'miniboss' || phase.type === 'levelBoss') {
+      this.spawnMinions(phase.minions);
+      this.spawnBoss(phase.enemyDef);
+    } else if (phase.type === 'templeBoss') {
+      this.spawnMinions(phase.minions);
+      this.spawnBoss(phase.enemyDef);
+      this.attachBossMechanics(phase.mechanics); // no-op until Phase 3
     }
   }
 
   spawnBoss(def) {
-    this.boss = new Boss(this, GAME_WIDTH / 2, -40, def);
+    this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.mult));
     this.enemies.add(this.boss);
   }
 
-  spawnTemple() {
-    this.temple = new Temple(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, this.scenario.temple);
-    this.templeOverlap = this.physics.add.overlap(this.caster, this.temple, () => {
-      if (!this.temple || !this.temple.active) return;
-      this.temple.destroy();
-      this.temple = null;
-      if (this.templeOverlap) { this.templeOverlap.destroy(); this.templeOverlap = null; }
-      this.scene.pause();
-      this.scene.launch('Dialogue', {
-        lines: this.scenario.temple.dialogue,
-        onDone: () => {
-          this.scene.resume();
-          this.stats.hasFireball = true;
-          this.runner.onCleared();
-          this.beginPhase();
-        },
-      });
-    });
+  // Hook implemented in Phase 3 (Task 3.2).
+  attachBossMechanics(_mechanics) {}
+
+  spawnMinions(minions) {
+    if (!minions) return;
+    for (const m of minions) {
+      for (let i = 0; i < m.count; i++) this.spawnEnemy(ENEMY_TYPES[m.type]);
+    }
   }
 
-  finishScenario() {
-    this.physics.pause();
-    const save = new SaveSystem(window.localStorage);
-    const state = save.load();
-    state.skillPoints += this.scenario.skillPointsReward;
-    if (!state.unlockedSkills.includes('fireball')) state.unlockedSkills.push('fireball');
-    if (!state.unlockedTemples.includes('fire')) state.unlockedTemples.push('fire');
-    save.write(state);
-
-    this.scene.stop('UI');
-    this.scene.launch('Dialogue', {
-      lines: [{ speaker: 'Narrador', text: `Ganaste ${this.scenario.skillPointsReward} puntos de habilidad.` }],
-      onDone: () => this.scene.start('SkillTree'),
-    });
-  }
-
-  spawnWave(wave) {
+  spawnWave(phase) {
     if (this.spawnEvent) { this.spawnEvent.remove(false); this.spawnEvent = null; }
     const queue = [];
-    for (const s of wave.spawns) {
+    for (const s of phase.spawns) {
       for (let i = 0; i < s.count; i++) queue.push(s.type);
     }
     this.spawnQueue = queue;
     this.spawnEvent = this.time.addEvent({
-      delay: wave.spawnDelay,
+      delay: phase.spawnDelay,
       repeat: queue.length - 1,
       callback: () => {
         const type = this.spawnQueue.shift();
@@ -139,14 +123,13 @@ export default class GameScene extends Phaser.Scene {
   }
 
   spawnEnemy(def) {
-    // spawn just outside a random edge
     const edge = Phaser.Math.Between(0, 3);
     let x = 0; let y = 0;
     if (edge === 0) { x = Phaser.Math.Between(0, GAME_WIDTH); y = -20; }
     else if (edge === 1) { x = GAME_WIDTH + 20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
     else if (edge === 2) { x = Phaser.Math.Between(0, GAME_WIDTH); y = GAME_HEIGHT + 20; }
     else { x = -20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
-    const e = new Enemy(this, x, y, def);
+    const e = new Enemy(this, x, y, scaleEnemyDef(def, this.mult));
     this.enemies.add(e);
     return e;
   }
@@ -155,6 +138,7 @@ export default class GameScene extends Phaser.Scene {
     const r = applyDamage({ hp: enemy.hp }, damage);
     enemy.hp = r.hp;
     if (r.dead) {
+      if (enemy === this.boss) this.boss = null;
       enemy.destroy();
       this.checkPhaseCleared();
     }
@@ -164,9 +148,7 @@ export default class GameScene extends Phaser.Scene {
     const targets = [];
     this.enemies.children.iterate((e) => {
       if (!e || !e.active || e === centerEnemy) return true;
-      if (Phaser.Math.Distance.Between(orb.x, orb.y, e.x, e.y) <= orb.aoeRadius) {
-        targets.push(e);
-      }
+      if (Phaser.Math.Distance.Between(orb.x, orb.y, e.x, e.y) <= orb.aoeRadius) targets.push(e);
       return true;
     });
     for (const e of targets) this.hitEnemy(e, orb.damage);
@@ -177,7 +159,7 @@ export default class GameScene extends Phaser.Scene {
     this.caster.hp = r.hp;
     if (r.dead) {
       this.scene.stop('UI');
-      this.scene.start('Game', { stats: this.stats }); // restart this scenario only
+      this.scene.start('Game', { regionId: this.regionId, levelIndex: this.levelIndex, stats: this.stats });
     }
   }
 
@@ -186,26 +168,45 @@ export default class GameScene extends Phaser.Scene {
     if (phase === 'wave') {
       const alive = this.enemies.countActive(true);
       const stillSpawning = this.spawnEvent && this.spawnEvent.getRepeatCount() > 0;
-      if (alive === 0 && !stillSpawning) {
-        this.runner.onCleared();
-        this.beginPhase();
-      }
-    } else if (phase === 'miniboss' || phase === 'boss') {
+      if (alive === 0 && !stillSpawning) { this.runner.onCleared(); this.beginPhase(); }
+    } else if (phase === 'miniboss' || phase === 'levelBoss' || phase === 'templeBoss') {
       if (this.enemies.countActive(true) === 0) {
-        this.boss = null;
-        if (phase === 'boss') {
+        this.bossMechanics = null;
+        const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
+        if (dialogue && dialogue.length) {
           this.scene.pause();
-          this.scene.launch('Dialogue', {
-            lines: this.scenario.boss.dialogue,
-            onDone: () => { this.scene.resume(); this.runner.onCleared(); this.beginPhase(); },
-          });
+          this.scene.launch('Dialogue', { lines: dialogue, onDone: () => { this.scene.resume(); this.runner.onCleared(); this.beginPhase(); } });
         } else {
           this.runner.onCleared();
           this.beginPhase();
         }
       }
     }
-    // 'temple' advances via overlap, not via kills.
+  }
+
+  phaseStoryDialogue(phase) {
+    if (phase === 'templeBoss') return this.level.dialogue && this.level.dialogue.onClear;
+    return null;
+  }
+
+  finishLevel() {
+    this.physics.pause();
+    const save = new SaveSystem(window.localStorage);
+    let state = save.load();
+    state = grantClear(state, this.region, this.levelIndex);
+    save.write(state);
+
+    const isEnding = this.regionId === 'castle' && this.levelIndex === this.region.levels.length - 1;
+    const reward = this.level.reward.skillPoints;
+
+    this.scene.stop('UI');
+    this.scene.launch('Dialogue', {
+      lines: [{ speaker: 'Narrador', text: `Nivel superado. +${reward} punto(s) de habilidad.` }],
+      onDone: () => {
+        if (isEnding) this.scene.start('Map');
+        else this.scene.start('Branch', { regionId: this.regionId });
+      },
+    });
   }
 
   fireOrb(target) {
@@ -231,12 +232,15 @@ export default class GameScene extends Phaser.Scene {
     this.caster.moveBy(this.joystick.vector);
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
-    for (const e of liveEnemies) {
-      e.updateBehavior(delta, this.caster, (en) => this.fireArrow(en));
-    }
+    for (const e of liveEnemies) e.updateBehavior(delta, this.caster, (en) => this.fireArrow(en));
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
-    this.debug.setText(`hp ${Math.ceil(this.caster.hp)}  enemies ${liveEnemies.length}  phase ${this.runner.phase}`);
+    if (this.bossMechanics) this.bossMechanics.update(delta);
+    this.updatePoisonZones(delta); // no-op until Phase 3
+    this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     if (this.boss && this.boss.active) this.boss.drawBar();
   }
+
+  // Implemented in Phase 3 (Task 3.2).
+  updatePoisonZones(_delta) {}
 }

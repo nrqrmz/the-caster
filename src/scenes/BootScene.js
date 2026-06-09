@@ -1,4 +1,5 @@
 import { COLORS, TEX } from '../config.js';
+import { BASE_STATS } from '../data/stats.js';
 
 export default class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -15,7 +16,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeCircle(TEX.boss, COLORS.boss, 30);
     this.makeDiamond(TEX.temple, COLORS.temple, 26);
 
-    this.scene.start('Menu');
+    this.scene.start('Game', { regionId: 'fire', levelIndex: 0, stats: { ...BASE_STATS } });
   }
 
   makeCircle(key, color, radius) {
