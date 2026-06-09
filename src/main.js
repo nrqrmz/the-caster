@@ -3,6 +3,7 @@ import BootScene from './scenes/BootScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
 import UIScene from './scenes/UIScene.js';
+import DialogueScene from './scenes/DialogueScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config = {
     default: 'arcade',
     arcade: { debug: false },
   },
-  scene: [BootScene, MenuScene, GameScene, UIScene],
+  scene: [BootScene, MenuScene, GameScene, UIScene, DialogueScene],
 };
 
 // eslint-disable-next-line no-new
