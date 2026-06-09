@@ -13,7 +13,11 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   applyFreeze(ms) { this.freezeRemaining = Math.max(this.freezeRemaining, ms); }
-  applySlow(factor, ms) { this.slowRemaining = Math.max(this.slowRemaining, ms); this.slowFactor = factor; }
+  applySlow(factor, ms) {
+    // Fresh slow uses the new factor; stacking onto an active slow keeps the stronger (lower) one.
+    this.slowFactor = this.slowRemaining > 0 ? Math.min(this.slowFactor, factor) : factor;
+    this.slowRemaining = Math.max(this.slowRemaining, ms);
+  }
 
   // target = caster sprite. onRangedFire(enemy) spawns the enemy projectile.
   updateBehavior(delta, target, onRangedFire) {

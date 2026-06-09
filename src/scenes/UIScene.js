@@ -20,8 +20,9 @@ export default class UIScene extends Phaser.Scene {
       const x = GAME_WIDTH - 56;
       const y = GAME_HEIGHT - 70 - i * 84;
       const circle = this.add.circle(x, y, 36, s.color, 0.25).setStrokeStyle(3, s.color).setInteractive();
-      this.add.text(x, y, s.icon, { fontSize: '26px' }).setOrigin(0.5);
       const cdArc = this.add.graphics();
+      // Icon last so the cooldown sweep draws under it, not over it.
+      this.add.text(x, y, s.icon, { fontSize: '26px' }).setOrigin(0.5);
       circle.on('pointerdown', () => {
         // Only cast while Game is active (it pauses during dialogue overlays).
         if (this.game_scene.scene.isActive('Game')) this.game_scene.tryCast(s.key);
