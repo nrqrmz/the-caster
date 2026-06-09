@@ -1,0 +1,119 @@
+<h2>¿Cómo se ve y se navega el mapa de campaña?</h2>
+<p class="subtitle">4 ramas elementales (7 niveles c/u) + Castillo del Rey bloqueado hasta tener los 4 elementos. Movimiento libre entre ramas. Cada nodo = un nivel. Elige la estructura que más te late.</p>
+
+<style>
+  .maps { display: flex; gap: 16px; flex-wrap: wrap; }
+  .maps .option { flex: 1; min-width: 280px; }
+  .diagram { background: #120c1c; border-radius: 10px; padding: 8px; margin-top: 10px; }
+  .legend { font-size: 12px; opacity: .75; margin-top: 6px; }
+</style>
+
+<div class="options maps">
+
+  <div class="option" data-choice="radial" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Compás radial</h3>
+      <p>Un <b>hub central</b> (donde empiezas). Cada elemento es un brazo de 7 nodos que sale hacia su templo. El <b>Castillo</b> corona el centro, bloqueado. Para cambiar de rama vuelves al hub.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 280 210" width="100%">
+          <!-- castle top -->
+          <rect x="125" y="6" width="30" height="22" rx="3" fill="#3a2030" stroke="#d32f2f"/>
+          <text x="140" y="22" font-size="13" text-anchor="middle">👑</text>
+          <text x="140" y="40" font-size="9" fill="#888" text-anchor="middle">bloqueado</text>
+          <!-- hub -->
+          <circle cx="140" cy="120" r="13" fill="#4fc3f7"/>
+          <text x="140" y="124" font-size="9" text-anchor="middle" fill="#06121a">INICIO</text>
+          <!-- four arms -->
+          <g stroke="#ff7043" stroke-width="2" fill="#ff7043">
+            <line x1="132" y1="112" x2="40" y2="60"/>
+            <circle cx="108" cy="105" r="4"/><circle cx="84" cy="90" r="4"/><circle cx="60" cy="74" r="4"/>
+            <text x="34" y="55" font-size="15">🔥</text>
+          </g>
+          <g stroke="#66bb6a" stroke-width="2" fill="#66bb6a">
+            <line x1="148" y1="112" x2="240" y2="60"/>
+            <circle cx="172" cy="105" r="4"/><circle cx="196" cy="90" r="4"/><circle cx="220" cy="74" r="4"/>
+            <text x="244" y="55" font-size="15">🌿</text>
+          </g>
+          <g stroke="#80d8ff" stroke-width="2" fill="#80d8ff">
+            <line x1="132" y1="128" x2="40" y2="180"/>
+            <circle cx="108" cy="135" r="4"/><circle cx="84" cy="150" r="4"/><circle cx="60" cy="166" r="4"/>
+            <text x="30" y="200" font-size="15">💧</text>
+          </g>
+          <g stroke="#cfd8dc" stroke-width="2" fill="#cfd8dc">
+            <line x1="148" y1="128" x2="240" y2="180"/>
+            <circle cx="172" cy="135" r="4"/><circle cx="196" cy="150" r="4"/><circle cx="220" cy="166" r="4"/>
+            <text x="244" y="200" font-size="15">💨</text>
+          </g>
+        </svg>
+      </div>
+      <div class="legend">Limpio y claro. La progresión se "lee" de un vistazo. Menos atmósfera de mundo.</div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="world" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Mundo geográfico</h3>
+      <p>Un <b>mapa de fantasía</b>: el volcán, el lago, la montaña y el bosque ubicados en el terreno, unidos por caminos serpenteantes de nodos. El Castillo en el centro. Saltas entre regiones desde la vista de mapa.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 280 210" width="100%">
+          <rect x="0" y="0" width="280" height="210" fill="#0e1410" rx="8"/>
+          <!-- castle center -->
+          <text x="140" y="112" font-size="20" text-anchor="middle">🏰</text>
+          <text x="140" y="128" font-size="8" fill="#888" text-anchor="middle">(4 elementos)</text>
+          <!-- volcano NW -->
+          <path d="M55 45 Q90 70 120 95" stroke="#ff7043" stroke-width="2" fill="none" stroke-dasharray="3 3"/>
+          <circle cx="75" cy="58" r="3" fill="#ff7043"/><circle cx="98" cy="76" r="3" fill="#ff7043"/>
+          <text x="45" y="42" font-size="18">🌋</text>
+          <!-- lake NE -->
+          <path d="M225 45 Q190 70 160 95" stroke="#80d8ff" stroke-width="2" fill="none" stroke-dasharray="3 3"/>
+          <circle cx="205" cy="58" r="3" fill="#80d8ff"/><circle cx="182" cy="76" r="3" fill="#80d8ff"/>
+          <text x="225" y="42" font-size="18">💧</text>
+          <!-- mountain SW -->
+          <path d="M55 175 Q90 150 120 125" stroke="#cfd8dc" stroke-width="2" fill="none" stroke-dasharray="3 3"/>
+          <circle cx="75" cy="162" r="3" fill="#cfd8dc"/><circle cx="98" cy="144" r="3" fill="#cfd8dc"/>
+          <text x="42" y="195" font-size="18">⛰️</text>
+          <!-- forest SE -->
+          <path d="M225 175 Q190 150 160 125" stroke="#66bb6a" stroke-width="2" fill="none" stroke-dasharray="3 3"/>
+          <circle cx="205" cy="162" r="3" fill="#66bb6a"/><circle cx="182" cy="144" r="3" fill="#66bb6a"/>
+          <text x="222" y="195" font-size="18">🌲</text>
+        </svg>
+      </div>
+      <div class="legend">Inmersivo, sensación de viaje. Más arte/mapa que construir y posicionar.</div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="twolevel" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Dos niveles: portales + camino</h3>
+      <p>Pantalla 1: <b>5 portales</b> (4 elementos + Castillo bloqueado). Tocas uno → Pantalla 2: el <b>camino lineal</b> de 7 nodos de esa rama. Más "selector de niveles" que mapa.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 280 210" width="100%">
+          <text x="14" y="14" font-size="9" fill="#aaa">1 · portales</text>
+          <g font-size="16">
+            <rect x="14" y="22" width="34" height="34" rx="6" fill="#2a1620" stroke="#ff7043"/><text x="31" y="44" text-anchor="middle">🔥</text>
+            <rect x="58" y="22" width="34" height="34" rx="6" fill="#16242a" stroke="#80d8ff"/><text x="75" y="44" text-anchor="middle">💧</text>
+            <rect x="102" y="22" width="34" height="34" rx="6" fill="#1c2620" stroke="#66bb6a"/><text x="119" y="44" text-anchor="middle">🌿</text>
+            <rect x="146" y="22" width="34" height="34" rx="6" fill="#20242a" stroke="#cfd8dc"/><text x="163" y="44" text-anchor="middle">💨</text>
+            <rect x="196" y="22" width="34" height="34" rx="6" fill="#241016" stroke="#555"/><text x="213" y="44" text-anchor="middle">🔒</text>
+          </g>
+          <text x="14" y="92" font-size="9" fill="#aaa">2 · camino de la rama elegida</text>
+          <line x1="20" y1="135" x2="250" y2="135" stroke="#ff7043" stroke-width="2"/>
+          <g fill="#ff7043">
+            <circle cx="30" cy="135" r="6"/><circle cx="62" cy="135" r="6"/><circle cx="94" cy="135" r="6"/>
+            <circle cx="126" cy="135" r="7"/><circle cx="158" cy="135" r="7"/>
+            <circle cx="194" cy="135" r="8" fill="#ffb300"/>
+            <text x="226" y="140" font-size="16">⛩️</text>
+          </g>
+          <text x="30" y="160" font-size="7" fill="#999">básico×3</text>
+          <text x="120" y="160" font-size="7" fill="#999">inter×2</text>
+          <text x="180" y="172" font-size="7" fill="#999">pre-templo</text>
+        </svg>
+      </div>
+      <div class="legend">Lo más simple de construir. Pierde la sensación de mapa explorable que pediste.</div>
+    </div>
+  </div>
+
+</div>
