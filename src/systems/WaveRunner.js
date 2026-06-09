@@ -1,35 +1,28 @@
 // src/systems/WaveRunner.js
-// Phase order: each wave, then miniboss, temple, boss, done.
+// Generic sequencer over a level's ordered `phases` array. No hardcoded order.
 export class WaveRunner {
-  constructor(scenario) {
-    this.scenario = scenario;
-    this.waveIndex = 0;
-    this.phase = 'wave';
+  constructor(level) {
+    this.phases = level.phases || [];
+    this.index = 0;
   }
 
-  currentWave() {
-    return this.scenario.waves[this.waveIndex];
+  // Current phase's type string, or 'done' when past the last phase.
+  get phase() {
+    const p = this.phases[this.index];
+    return p ? p.type : 'done';
   }
 
-  // Called by GameScene when the current phase's enemies are all defeated
-  // (or, for 'temple', when the caster has touched the temple).
+  // The full descriptor for the current phase (spawns, enemyDef, mechanics…), or null.
+  currentPhase() {
+    return this.phases[this.index] || null;
+  }
+
+  // Called by GameScene when the current phase is cleared.
   onCleared() {
-    if (this.phase === 'wave') {
-      if (this.waveIndex < this.scenario.waves.length - 1) {
-        this.waveIndex += 1;
-      } else {
-        this.phase = 'miniboss';
-      }
-    } else if (this.phase === 'miniboss') {
-      this.phase = 'temple';
-    } else if (this.phase === 'temple') {
-      this.phase = 'boss';
-    } else if (this.phase === 'boss') {
-      this.phase = 'done';
-    }
+    if (this.index < this.phases.length) this.index += 1;
   }
 
   isComplete() {
-    return this.phase === 'done';
+    return this.index >= this.phases.length;
   }
 }
