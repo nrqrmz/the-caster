@@ -6,6 +6,7 @@ import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
 import { applyDamage } from '../systems/CombatSystem.js';
+import { SaveSystem } from '../systems/SaveSystem.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
 import Boss from '../objects/Boss.js';
@@ -105,11 +106,19 @@ export default class GameScene extends Phaser.Scene {
   }
 
   finishScenario() {
-    // Refined in Task 5.x (award points + go to SkillTree). Stub for now:
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '¡Escenario completo!', {
-      fontFamily: 'sans-serif', fontSize: '26px', color: '#fff',
-    }).setOrigin(0.5).setDepth(3000);
     this.physics.pause();
+    const save = new SaveSystem(window.localStorage);
+    const state = save.load();
+    state.skillPoints += this.scenario.skillPointsReward;
+    if (!state.unlockedSkills.includes('fireball')) state.unlockedSkills.push('fireball');
+    if (!state.unlockedTemples.includes('fire')) state.unlockedTemples.push('fire');
+    save.write(state);
+
+    this.scene.stop('UI');
+    this.scene.launch('Dialogue', {
+      lines: [{ speaker: 'Narrador', text: `Ganaste ${this.scenario.skillPointsReward} puntos de habilidad.` }],
+      onDone: () => this.scene.start('SkillTree'),
+    });
   }
 
   spawnWave(wave) {
@@ -166,7 +175,10 @@ export default class GameScene extends Phaser.Scene {
   damageCaster(amount) {
     const r = applyDamage({ hp: this.caster.hp }, amount);
     this.caster.hp = r.hp;
-    if (r.dead) this.scene.restart(); // die → restart scenario (Phase 5 refines this)
+    if (r.dead) {
+      this.scene.stop('UI');
+      this.scene.start('Game', { stats: this.stats }); // restart this scenario only
+    }
   }
 
   checkPhaseCleared() {

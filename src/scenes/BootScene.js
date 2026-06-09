@@ -15,7 +15,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeCircle(TEX.boss, COLORS.boss, 30);
     this.makeDiamond(TEX.temple, COLORS.temple, 26);
 
-    this.scene.start('Game');
+    this.scene.start('Menu');
   }
 
   makeCircle(key, color, radius) {
