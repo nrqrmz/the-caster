@@ -15,6 +15,9 @@ export const COLORS = {
   miniboss: 0xab47bc,   // purple
   boss: 0xd32f2f,       // deep red
   temple: 0xffd54f,     // gold
+  lightning: 0xfff176,  // yellow zap
+  ice: 0x80d8ff,        // cyan freeze flash
+  poison: 0x7cb342,     // green poison zone
   healthBack: 0x33272a,
   healthFill: 0x66bb6a,
 };
