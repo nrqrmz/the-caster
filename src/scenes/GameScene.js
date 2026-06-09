@@ -84,6 +84,7 @@ export default class GameScene extends Phaser.Scene {
         this.stats.hasFireball = true; // skill granted (used by Phase 4 fireball button)
         this.temple.destroy();
         this.temple = null;
+        if (this.templeOverlap) { this.templeOverlap.destroy(); this.templeOverlap = null; }
         this.runner.onCleared();
         this.beginPhase();
       }
@@ -99,6 +100,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   spawnWave(wave) {
+    if (this.spawnEvent) { this.spawnEvent.remove(false); this.spawnEvent = null; }
     const queue = [];
     for (const s of wave.spawns) {
       for (let i = 0; i < s.count; i++) queue.push(s.type);
@@ -137,13 +139,15 @@ export default class GameScene extends Phaser.Scene {
   }
 
   explode(orb, centerEnemy) {
+    const targets = [];
     this.enemies.children.iterate((e) => {
       if (!e || !e.active || e === centerEnemy) return true;
       if (Phaser.Math.Distance.Between(orb.x, orb.y, e.x, e.y) <= orb.aoeRadius) {
-        this.hitEnemy(e, orb.damage);
+        targets.push(e);
       }
       return true;
     });
+    for (const e of targets) this.hitEnemy(e, orb.damage);
   }
 
   damageCaster(amount) {
@@ -163,6 +167,7 @@ export default class GameScene extends Phaser.Scene {
       }
     } else if (phase === 'miniboss' || phase === 'boss') {
       if (this.enemies.countActive(true) === 0) {
+        this.boss = null;
         this.runner.onCleared();
         this.beginPhase();
       }
