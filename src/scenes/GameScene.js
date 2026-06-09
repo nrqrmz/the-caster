@@ -8,6 +8,8 @@ import { VirtualJoystick } from '../systems/InputSystem.js';
 import { applyDamage } from '../systems/CombatSystem.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
+import Boss from '../objects/Boss.js';
+import Temple from '../objects/Temple.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -56,10 +58,44 @@ export default class GameScene extends Phaser.Scene {
   }
 
   beginPhase() {
-    if (this.runner.phase === 'wave') {
+    const phase = this.runner.phase;
+    if (phase === 'wave') {
       this.spawnWave(this.runner.currentWave());
+    } else if (phase === 'miniboss') {
+      this.spawnBoss(this.scenario.miniboss);
+    } else if (phase === 'temple') {
+      this.spawnTemple();
+    } else if (phase === 'boss') {
+      this.spawnBoss(this.scenario.boss);
+    } else if (phase === 'done') {
+      this.finishScenario();
     }
-    // miniboss/temple/boss handled in later tasks.
+  }
+
+  spawnBoss(def) {
+    this.boss = new Boss(this, GAME_WIDTH / 2, -40, def);
+    this.enemies.add(this.boss);
+  }
+
+  spawnTemple() {
+    this.temple = new Temple(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, this.scenario.temple);
+    this.templeOverlap = this.physics.add.overlap(this.caster, this.temple, () => {
+      if (this.temple && this.temple.active) {
+        this.stats.hasFireball = true; // skill granted (used by Phase 4 fireball button)
+        this.temple.destroy();
+        this.temple = null;
+        this.runner.onCleared();
+        this.beginPhase();
+      }
+    });
+  }
+
+  finishScenario() {
+    // Refined in Task 5.x (award points + go to SkillTree). Stub for now:
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '¡Escenario completo!', {
+      fontFamily: 'sans-serif', fontSize: '26px', color: '#fff',
+    }).setOrigin(0.5).setDepth(3000);
+    this.physics.pause();
   }
 
   spawnWave(wave) {
@@ -117,13 +153,21 @@ export default class GameScene extends Phaser.Scene {
   }
 
   checkPhaseCleared() {
-    const alive = this.enemies.countActive(true);
-    const stillSpawning = this.spawnEvent && this.spawnEvent.getRepeatCount() > 0;
-    if (alive === 0 && !stillSpawning && this.runner.phase === 'wave') {
-      this.runner.onCleared();
-      if (this.runner.phase === 'wave') this.spawnWave(this.runner.currentWave());
-      // non-wave phases handled in later tasks
+    const phase = this.runner.phase;
+    if (phase === 'wave') {
+      const alive = this.enemies.countActive(true);
+      const stillSpawning = this.spawnEvent && this.spawnEvent.getRepeatCount() > 0;
+      if (alive === 0 && !stillSpawning) {
+        this.runner.onCleared();
+        this.beginPhase();
+      }
+    } else if (phase === 'miniboss' || phase === 'boss') {
+      if (this.enemies.countActive(true) === 0) {
+        this.runner.onCleared();
+        this.beginPhase();
+      }
     }
+    // 'temple' advances via overlap, not via kills.
   }
 
   fireOrb(target) {
@@ -144,5 +188,6 @@ export default class GameScene extends Phaser.Scene {
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.debug.setText(`hp ${Math.ceil(this.caster.hp)}  enemies ${liveEnemies.length}  phase ${this.runner.phase}`);
+    if (this.boss && this.boss.active) this.boss.drawBar();
   }
 }
