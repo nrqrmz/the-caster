@@ -9,6 +9,7 @@ import { applyDamage } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { difficultyMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
+import { BossMechanics } from '../systems/BossMechanics.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
 import Boss from '../objects/Boss.js';
@@ -95,8 +96,10 @@ export default class GameScene extends Phaser.Scene {
     this.enemies.add(this.boss);
   }
 
-  // Hook implemented in Phase 3 (Task 3.2).
-  attachBossMechanics(_mechanics) {}
+  attachBossMechanics(mechanics) {
+    if (!mechanics || !this.boss) return;
+    this.bossMechanics = new BossMechanics(this, this.boss, mechanics);
+  }
 
   spawnMinions(minions) {
     if (!minions) return;
@@ -241,6 +244,23 @@ export default class GameScene extends Phaser.Scene {
     if (this.boss && this.boss.active) this.boss.drawBar();
   }
 
-  // Implemented in Phase 3 (Task 3.2).
-  updatePoisonZones(_delta) {}
+  spawnPoisonZone(x, y, radius, dps, duration) {
+    const gfx = this.add.circle(x, y, radius, 0x7cb342, 0.30).setDepth(5);
+    this.poisonZones.push({ x, y, radius, dps, remaining: duration, gfx });
+  }
+
+  updatePoisonZones(delta) {
+    if (!this.poisonZones.length) return;
+    for (const z of this.poisonZones) {
+      z.remaining -= delta;
+      if (this.caster && Phaser.Math.Distance.Between(this.caster.x, this.caster.y, z.x, z.y) <= z.radius) {
+        this.damageCaster(z.dps * (delta / 1000));
+      }
+    }
+    this.poisonZones = this.poisonZones.filter((z) => {
+      if (z.remaining > 0) return true;
+      z.gfx.destroy();
+      return false;
+    });
+  }
 }
