@@ -40,7 +40,7 @@ export default class SkillTreeScene extends Phaser.Scene {
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 50, 'Continuar', {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#fff',
     }).setOrigin(0.5);
-    cont.on('pointerdown', () => this.scene.start('Menu'));
+    cont.on('pointerdown', () => this.scene.start('Map'));
 
     this.refresh();
   }

@@ -1,14 +1,10 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config.js';
-import { SaveSystem } from '../systems/SaveSystem.js';
-import { getStats } from '../systems/SkillTree.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
 
   create() {
     this.cameras.main.setBackgroundColor(COLORS.bg);
-    this.save = new SaveSystem(window.localStorage);
-
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 80, 'THE CASTER', {
       fontFamily: 'sans-serif', fontSize: '44px', color: '#4fc3f7', fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -35,8 +31,6 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   startCampaign() {
-    const state = this.save.load();
-    const stats = getStats(state);
-    this.scene.start('Game', { stats });
+    this.scene.start('Map');
   }
 }
