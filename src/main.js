@@ -6,6 +6,7 @@ import UIScene from './scenes/UIScene.js';
 import DialogueScene from './scenes/DialogueScene.js';
 import SkillTreeScene from './scenes/SkillTreeScene.js';
 import BranchScene from './scenes/BranchScene.js';
+import MapScene from './scenes/MapScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -21,7 +22,7 @@ const config = {
     default: 'arcade',
     arcade: { debug: false },
   },
-  scene: [BootScene, MenuScene, GameScene, BranchScene, UIScene, DialogueScene, SkillTreeScene],
+  scene: [BootScene, MenuScene, GameScene, MapScene, BranchScene, UIScene, DialogueScene, SkillTreeScene],
 };
 
 const game = new Phaser.Game(config);

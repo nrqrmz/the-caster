@@ -16,7 +16,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeCircle(TEX.boss, COLORS.boss, 30);
     this.makeDiamond(TEX.temple, COLORS.temple, 26);
 
-    this.scene.start('Branch', { regionId: 'fire' });
+    this.scene.start('Map');
   }
 
   makeCircle(key, color, radius) {
