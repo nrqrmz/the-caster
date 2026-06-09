@@ -1,5 +1,5 @@
 // src/systems/SaveSystem.js
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 const SAVE_KEY = 'the-caster:save';
 
 export const DEFAULT_SAVE = {
@@ -7,12 +7,24 @@ export const DEFAULT_SAVE = {
   skillPoints: 0,
   purchasedNodes: [],
   unlockedSkills: [],
-  unlockedTemples: [],
-  currentScenario: 'scenario1',
+  elements: [],        // elements mastered (temple completed)
+  regionProgress: {},  // { fire: { cleared: N }, ... }
 };
 
 function freshSave() {
   return JSON.parse(JSON.stringify(DEFAULT_SAVE));
+}
+
+// v1 → v2: keep progression, derive elements from old unlockedTemples, drop currentScenario.
+function migrateV1toV2(old) {
+  return {
+    ...freshSave(),
+    skillPoints: old.skillPoints || 0,
+    purchasedNodes: old.purchasedNodes || [],
+    unlockedSkills: old.unlockedSkills || [],
+    elements: old.unlockedTemples || [],
+    regionProgress: {},
+  };
 }
 
 export class SaveSystem {
@@ -25,8 +37,9 @@ export class SaveSystem {
     if (!raw) return freshSave();
     try {
       const parsed = JSON.parse(raw);
-      if (parsed.version !== SAVE_VERSION) return freshSave();
-      return { ...freshSave(), ...parsed };
+      if (parsed.version === SAVE_VERSION) return { ...freshSave(), ...parsed };
+      if (parsed.version === 1) return migrateV1toV2(parsed);
+      return freshSave();
     } catch {
       return freshSave();
     }
