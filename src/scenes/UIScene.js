@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config.js';
+import { SKILLS } from '../data/skills.js';
 
 export default class UIScene extends Phaser.Scene {
   constructor() { super('UI'); }
@@ -11,16 +12,21 @@ export default class UIScene extends Phaser.Scene {
     this.hpFill = this.add.rectangle(22, 24, GAME_WIDTH - 44, 12, COLORS.healthFill).setOrigin(0, 0.5);
     this.hpMaxW = GAME_WIDTH - 44;
 
-    // Fireball button (bottom-right). Disabled until skill granted.
-    this.fireBtn = this.add.circle(GAME_WIDTH - 56, GAME_HEIGHT - 70, 36, COLORS.fireball, 0.25)
-      .setStrokeStyle(3, COLORS.fireball).setInteractive();
-    this.fireLabel = this.add.text(GAME_WIDTH - 56, GAME_HEIGHT - 70, '🔥', { fontSize: '28px' }).setOrigin(0.5);
-    this.cdArc = this.add.graphics();
-
-    // Only cast while Game is actually active — Game is paused during any
-    // dialogue overlay, so this stops a dialogue-advance tap from also firing.
-    this.fireBtn.on('pointerdown', () => {
-      if (this.game_scene && this.game_scene.scene.isActive('Game')) this.game_scene.tryCastFireball();
+    // One cooldown button per UNLOCKED skill, stacked up from the bottom-right.
+    const unlocked = (this.game_scene.stats && this.game_scene.stats.unlockedSkills) || [];
+    const shown = SKILLS.filter((s) => unlocked.includes(s.key));
+    this.buttons = [];
+    shown.forEach((s, i) => {
+      const x = GAME_WIDTH - 56;
+      const y = GAME_HEIGHT - 70 - i * 84;
+      const circle = this.add.circle(x, y, 36, s.color, 0.25).setStrokeStyle(3, s.color).setInteractive();
+      this.add.text(x, y, s.icon, { fontSize: '26px' }).setOrigin(0.5);
+      const cdArc = this.add.graphics();
+      circle.on('pointerdown', () => {
+        // Only cast while Game is active (it pauses during dialogue overlays).
+        if (this.game_scene.scene.isActive('Game')) this.game_scene.tryCast(s.key);
+      });
+      this.buttons.push({ key: s.key, x, y, cdArc });
     });
   }
 
@@ -30,18 +36,16 @@ export default class UIScene extends Phaser.Scene {
     const pct = Phaser.Math.Clamp(gs.caster.hp / gs.caster.maxHp, 0, 1);
     this.hpFill.width = this.hpMaxW * pct;
 
-    const ready = gs.stats.hasFireball;
-    this.fireBtn.setAlpha(ready ? 1 : 0.25);
-    this.fireLabel.setAlpha(ready ? 1 : 0.3);
-
-    // Cooldown sweep.
-    this.cdArc.clear();
-    if (ready && gs.fireballCdRemaining > 0) {
-      const frac = gs.fireballCdRemaining / gs.stats.fireballCooldown;
-      this.cdArc.fillStyle(0x000000, 0.5);
-      this.cdArc.slice(GAME_WIDTH - 56, GAME_HEIGHT - 70, 36,
-        -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac, false);
-      this.cdArc.fillPath();
+    for (const b of this.buttons) {
+      b.cdArc.clear();
+      const remaining = (gs.cooldowns && gs.cooldowns[b.key]) || 0;
+      const total = gs.stats[`${b.key}Cooldown`] || 1;
+      if (remaining > 0) {
+        const frac = Phaser.Math.Clamp(remaining / total, 0, 1);
+        b.cdArc.fillStyle(0x000000, 0.5);
+        b.cdArc.slice(b.x, b.y, 36, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac, false);
+        b.cdArc.fillPath();
+      }
     }
   }
 }
