@@ -45,19 +45,19 @@ When adding logic, push the decision-making (damage math, phase transitions, pur
 ### Data-driven content
 
 Content is declarative in `src/data/` and consumed by scenes:
-- `scenarios.js` — a scenario is a full object: `intro` dialogue, ordered `waves`, `miniboss`, `temple`, `boss`. Adding a level means adding a scenario object, not new code.
+- `regions.js` — the campaign: `REGIONS` keyed by id (`fire`/`water`/`air`/`earth`/`castle`), built by `makeBranch`/`makeCastle`. A region has `element`, `grantsSkill`, and an array of `levels`. A level is built by `makeLevel` (`data/levelBuilder.js`) from a `kind` preset (`basic`/`intermediate`/`pretemple`/`temple`) into an ordered `phases` array. `REGION_ORDER`, `CASTLE_ID`, `REQUIRED_ELEMENTS` drive the map and gating.
 - `enemies.js` — enemy defs keyed by type, with `behavior: 'chase' | 'ranged'`. `Enemy.updateBehavior` branches on `def.behavior`.
 - `skilltree.js` — nodes with `cost`, `requires` (prereq node ids), and `effect: { stat, add }` (`add` may be negative, e.g. faster `shotRate`). `SKILL_TREE_ORDER` controls UI layout.
 - `stats.js` — `BASE_STATS` (time fields in ms; lower is better) and `STAT_FLOORS` (clamps so reductions can't break the game).
 
 ### Scene flow
 
-`Boot → Menu → Game (+ UI overlay) → SkillTree`, with `Dialogue` launched as a pause-overlay. Registered in `src/main.js`.
+`Boot → Menu → Map (portals) → Branch (level path) → Game (+ UI overlay)`, with `Dialogue` as a pause-overlay and `SkillTree` reachable from `Map`. `WaveRunner` is now a generic sequencer over `level.phases`; `GameScene.beginPhase()` branches on `phase.type` (`wave`/`miniboss`/`levelBoss`/`templeBoss`). `Campaign` (pure) owns unlock/progress; `Difficulty` (pure) scales enemies by skill points spent + elements mastered; temple bosses run `BossMechanics`. Registered in `src/main.js`.
 
-- **GameScene** is the orchestrator. It owns the run loop, spawns entities, wires Arcade physics colliders/overlaps, and drives phases via a `WaveRunner`. `WaveRunner` is pure state (`phase`: wave → miniboss → temple → boss → done); `GameScene.beginPhase()` reacts to the current phase and `checkPhaseCleared()` / overlaps call `runner.onCleared()` to advance.
+- **GameScene** is the orchestrator. It owns the run loop, spawns entities, wires Arcade physics colliders/overlaps, and drives phases via a `WaveRunner`. `WaveRunner` is pure state over `level.phases`; `GameScene.beginPhase()` reacts to the current phase type and `checkPhaseCleared()` / overlaps call `runner.onCleared()` to advance.
 - **UIScene** runs as a parallel overlay (`scene.launch('UI', { gameScene })`), holding a reference to GameScene to read HP and trigger the Fireball cast.
 - **DialogueScene** is launched over a **paused** GameScene with `{ lines, onDone }`. Because Game is paused during dialogue, input handlers must guard against firing — e.g. UIScene's fireball button checks `scene.isActive('Game')` so a dialogue-advance tap doesn't also cast.
-- **Death** restarts only the current scenario (`scene.start('Game', { stats })`); progress is preserved. **Scenario completion** writes rewards to the save and goes to SkillTree.
+- **Death** restarts only the current level (`scene.start('Game', { regionId, levelIndex, stats })`); progress is preserved. **Level completion** writes rewards via `Campaign.grantClear` and returns to `Branch`.
 
 ### Stats & progression pipeline
 

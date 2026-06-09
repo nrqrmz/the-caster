@@ -2,7 +2,7 @@
 
 Mobile top-down survivor built with Phaser 3. No build step — just open `index.html`.
 
-Play as an orphaned sorceress avenging her parents: move with a virtual joystick, auto-fire orbs, unlock Fireball at the fire temple, beat the boss, and spend skill points in a persistent skill tree.
+Play as an orphaned sorceress avenging her parents against the Council of Mages: explore a map of 4 elemental branches (volcano/lake/mountain/forest) in any order, clear each branch's 7 levels to its temple boss, master all 4 elements to unlock the King's Castle, and spend skill points in a persistent skill tree. Difficulty scales with your power.
 
 ## Run locally
 
