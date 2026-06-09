@@ -45,6 +45,7 @@ export default class GameScene extends Phaser.Scene {
     this.scene.launch('UI', { gameScene: this });
 
     this.runner = new WaveRunner(this.level);
+    // dev-only debug HUD (region/level/difficulty/phase); strip or gate before release
     this.debug = this.add.text(8, 8, '', { fontFamily: 'monospace', fontSize: '14px', color: '#fff' }).setDepth(2000);
 
     this.setupCollisions();

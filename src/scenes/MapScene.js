@@ -31,7 +31,7 @@ export default class MapScene extends Phaser.Scene {
 
     // Castle portal (gated by all 4 elements).
     const castleOpen = isCastleUnlocked(save, REQUIRED_ELEMENTS);
-    this.portal(GAME_WIDTH / 2, 540, REGIONS[CASTLE_ID].name, PORTAL_ICON.castle, false, castleOpen,
+    this.portal(GAME_WIDTH / 2, 540, REGIONS[CASTLE_ID].name, PORTAL_ICON.castle, isRegionComplete(save, REGIONS[CASTLE_ID]), castleOpen,
       () => this.scene.start('Branch', { regionId: CASTLE_ID }),
       castleOpen ? null : 'Requiere los 4 elementos');
 
