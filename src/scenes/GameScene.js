@@ -39,7 +39,11 @@ export default class GameScene extends Phaser.Scene {
     this.debug = this.add.text(8, 8, '', { fontFamily: 'monospace', fontSize: '14px', color: '#fff' }).setDepth(2000);
 
     this.setupCollisions();
-    this.beginPhase();
+    this.scene.pause();
+    this.scene.launch('Dialogue', {
+      lines: this.scenario.intro,
+      onDone: () => { this.scene.resume(); this.beginPhase(); },
+    });
   }
 
   setupCollisions() {
@@ -83,14 +87,20 @@ export default class GameScene extends Phaser.Scene {
   spawnTemple() {
     this.temple = new Temple(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, this.scenario.temple);
     this.templeOverlap = this.physics.add.overlap(this.caster, this.temple, () => {
-      if (this.temple && this.temple.active) {
-        this.stats.hasFireball = true; // skill granted (used by Phase 4 fireball button)
-        this.temple.destroy();
-        this.temple = null;
-        if (this.templeOverlap) { this.templeOverlap.destroy(); this.templeOverlap = null; }
-        this.runner.onCleared();
-        this.beginPhase();
-      }
+      if (!this.temple || !this.temple.active) return;
+      this.temple.destroy();
+      this.temple = null;
+      if (this.templeOverlap) { this.templeOverlap.destroy(); this.templeOverlap = null; }
+      this.scene.pause();
+      this.scene.launch('Dialogue', {
+        lines: this.scenario.temple.dialogue,
+        onDone: () => {
+          this.scene.resume();
+          this.stats.hasFireball = true;
+          this.runner.onCleared();
+          this.beginPhase();
+        },
+      });
     });
   }
 
@@ -171,8 +181,16 @@ export default class GameScene extends Phaser.Scene {
     } else if (phase === 'miniboss' || phase === 'boss') {
       if (this.enemies.countActive(true) === 0) {
         this.boss = null;
-        this.runner.onCleared();
-        this.beginPhase();
+        if (phase === 'boss') {
+          this.scene.pause();
+          this.scene.launch('Dialogue', {
+            lines: this.scenario.boss.dialogue,
+            onDone: () => { this.scene.resume(); this.runner.onCleared(); this.beginPhase(); },
+          });
+        } else {
+          this.runner.onCleared();
+          this.beginPhase();
+        }
       }
     }
     // 'temple' advances via overlap, not via kills.
