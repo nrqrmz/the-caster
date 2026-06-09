@@ -17,7 +17,11 @@ export default class UIScene extends Phaser.Scene {
     this.fireLabel = this.add.text(GAME_WIDTH - 56, GAME_HEIGHT - 70, '🔥', { fontSize: '28px' }).setOrigin(0.5);
     this.cdArc = this.add.graphics();
 
-    this.fireBtn.on('pointerdown', () => this.game_scene.tryCastFireball());
+    // Only cast while Game is actually active — Game is paused during any
+    // dialogue overlay, so this stops a dialogue-advance tap from also firing.
+    this.fireBtn.on('pointerdown', () => {
+      if (this.game_scene && this.game_scene.scene.isActive('Game')) this.game_scene.tryCastFireball();
+    });
   }
 
   update() {
