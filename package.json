@@ -1,0 +1,10 @@
+{
+  "name": "the-caster",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "The Caster — mobile top-down survivor in Phaser 3",
+  "scripts": {
+    "test": "node --test"
+  }
+}
