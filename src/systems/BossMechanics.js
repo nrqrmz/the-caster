@@ -36,6 +36,7 @@ export class BossMechanics {
 
   update(delta) {
     if (!this.boss || !this.boss.active) return;
+    if (!this.scene.caster || !this.scene.caster.active) return;
     for (const t of this.timers) {
       t.remaining -= delta;
       if (t.remaining <= 0) {

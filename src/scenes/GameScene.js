@@ -239,7 +239,7 @@ export default class GameScene extends Phaser.Scene {
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     if (this.bossMechanics) this.bossMechanics.update(delta);
-    this.updatePoisonZones(delta); // no-op until Phase 3
+    this.updatePoisonZones(delta);
     this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     if (this.boss && this.boss.active) this.boss.drawBar();
   }
@@ -253,7 +253,7 @@ export default class GameScene extends Phaser.Scene {
     if (!this.poisonZones.length) return;
     for (const z of this.poisonZones) {
       z.remaining -= delta;
-      if (this.caster && Phaser.Math.Distance.Between(this.caster.x, this.caster.y, z.x, z.y) <= z.radius) {
+      if (this.caster && this.caster.hp > 0 && Phaser.Math.Distance.Between(this.caster.x, this.caster.y, z.x, z.y) <= z.radius) {
         this.damageCaster(z.dps * (delta / 1000));
       }
     }
