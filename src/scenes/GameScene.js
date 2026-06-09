@@ -41,7 +41,7 @@ export default class GameScene extends Phaser.Scene {
     this.fireballCdRemaining = 0;
     this.boss = null;
     this.bossMechanics = null;   // set in Phase 3
-    this.poisonZones = [];       // set in Phase 3
+    this.zones = [];             // active ground zones (poison, freeze, boss hazards)
     this.scene.launch('UI', { gameScene: this });
 
     this.runner = new WaveRunner(this.level);
@@ -240,25 +240,48 @@ export default class GameScene extends Phaser.Scene {
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     if (this.bossMechanics) this.bossMechanics.update(delta);
-    this.updatePoisonZones(delta);
+    this.updateZones(delta);
     this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     if (this.boss && this.boss.active) this.boss.drawBar();
   }
 
-  spawnPoisonZone(x, y, radius, dps, duration) {
-    const gfx = this.add.circle(x, y, radius, 0x7cb342, 0.30).setDepth(5);
-    this.poisonZones.push({ x, y, radius, dps, remaining: duration, gfx });
+  // Generic ground zone. opts: { x, y, radius, duration, color?, casterDps?, casterHeal?, enemyDps? }
+  spawnZone(opts) {
+    const color = opts.color != null ? opts.color : COLORS.poison;
+    const gfx = this.add.circle(opts.x, opts.y, opts.radius, color, 0.30).setDepth(5);
+    this.zones.push({
+      x: opts.x, y: opts.y, radius: opts.radius, remaining: opts.duration, gfx,
+      casterDps: opts.casterDps || 0,
+      casterHeal: opts.casterHeal || 0,
+      enemyDps: opts.enemyDps || 0,
+    });
   }
 
-  updatePoisonZones(delta) {
-    if (!this.poisonZones.length) return;
-    for (const z of this.poisonZones) {
+  // Back-compat wrapper used by BossMechanics' poisonFloor (damages the caster).
+  spawnPoisonZone(x, y, radius, dps, duration) {
+    this.spawnZone({ x, y, radius, duration, casterDps: dps, color: COLORS.poison });
+  }
+
+  updateZones(delta) {
+    if (!this.zones.length) return;
+    const dt = delta / 1000;
+    for (const z of this.zones) {
       z.remaining -= delta;
-      if (this.caster && this.caster.hp > 0 && Phaser.Math.Distance.Between(this.caster.x, this.caster.y, z.x, z.y) <= z.radius) {
-        this.damageCaster(z.dps * (delta / 1000));
+      const casterIn = this.caster && this.caster.hp > 0 &&
+        Phaser.Math.Distance.Between(this.caster.x, this.caster.y, z.x, z.y) <= z.radius;
+      if (casterIn && z.casterDps) this.damageCaster(z.casterDps * dt);
+      if (casterIn && z.casterHeal) {
+        this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + z.casterHeal * dt);
+      }
+      if (z.enemyDps) {
+        // Snapshot (filter returns a new array) so a kill mid-loop can't skip an enemy.
+        const live = this.enemies.getChildren().filter((e) => e.active);
+        for (const e of live) {
+          if (Phaser.Math.Distance.Between(e.x, e.y, z.x, z.y) <= z.radius) this.hitEnemy(e, z.enemyDps * dt);
+        }
       }
     }
-    this.poisonZones = this.poisonZones.filter((z) => {
+    this.zones = this.zones.filter((z) => {
       if (z.remaining > 0) return true;
       z.gfx.destroy();
       return false;
