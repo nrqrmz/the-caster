@@ -27,6 +27,9 @@ export default class MenuScene extends Phaser.Scene {
       if (this.scale.fullscreen.available && !this.scale.isFullscreen) {
         this.scale.startFullscreen();
       }
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('portrait').catch(() => {});
+      }
       this.startCampaign();
     });
   }

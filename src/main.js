@@ -23,5 +23,11 @@ const config = {
   scene: [BootScene, MenuScene, GameScene, UIScene, DialogueScene, SkillTreeScene],
 };
 
-// eslint-disable-next-line no-new
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// Re-fit when the viewport changes (address bar, rotation).
+function refit() {
+  game.scale.refresh();
+}
+window.addEventListener('resize', refit);
+window.addEventListener('orientationchange', () => setTimeout(refit, 200));
