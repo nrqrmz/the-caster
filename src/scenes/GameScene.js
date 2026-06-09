@@ -30,6 +30,9 @@ export default class GameScene extends Phaser.Scene {
     this.enemyShots = new ProjectilePool(this);
     this.enemies = this.physics.add.group();
 
+    this.fireballCdRemaining = 0;
+    this.scene.launch('UI', { gameScene: this });
+
     this.runner = new WaveRunner(this.scenario);
     this.runnerStarted = false;
 
@@ -183,7 +186,18 @@ export default class GameScene extends Phaser.Scene {
     this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, this.caster.x, this.caster.y, 260, enemy.def.damage, 0);
   }
 
+  tryCastFireball() {
+    if (!this.stats.hasFireball) return;
+    if (this.fireballCdRemaining > 0) return;
+    const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
+    const target = this.caster.nearestEnemy(liveEnemies);
+    if (!target) return;
+    this.fireballCdRemaining = this.stats.fireballCooldown;
+    this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage, 70);
+  }
+
   update(time, delta) {
+    if (this.fireballCdRemaining > 0) this.fireballCdRemaining -= delta;
     this.caster.moveBy(this.joystick.vector);
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
