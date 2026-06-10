@@ -30,6 +30,13 @@ export default class UIScene extends Phaser.Scene {
       this.buttons.push({ key: s.key, x, y, cdArc });
     });
 
+    // Pause button (top-left, below the HP bar). Opens the pause overlay (Resume / Abandon).
+    const pauseBtn = this.add.circle(22, 64, 20, COLORS.healthFill, 0.2).setStrokeStyle(2, COLORS.healthFill).setInteractive();
+    this.add.text(22, 64, '⏸', { fontSize: '18px', color: '#fff' }).setOrigin(0.5);
+    pauseBtn.on('pointerdown', () => {
+      if (this.game_scene.scene.isActive('Game')) this.game_scene.openPauseMenu();
+    });
+
     // Elixir consumable button (top-right, below the HP bar).
     this.elixirBtn = this.add.circle(GAME_WIDTH - 40, 64, 22, COLORS.fireball, 0.2).setStrokeStyle(2, COLORS.fireball).setInteractive();
     this.add.text(GAME_WIDTH - 40, 64, '⚗️', { fontSize: '18px' }).setOrigin(0.5);
