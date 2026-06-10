@@ -29,6 +29,14 @@ export default class UIScene extends Phaser.Scene {
       });
       this.buttons.push({ key: s.key, x, y, cdArc });
     });
+
+    // Elixir consumable button (top-right, below the HP bar).
+    this.elixirBtn = this.add.circle(GAME_WIDTH - 40, 64, 22, COLORS.fireball, 0.2).setStrokeStyle(2, COLORS.fireball).setInteractive();
+    this.add.text(GAME_WIDTH - 40, 64, '⚗️', { fontSize: '18px' }).setOrigin(0.5);
+    this.elixirCount = this.add.text(GAME_WIDTH - 22, 80, '', { fontFamily: 'sans-serif', fontSize: '12px', color: '#fff' }).setOrigin(0.5);
+    this.elixirBtn.on('pointerdown', () => {
+      if (this.game_scene.scene.isActive('Game')) this.game_scene.useElixir();
+    });
   }
 
   update() {
@@ -36,6 +44,10 @@ export default class UIScene extends Phaser.Scene {
     if (!gs || !gs.caster) return;
     const pct = Phaser.Math.Clamp(gs.caster.hp / gs.caster.maxHp, 0, 1);
     this.hpFill.width = this.hpMaxW * pct;
+    if (this.elixirCount) {
+      this.elixirCount.setText(`x${(gs.inventory && gs.inventory.elixir) || 0}`);
+      this.elixirBtn.setStrokeStyle(2, gs.damageBuffRemaining > 0 ? 0xffd54f : COLORS.fireball);
+    }
 
     for (const b of this.buttons) {
       b.cdArc.clear();

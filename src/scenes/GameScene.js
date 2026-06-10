@@ -9,11 +9,15 @@ import { applyDamage } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { difficultyMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
+import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
+import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
 import Boss from '../objects/Boss.js';
+
+const ITEM = Object.fromEntries(SHOP_ITEMS.map((i) => [i.key, i]));
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -27,6 +31,7 @@ export default class GameScene extends Phaser.Scene {
 
     const save = new SaveSystem(window.localStorage).load();
     this.mult = difficultyMultiplier(save);
+    this.inventory = { potion: 0, elixir: 0, phoenix: 0, ...(save.inventory || {}) };
   }
 
   create() {
@@ -40,6 +45,8 @@ export default class GameScene extends Phaser.Scene {
     this.enemies = this.physics.add.group();
 
     this.cooldowns = {}; // ms remaining per skill key
+    this.damageBuffRemaining = 0; // ms of elixir buff left
+    this.damageBuffMult = 1;
     this.boss = null;
     this.bossMechanics = null;   // set in Phase 3
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
@@ -51,12 +58,14 @@ export default class GameScene extends Phaser.Scene {
 
     this.setupCollisions();
 
+    this.startedAt = null; // captured on the first update tick (scene clock is 0 in create)
+    const startCombat = () => { this.beginPhase(); };
     const intro = this.level.dialogue && this.level.dialogue.onEnter;
     if (intro && intro.length) {
       this.scene.pause();
-      this.scene.launch('Dialogue', { lines: intro, onDone: () => { this.scene.resume(); this.beginPhase(); } });
+      this.scene.launch('Dialogue', { lines: intro, onDone: () => { this.scene.resume(); startCombat(); } });
     } else {
-      this.beginPhase();
+      startCombat();
     }
   }
 
@@ -167,8 +176,16 @@ export default class GameScene extends Phaser.Scene {
     const r = applyDamage({ hp: this.caster.hp }, amount);
     this.caster.hp = r.hp;
     if (r.dead) {
+      if (this.consumeItem('phoenix')) {
+        this.caster.hp = Math.round(this.caster.maxHp * ITEM.phoenix.revivePct);
+        return;
+      }
       this.scene.stop('UI');
       this.scene.start('Game', { regionId: this.regionId, levelIndex: this.levelIndex, stats: this.stats });
+      return;
+    }
+    if (this.caster.hp / this.caster.maxHp < ITEM.potion.threshold && this.consumeItem('potion')) {
+      this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.caster.maxHp * ITEM.potion.healPct);
     }
   }
 
@@ -200,9 +217,12 @@ export default class GameScene extends Phaser.Scene {
 
   finishLevel() {
     this.physics.pause();
+    const clearMs = this.startedAt !== null ? this.time.now - this.startedAt : 0;
+    const gold = goldReward(this.level, this.mult, clearMs);
     const save = new SaveSystem(window.localStorage);
     let state = save.load();
     state = grantClear(state, this.region, this.levelIndex);
+    state.gold = (state.gold || 0) + gold;
     save.write(state);
 
     const isEnding = this.regionId === 'castle' && this.levelIndex === this.region.levels.length - 1;
@@ -210,7 +230,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.scene.stop('UI');
     this.scene.launch('Dialogue', {
-      lines: [{ speaker: 'Narrador', text: `Nivel superado. +${reward} punto(s) de habilidad.` }],
+      lines: [{ speaker: 'Narrador', text: `Nivel superado. +${reward} punto(s) de habilidad, +${gold} oro.` }],
       onDone: () => {
         if (isEnding) this.scene.start('Map');
         else this.scene.start('Branch', { regionId: this.regionId });
@@ -218,8 +238,30 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  useElixir() {
+    if (!this.consumeItem('elixir')) return;
+    this.damageBuffRemaining = ITEM.elixir.durationMs;
+    this.damageBuffMult = ITEM.elixir.dmgMult;
+  }
+
+  // Current outgoing-damage multiplier (1 unless an elixir buff is active).
+  dmgMult() {
+    return this.damageBuffRemaining > 0 ? this.damageBuffMult : 1;
+  }
+
+  // Decrement an owned consumable and persist immediately (spent items stay spent).
+  consumeItem(key) {
+    if ((this.inventory[key] || 0) <= 0) return false;
+    this.inventory[key] -= 1;
+    const save = new SaveSystem(window.localStorage);
+    const s = save.load();
+    s.inventory = { ...s.inventory, [key]: this.inventory[key] };
+    save.write(s);
+    return true;
+  }
+
   fireOrb(target) {
-    this.orbs.fire(TEX.orb, this.caster.x, this.caster.y, target.x, target.y, 420, this.stats.basicDamage, 0);
+    this.orbs.fire(TEX.orb, this.caster.x, this.caster.y, target.x, target.y, 420, this.stats.basicDamage * this.dmgMult(), 0);
   }
 
   fireArrow(enemy) {
@@ -244,7 +286,7 @@ export default class GameScene extends Phaser.Scene {
   cast_fireball() {
     const target = this.caster.nearestEnemy(this.liveEnemies());
     if (!target) return false;
-    const orb = this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage, this.stats.fireballRadius);
+    const orb = this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage * this.dmgMult(), this.stats.fireballRadius);
     if (orb && this.stats.burnDamage > 0) { orb.burnDps = this.stats.burnDamage; orb.burnMs = this.stats.burnDuration; }
     return true;
   }
@@ -256,7 +298,7 @@ export default class GameScene extends Phaser.Scene {
     if (!idx.length) return false;
     const points = [{ x: this.caster.x, y: this.caster.y }];
     for (const i of idx) points.push({ x: live[i].x, y: live[i].y });
-    for (const i of idx) this.hitEnemy(live[i], this.stats.lightningDamage);
+    for (const i of idx) this.hitEnemy(live[i], this.stats.lightningDamage * this.dmgMult());
     this.drawZap(points);
     return true;
   }
@@ -264,7 +306,7 @@ export default class GameScene extends Phaser.Scene {
   cast_poison() {
     this.spawnZone({
       x: this.caster.x, y: this.caster.y, radius: this.stats.poisonRadius,
-      duration: this.stats.poisonDuration, enemyDps: this.stats.poisonDamage,
+      duration: this.stats.poisonDuration, enemyDps: this.stats.poisonDamage * this.dmgMult(),
       casterHeal: this.stats.poisonHeal, color: COLORS.poison,
     });
     return true;
@@ -299,7 +341,9 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    if (this.startedAt === null) this.startedAt = time; // valid game time on the first active frame
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
+    if (this.damageBuffRemaining > 0) this.damageBuffRemaining -= delta;
     if (this.stats.healthRegen > 0 && this.caster.hp > 0) {
       this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
     }

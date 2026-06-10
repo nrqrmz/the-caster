@@ -11,57 +11,63 @@ function memStorage(seed) {
   };
 }
 
-test('fresh default has v2 shape', () => {
+test('fresh default has v3 shape', () => {
   const s = new SaveSystem(memStorage()).load();
   assert.equal(s.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 2);
-  assert.equal(s.skillPoints, 0);
-  assert.deepEqual(s.purchasedNodes, []);
-  assert.deepEqual(s.unlockedSkills, []);
+  assert.equal(SAVE_VERSION, 3);
+  assert.equal(s.gold, 0);
+  assert.deepEqual(s.inventory, { potion: 0, elixir: 0, phoenix: 0 });
+  assert.equal(s.respecCount, 0);
   assert.deepEqual(s.elements, []);
-  assert.deepEqual(s.regionProgress, {});
-  assert.equal('currentScenario' in s, false);
 });
 
-test('save then load round-trips v2 state', () => {
+test('round-trips v3 state', () => {
   const storage = memStorage();
   const save = new SaveSystem(storage);
   const s = save.load();
-  s.skillPoints = 5;
-  s.elements.push('fire');
-  s.regionProgress.fire = { cleared: 3 };
+  s.gold = 250; s.inventory.potion = 2; s.respecCount = 1;
   save.write(s);
   const r = new SaveSystem(storage).load();
-  assert.equal(r.skillPoints, 5);
-  assert.deepEqual(r.elements, ['fire']);
-  assert.deepEqual(r.regionProgress.fire, { cleared: 3 });
+  assert.equal(r.gold, 250);
+  assert.equal(r.inventory.potion, 2);
+  assert.equal(r.respecCount, 1);
 });
 
-test('migrates a v1 save: keeps points/nodes/skills, derives elements from unlockedTemples', () => {
-  const v1 = {
-    version: 1, skillPoints: 7, purchasedNodes: ['basic_dmg_1'],
-    unlockedSkills: ['fireball'], unlockedTemples: ['fire'], currentScenario: 'scenario1',
+test('migrates a v2 save: keeps progression, adds gold/inventory/respecCount at 0', () => {
+  const v2 = {
+    version: 2, skillPoints: 4, purchasedNodes: ['dmg1'],
+    unlockedSkills: ['fireball'], elements: ['fire'], regionProgress: { fire: { cleared: 3 } },
   };
-  const s = new SaveSystem(memStorage(v1)).load();
-  assert.equal(s.version, 2);
-  assert.equal(s.skillPoints, 7);
-  assert.deepEqual(s.purchasedNodes, ['basic_dmg_1']);
-  assert.deepEqual(s.unlockedSkills, ['fireball']);
+  const s = new SaveSystem(memStorage(v2)).load();
+  assert.equal(s.version, 3);
+  assert.equal(s.skillPoints, 4);
   assert.deepEqual(s.elements, ['fire']);
-  assert.deepEqual(s.regionProgress, {});
-  assert.equal('currentScenario' in s, false);
+  assert.deepEqual(s.regionProgress, { fire: { cleared: 3 } });
+  assert.equal(s.gold, 0);
+  assert.deepEqual(s.inventory, { potion: 0, elixir: 0, phoenix: 0 });
+  assert.equal(s.respecCount, 0);
+});
+
+test('migrates a v1 save all the way to v3', () => {
+  const v1 = { version: 1, skillPoints: 7, purchasedNodes: [], unlockedSkills: ['fireball'], unlockedTemples: ['fire'], currentScenario: 'scenario1' };
+  const s = new SaveSystem(memStorage(v1)).load();
+  assert.equal(s.version, 3);
+  assert.equal(s.skillPoints, 7);
+  assert.deepEqual(s.elements, ['fire']);
+  assert.equal(s.gold, 0);
+  assert.equal(s.respecCount, 0);
 });
 
 test('unknown version resets to fresh default', () => {
-  const s = new SaveSystem(memStorage({ version: 999, skillPoints: 50 })).load();
+  const s = new SaveSystem(memStorage({ version: 999 })).load();
   assert.equal(s.version, SAVE_VERSION);
-  assert.equal(s.skillPoints, 0);
+  assert.equal(s.gold, 0);
 });
 
 test('reset clears stored state', () => {
   const storage = memStorage();
   const save = new SaveSystem(storage);
-  const s = save.load(); s.skillPoints = 9; save.write(s);
+  const s = save.load(); s.gold = 99; save.write(s);
   save.reset();
-  assert.equal(save.load().skillPoints, 0);
+  assert.equal(save.load().gold, 0);
 });
