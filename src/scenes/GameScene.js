@@ -52,6 +52,7 @@ export default class GameScene extends Phaser.Scene {
     this.boss = null;
     this.bossMechanics = null;   // set in Phase 3
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
+    this.telegraphGfx = this.add.graphics().setDepth(1400);
     this.casterBurnRemaining = 0;
     this.casterBurnDps = 0;
     this.scene.launch('UI', { gameScene: this });
@@ -332,6 +333,16 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  drawTelegraph(enemy, step) {
+    const g = this.telegraphGfx;
+    g.lineStyle(2, 0xffffff, 0.9);
+    if (step.do === 'lobAoe') {
+      g.strokeCircle(this.caster.x, this.caster.y, step.radius ?? 60); // ground marker where it lands
+    } else {
+      g.strokeCircle(enemy.x, enemy.y, (enemy.def.radius || 20) + 16);  // wind-up ring on the boss
+    }
+  }
+
   steerHomingShots(delta) {
     const turn = 0.006 * delta; // rad per frame budget; gentle so it's dodgeable
     this.enemyShots.group.children.iterate((p) => {
@@ -429,10 +440,12 @@ export default class GameScene extends Phaser.Scene {
     this.caster.moveBy(this.joystick.vector);
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
+    this.telegraphGfx.clear();
     for (const e of liveEnemies) {
       const intent = e.think(delta, this.caster);
       e.setVelocity(intent.velocity.x, intent.velocity.y);
       for (const att of intent.fires) this.executeAttack(e, att);
+      if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.steerHomingShots(delta);
