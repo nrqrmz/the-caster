@@ -45,6 +45,8 @@ export default class GameScene extends Phaser.Scene {
     this.enemies = this.physics.add.group();
 
     this.cooldowns = {}; // ms remaining per skill key
+    this.damageBuffRemaining = 0; // ms of elixir buff left
+    this.damageBuffMult = 1;
     this.boss = null;
     this.bossMechanics = null;   // set in Phase 3
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
@@ -235,6 +237,17 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  useElixir() {
+    if (!this.consumeItem('elixir')) return;
+    this.damageBuffRemaining = ITEM.elixir.durationMs;
+    this.damageBuffMult = ITEM.elixir.dmgMult;
+  }
+
+  // Current outgoing-damage multiplier (1 unless an elixir buff is active).
+  dmgMult() {
+    return this.damageBuffRemaining > 0 ? this.damageBuffMult : 1;
+  }
+
   // Decrement an owned consumable and persist immediately (spent items stay spent).
   consumeItem(key) {
     if ((this.inventory[key] || 0) <= 0) return false;
@@ -247,7 +260,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   fireOrb(target) {
-    this.orbs.fire(TEX.orb, this.caster.x, this.caster.y, target.x, target.y, 420, this.stats.basicDamage, 0);
+    this.orbs.fire(TEX.orb, this.caster.x, this.caster.y, target.x, target.y, 420, this.stats.basicDamage * this.dmgMult(), 0);
   }
 
   fireArrow(enemy) {
@@ -272,7 +285,7 @@ export default class GameScene extends Phaser.Scene {
   cast_fireball() {
     const target = this.caster.nearestEnemy(this.liveEnemies());
     if (!target) return false;
-    const orb = this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage, this.stats.fireballRadius);
+    const orb = this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage * this.dmgMult(), this.stats.fireballRadius);
     if (orb && this.stats.burnDamage > 0) { orb.burnDps = this.stats.burnDamage; orb.burnMs = this.stats.burnDuration; }
     return true;
   }
@@ -284,7 +297,7 @@ export default class GameScene extends Phaser.Scene {
     if (!idx.length) return false;
     const points = [{ x: this.caster.x, y: this.caster.y }];
     for (const i of idx) points.push({ x: live[i].x, y: live[i].y });
-    for (const i of idx) this.hitEnemy(live[i], this.stats.lightningDamage);
+    for (const i of idx) this.hitEnemy(live[i], this.stats.lightningDamage * this.dmgMult());
     this.drawZap(points);
     return true;
   }
@@ -292,7 +305,7 @@ export default class GameScene extends Phaser.Scene {
   cast_poison() {
     this.spawnZone({
       x: this.caster.x, y: this.caster.y, radius: this.stats.poisonRadius,
-      duration: this.stats.poisonDuration, enemyDps: this.stats.poisonDamage,
+      duration: this.stats.poisonDuration, enemyDps: this.stats.poisonDamage * this.dmgMult(),
       casterHeal: this.stats.poisonHeal, color: COLORS.poison,
     });
     return true;
@@ -328,6 +341,7 @@ export default class GameScene extends Phaser.Scene {
 
   update(time, delta) {
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
+    if (this.damageBuffRemaining > 0) this.damageBuffRemaining -= delta;
     if (this.stats.healthRegen > 0 && this.caster.hp > 0) {
       this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
     }
