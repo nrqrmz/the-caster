@@ -19,6 +19,7 @@ export class ProjectilePool {
     p.burnDps = 0;             // reset; only fireball sets this after fire()
     p.burnMs = 0;
     p.homing = false;
+    p.homingLife = 0;          // reset; only homing enemy shots set this after fire()
     const angle = Phaser.Math.Angle.Between(x, y, targetX, targetY);
     p.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
     return p;

@@ -1,7 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG } from '../config.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
-import { CONCURRENCY_CAP, ENEMY_SHOT_POOL } from '../data/tuning.js';
+import { CONCURRENCY_CAP, ENEMY_SHOT_POOL, HOMING_TTL_MS } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
@@ -193,15 +193,13 @@ export default class GameScene extends Phaser.Scene {
     return e;
   }
 
-  // Enemies spawn just off-screen and walk in; once on-screen they must not be able
-  // to wander or flee back out. An escaped enemy never dies (orbs cull off-screen),
-  // so the wave's `countActive === 0` clear condition would never fire — trapping the
-  // player in the level forever. Latch `_entered` on first arrival, then clamp.
+  // No enemy may ever leave the play area — for ANY reason. An escaped enemy never
+  // dies (the player's orbs cull off-screen), so the wave's `countActive === 0` clear
+  // condition would never fire and the player would be trapped. A `flee`/`kite` enemy
+  // that spawns just off-screen and immediately moves away would never "enter", so we
+  // clamp EVERY enemy to the bounds every frame (no entered-latch). Enemies spawned
+  // just outside snap to the edge on their first frame — a negligible visual change.
   containEnemy(e) {
-    if (!e._entered) {
-      if (e.x >= 0 && e.x <= GAME_WIDTH && e.y >= 0 && e.y <= GAME_HEIGHT) e._entered = true;
-      return;
-    }
     e.x = Phaser.Math.Clamp(e.x, 0, GAME_WIDTH);
     e.y = Phaser.Math.Clamp(e.y, 0, GAME_HEIGHT);
   }
@@ -391,7 +389,7 @@ export default class GameScene extends Phaser.Scene {
       const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
       if (!shot) continue;
       shot.setTint(COLORS.fireball); // enemy shots read clearly distinct from the player's cyan orbs
-      if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; }
+      if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; shot.homingLife = HOMING_TTL_MS; }
       if (burn) { shot.burnDps = burn.dps ?? 6; shot.burnMs = burn.ms ?? 2000; }
     }
   }
@@ -410,6 +408,8 @@ export default class GameScene extends Phaser.Scene {
     const turn = 0.006 * delta; // rad per frame budget; gentle so it's dodgeable
     this.enemyShots.group.children.iterate((p) => {
       if (!p || !p.active || !p.homing) return true;
+      p.homingLife -= delta;
+      if (p.homingLife <= 0) { this.enemyShots.despawn(p); return true; } // expired: stop chasing
       const desired = Phaser.Math.Angle.Between(p.x, p.y, this.caster.x, this.caster.y);
       const current = Math.atan2(p.body.velocity.y, p.body.velocity.x);
       const next = Phaser.Math.Angle.RotateTo(current, desired, turn);

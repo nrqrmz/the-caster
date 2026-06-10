@@ -11,6 +11,10 @@ export const CONCURRENCY_CAP = 16;
 // Enemy projectile pool size (Fire is projectile-dense).
 export const ENEMY_SHOT_POOL = 400;
 
+// Homing shots curve toward the player; without a lifespan they'd chase forever and
+// become impossible to dodge. They expire (return to the pool) after this many ms.
+export const HOMING_TTL_MS = 2600;
+
 export function baseDifficulty(levelIndex) {
   if (levelIndex < 0) return BASE_CURVE[0];
   if (levelIndex >= BASE_CURVE.length) return BASE_CURVE[BASE_CURVE.length - 1];
