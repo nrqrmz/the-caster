@@ -12,7 +12,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier } from '../systems/EnemyBrain.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
@@ -266,7 +266,22 @@ export default class GameScene extends Phaser.Scene {
   }
 
   executeAttack(enemy, att) {
-    if (att.type === 'melee') return; // contact damage handled by the caster/enemies overlap
+    if (att.type === 'melee') return; // contact damage via the caster/enemies overlap
+    if (att.type === 'lobAoe') {
+      // Telegraphed fire pool dropped on the caster's current position.
+      this.spawnZone({
+        x: this.caster.x, y: this.caster.y,
+        radius: att.radius ?? 60, duration: att.duration ?? 3000,
+        casterDps: att.dps ?? 18, color: COLORS.fireball,
+      });
+      return;
+    }
+    if (att.type === 'summon') {
+      const def = ENEMY_TYPES[att.spawnType];
+      if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
+      return;
+    }
+    const burn = findModifier(enemy.def, 'onHitBurn');
     const projs = buildProjectiles(att, {
       self: { x: enemy.x, y: enemy.y },
       target: { x: this.caster.x, y: this.caster.y },
@@ -275,7 +290,11 @@ export default class GameScene extends Phaser.Scene {
     for (const p of projs) {
       const tx = enemy.x + Math.cos(p.angle) * 50;
       const ty = enemy.y + Math.sin(p.angle) * 50;
-      this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
+      const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
+      if (!shot) continue;
+      shot.setTint(COLORS.fireball); // enemy shots read clearly distinct from the player's cyan orbs
+      if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; }
+      if (burn) { shot.burnDps = burn.dps ?? 6; shot.burnMs = burn.ms ?? 2000; }
     }
   }
 
