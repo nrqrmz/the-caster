@@ -6,6 +6,8 @@
 function angleBetween(ax, ay, bx, by) { return Math.atan2(by - ay, bx - ax); }
 function distance(ax, ay, bx, by) { return Math.hypot(bx - ax, by - ay); }
 
+const DEFAULT_BURST_GAP = 120; // ms, ~2 frames at 60fps
+
 // --- Movement library ---------------------------------------------------------
 // Each returns a desired velocity {x,y}.
 // args: { self, target, speed, dt, params, state }  (params = def.movement, state mutable)
@@ -107,21 +109,37 @@ export function computeMovement(def, state, ctx) {
 
 // --- Attack sequencer ---------------------------------------------------------
 // Advances one attack's runtime timer. Returns {} | { telegraph: true } | { fire: true }.
-// rt is mutable per-attack state: { remaining, mode, tele }.
+// rt is mutable per-attack state: { remaining, mode, tele, burstLeft, burstTimer }.
 export function stepAttack(att, rt, dt) {
+  // Mid-burst: emit the queued shots spaced by burstGap.
+  if (rt.burstLeft > 0) {
+    rt.burstTimer -= dt;
+    if (rt.burstTimer <= 0) {
+      rt.burstLeft -= 1;
+      rt.burstTimer = att.burstGap ?? DEFAULT_BURST_GAP;
+      return { fire: true };
+    }
+    return {};
+  }
   const every = att.every ?? 1000;
   if (rt.mode === 'telegraph') {
     rt.tele -= dt;
-    if (rt.tele <= 0) { rt.mode = 'cooldown'; rt.remaining = every; return { fire: true }; }
+    if (rt.tele <= 0) { rt.mode = 'cooldown'; rt.remaining = every; return startBurstOrFire(att, rt); }
     return { telegraph: true };
   }
   rt.remaining = (rt.remaining === undefined ? every : rt.remaining) - dt;
   if (rt.remaining <= 0) {
     if (att.telegraph > 0) { rt.mode = 'telegraph'; rt.tele = att.telegraph; return { telegraph: true }; }
     rt.remaining = every;
-    return { fire: true };
+    return startBurstOrFire(att, rt);
   }
   return {};
+}
+
+// On a fire trigger, queue the remaining burst shots (if any) and fire the first.
+function startBurstOrFire(att, rt) {
+  if (att.burst > 1) { rt.burstLeft = att.burst - 1; rt.burstTimer = att.burstGap ?? DEFAULT_BURST_GAP; }
+  return { fire: true };
 }
 
 // --- Projectile builder -------------------------------------------------------
@@ -144,7 +162,22 @@ export function buildProjectiles(att, ctx) {
   } else if (att.type === 'nova') {
     const n = att.count ?? 10;
     for (let i = 0; i < n; i++) out.push({ angle: (Math.PI * 2 * i) / n, speed, damage });
+  } else if (att.type === 'shootHoming') {
+    out.push({ angle: base, speed, damage, homing: true });
+  } else if (att.type === 'shootBurst') {
+    out.push({ angle: base, speed, damage });
   }
   // melee and not-yet-implemented types produce no projectiles.
   return out;
+}
+
+// --- Modifier lookup ----------------------------------------------------------
+// Modifiers live on def.modifiers as strings ('explodesOnDeath') or objects
+// ({ type: 'onHitBurn', dps, ms }). Returns the (normalized) entry or null.
+export function findModifier(def, type) {
+  for (const m of (def && def.modifiers) || []) {
+    if (typeof m === 'string') { if (m === type) return { type }; }
+    else if (m && m.type === type) return { ...m };
+  }
+  return null;
 }

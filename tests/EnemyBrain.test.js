@@ -63,6 +63,7 @@ test('every movement type returns a finite velocity vector', () => {
 });
 
 import { stepAttack, buildProjectiles } from '../src/systems/EnemyBrain.js';
+import { findModifier } from '../src/systems/EnemyBrain.js';
 
 test('stepAttack with no telegraph fires once the cooldown elapses', () => {
   const att = { type: 'shootStraight', every: 1000 };
@@ -117,4 +118,38 @@ test('buildProjectiles returns nothing for a melee attack', () => {
   const projs = buildProjectiles({ type: 'melee' },
     { self: { x: 0, y: 0 }, target: { x: 100, y: 0 } });
   assert.equal(projs.length, 0);
+});
+
+test('shootBurst fires `burst` times spaced by burstGap, then returns to cooldown', () => {
+  const att = { type: 'shootBurst', every: 1000, burst: 3, burstGap: 100 };
+  const rt = {};
+  assert.deepEqual(stepAttack(att, rt, 1000), { fire: true });
+  assert.deepEqual(stepAttack(att, rt, 100), { fire: true });
+  assert.deepEqual(stepAttack(att, rt, 100), { fire: true });
+  assert.deepEqual(stepAttack(att, rt, 100), {});
+});
+
+test('buildProjectiles shootHoming makes one homing shot toward the target', () => {
+  const projs = buildProjectiles({ type: 'shootHoming', speed: 120, damage: 9 },
+    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 } });
+  assert.equal(projs.length, 1);
+  assert.equal(projs[0].homing, true);
+  assert.ok(Math.abs(projs[0].angle - 0) < 1e-6);
+  assert.equal(projs[0].speed, 120);
+});
+
+test('buildProjectiles shootBurst builds one straight shot per fire call', () => {
+  const projs = buildProjectiles({ type: 'shootBurst', speed: 300 },
+    { self: { x: 0, y: 0 }, target: { x: 0, y: 100 }, damage: 7 });
+  assert.equal(projs.length, 1);
+  assert.ok(Math.abs(projs[0].angle - Math.PI / 2) < 1e-6);
+  assert.equal(projs[0].damage, 7);
+});
+
+test('findModifier returns the entry (normalizing string form) or null', () => {
+  const def = { modifiers: ['explodesOnDeath', { type: 'onHitBurn', dps: 6, ms: 2000 }] };
+  assert.deepEqual(findModifier(def, 'explodesOnDeath'), { type: 'explodesOnDeath' });
+  assert.deepEqual(findModifier(def, 'onHitBurn'), { type: 'onHitBurn', dps: 6, ms: 2000 });
+  assert.equal(findModifier(def, 'shielded'), null);
+  assert.equal(findModifier({}, 'shielded'), null);
 });
