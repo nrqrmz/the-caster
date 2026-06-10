@@ -18,6 +18,9 @@ export default class MapScene extends Phaser.Scene {
     this.add.text(GAME_WIDTH / 2, 86, `Elementos dominados: ${(save.elements || []).length}/4`, {
       fontFamily: 'sans-serif', fontSize: '16px', color: '#ffd54f',
     }).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2, 112, `Oro: ${save.gold || 0}`, {
+      fontFamily: 'sans-serif', fontSize: '15px', color: '#ffd54f',
+    }).setOrigin(0.5);
 
     // Four element portals in a 2×2 grid.
     REGION_ORDER.forEach((id, i) => {
@@ -35,13 +38,20 @@ export default class MapScene extends Phaser.Scene {
       () => this.scene.start('Branch', { regionId: CASTLE_ID }),
       castleOpen ? null : 'Requiere los 4 elementos');
 
-    // Skill tree access.
-    const st = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 60, 220, 50, 0x4fc3f7, 0.2)
+    // Skill tree + shop access.
+    const st = this.add.rectangle(GAME_WIDTH / 2 - 110, GAME_HEIGHT - 60, 200, 50, 0x4fc3f7, 0.2)
       .setStrokeStyle(2, 0x4fc3f7).setInteractive();
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 60, `🌳 Árbol  (${save.skillPoints} pts)`, {
-      fontFamily: 'sans-serif', fontSize: '18px', color: '#fff',
+    this.add.text(GAME_WIDTH / 2 - 110, GAME_HEIGHT - 60, `🌳 Árbol (${save.skillPoints})`, {
+      fontFamily: 'sans-serif', fontSize: '16px', color: '#fff',
     }).setOrigin(0.5);
     st.on('pointerdown', () => this.scene.start('SkillTree'));
+
+    const sh = this.add.rectangle(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 60, 200, 50, 0xffd54f, 0.15)
+      .setStrokeStyle(2, 0xffd54f).setInteractive();
+    this.add.text(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 60, '🛒 Tienda', {
+      fontFamily: 'sans-serif', fontSize: '16px', color: '#fff',
+    }).setOrigin(0.5);
+    sh.on('pointerdown', () => this.scene.start('Shop'));
   }
 
   portal(x, y, name, icon, complete, enabled, onTap, lockNote) {
