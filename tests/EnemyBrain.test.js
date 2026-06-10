@@ -61,3 +61,60 @@ test('every movement type returns a finite velocity vector', () => {
     assert.ok(Number.isFinite(v.x) && Number.isFinite(v.y), `${type} produced NaN`);
   }
 });
+
+import { stepAttack, buildProjectiles } from '../src/systems/EnemyBrain.js';
+
+test('stepAttack with no telegraph fires once the cooldown elapses', () => {
+  const att = { type: 'shootStraight', every: 1000 };
+  const rt = {};
+  assert.deepEqual(stepAttack(att, rt, 400), {});
+  assert.deepEqual(stepAttack(att, rt, 400), {});
+  assert.deepEqual(stepAttack(att, rt, 400), { fire: true });
+  assert.deepEqual(stepAttack(att, rt, 400), {});
+});
+
+test('stepAttack telegraphs first, then fires after the telegraph window', () => {
+  const att = { type: 'shootStraight', every: 1000, telegraph: 300 };
+  const rt = {};
+  assert.deepEqual(stepAttack(att, rt, 1000), { telegraph: true });
+  assert.deepEqual(stepAttack(att, rt, 100), { telegraph: true });
+  assert.deepEqual(stepAttack(att, rt, 250), { fire: true });
+});
+
+test('buildProjectiles shootStraight makes one shot aimed at the target', () => {
+  const projs = buildProjectiles({ type: 'shootStraight', speed: 200, damage: 5 },
+    { self: { x: 0, y: 0 }, target: { x: 0, y: 100 } });
+  assert.equal(projs.length, 1);
+  assert.ok(Math.abs(projs[0].angle - Math.PI / 2) < 1e-6);
+  assert.equal(projs[0].speed, 200);
+  assert.equal(projs[0].damage, 5);
+});
+
+test('buildProjectiles shootSpread fans `count` shots across the arc', () => {
+  const projs = buildProjectiles({ type: 'shootSpread', count: 3, arc: 90 },
+    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 } });
+  assert.equal(projs.length, 3);
+  const arc = (90 * Math.PI) / 180;
+  assert.ok(Math.abs(projs[0].angle - (-arc / 2)) < 1e-6);
+  assert.ok(Math.abs(projs[1].angle - 0) < 1e-6);
+  assert.ok(Math.abs(projs[2].angle - (arc / 2)) < 1e-6);
+});
+
+test('buildProjectiles nova spreads `count` shots evenly around the circle', () => {
+  const projs = buildProjectiles({ type: 'nova', count: 8 },
+    { self: { x: 0, y: 0 }, target: { x: 1, y: 0 } });
+  assert.equal(projs.length, 8);
+  assert.ok(Math.abs(projs[1].angle - (Math.PI * 2) / 8) < 1e-6);
+});
+
+test('buildProjectiles damage falls back to ctx.damage when the attack omits it', () => {
+  const projs = buildProjectiles({ type: 'shootStraight' },
+    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 }, damage: 14 });
+  assert.equal(projs[0].damage, 14);
+});
+
+test('buildProjectiles returns nothing for a melee attack', () => {
+  const projs = buildProjectiles({ type: 'melee' },
+    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 } });
+  assert.equal(projs.length, 0);
+});

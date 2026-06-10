@@ -104,3 +104,47 @@ export function computeMovement(def, state, ctx) {
   const fn = MOVEMENTS[type] || MOVEMENTS.chase;
   return fn({ ...ctx, params: def.movement, state });
 }
+
+// --- Attack sequencer ---------------------------------------------------------
+// Advances one attack's runtime timer. Returns {} | { telegraph: true } | { fire: true }.
+// rt is mutable per-attack state: { remaining, mode, tele }.
+export function stepAttack(att, rt, dt) {
+  const every = att.every ?? 1000;
+  if (rt.mode === 'telegraph') {
+    rt.tele -= dt;
+    if (rt.tele <= 0) { rt.mode = 'cooldown'; rt.remaining = every; return { fire: true }; }
+    return { telegraph: true };
+  }
+  rt.remaining = (rt.remaining === undefined ? every : rt.remaining) - dt;
+  if (rt.remaining <= 0) {
+    if (att.telegraph > 0) { rt.mode = 'telegraph'; rt.tele = att.telegraph; return { telegraph: true }; }
+    rt.remaining = every;
+    return { fire: true };
+  }
+  return {};
+}
+
+// --- Projectile builder -------------------------------------------------------
+// Turns a fired attack into projectile specs {angle, speed, damage}.
+// ctx = { self, target, damage? }  (damage = fallback when the attack omits one)
+export function buildProjectiles(att, ctx) {
+  const { self, target } = ctx;
+  const base = angleBetween(self.x, self.y, target.x, target.y);
+  const speed = att.speed ?? 240;
+  const damage = att.damage ?? ctx.damage ?? 8;
+  const out = [];
+  if (att.type === 'shootStraight') {
+    out.push({ angle: base, speed, damage });
+  } else if (att.type === 'shootSpread') {
+    const n = att.count ?? 3;
+    const arc = ((att.arc ?? 30) * Math.PI) / 180;
+    const start = base - arc / 2;
+    const step = n > 1 ? arc / (n - 1) : 0;
+    for (let i = 0; i < n; i++) out.push({ angle: start + step * i, speed, damage });
+  } else if (att.type === 'nova') {
+    const n = att.count ?? 10;
+    for (let i = 0; i < n; i++) out.push({ angle: (Math.PI * 2 * i) / n, speed, damage });
+  }
+  // melee and not-yet-implemented types produce no projectiles.
+  return out;
+}
