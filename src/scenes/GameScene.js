@@ -432,6 +432,7 @@ export default class GameScene extends Phaser.Scene {
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     if (this.bossMechanics) this.bossMechanics.update(delta);
     this.updateZones(delta);
+    this.updateAuras(delta);
     this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     if (this.boss && this.boss.active) this.boss.drawBar();
   }
@@ -477,6 +478,30 @@ export default class GameScene extends Phaser.Scene {
       z.gfx.destroy();
       return false;
     });
+  }
+
+  updateAuras(delta) {
+    const dt = delta / 1000;
+    const live = this.enemies.getChildren().filter((e) => e.active);
+    for (const e of live) {
+      const heal = findModifier(e.def, 'healAllies');
+      if (heal) {
+        const r = heal.radius ?? 120; const hps = heal.hps ?? 8;
+        for (const o of live) {
+          if (o === e || o.hp >= o.maxHp) continue;
+          if (Phaser.Math.Distance.Between(e.x, e.y, o.x, o.y) <= r) {
+            o.hp = Math.min(o.maxHp, o.hp + hps * dt);
+          }
+        }
+      }
+      const aura = findModifier(e.def, 'auraDamage');
+      if (aura) {
+        const r = aura.radius ?? 40;
+        if (Phaser.Math.Distance.Between(e.x, e.y, this.caster.x, this.caster.y) <= r) {
+          this.damageCaster((aura.dps ?? 10) * dt);
+        }
+      }
+    }
   }
 
   applyCasterBurn(dps, ms) {
