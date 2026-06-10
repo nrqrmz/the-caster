@@ -156,12 +156,34 @@ export default class GameScene extends Phaser.Scene {
   }
 
   hitEnemy(enemy, damage) {
-    const r = applyDamage({ hp: enemy.hp }, damage);
+    const shield = findModifier(enemy.def, 'shielded');
+    const dmg = shield ? damage * (1 - (shield.reduce ?? 0.5)) : damage;
+    const r = applyDamage({ hp: enemy.hp }, dmg);
     enemy.hp = r.hp;
-    if (r.dead) {
-      if (enemy === this.boss) this.boss = null;
-      enemy.destroy();
-      this.checkPhaseCleared();
+    if (!r.dead) return;
+    if (findModifier(enemy.def, 'reviveOnce') && !enemy._revived) {
+      enemy._revived = true;
+      enemy.hp = Math.round(enemy.maxHp * 0.4);
+      return;
+    }
+    this.onEnemyDeath(enemy);
+    if (enemy === this.boss) this.boss = null;
+    enemy.destroy();
+    this.checkPhaseCleared();
+  }
+
+  onEnemyDeath(enemy) {
+    const boom = findModifier(enemy.def, 'explodesOnDeath');
+    if (!boom) return;
+    const n = boom.count ?? 8;
+    const speed = boom.speed ?? 200;
+    const dmg = boom.damage ?? Math.round(enemy.def.damage * 0.8);
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n;
+      const tx = enemy.x + Math.cos(a) * 50;
+      const ty = enemy.y + Math.sin(a) * 50;
+      const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
+      if (shot) shot.setTint(COLORS.fireball);
     }
   }
 
