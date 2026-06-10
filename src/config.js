@@ -2,6 +2,9 @@
 export const GAME_WIDTH = 480;
 export const GAME_HEIGHT = 854;
 
+// Debug helpers (oculta el botón de borrar guardado en release con poner false).
+export const DEBUG = true;
+
 // Geometric-art palette. Swapped for sprites later without touching logic.
 export const COLORS = {
   bg: 0x1a1224,
