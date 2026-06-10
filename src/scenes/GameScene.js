@@ -7,7 +7,7 @@ import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
 import { applyDamage } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
-import { difficultyMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
+import { levelMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
@@ -31,7 +31,7 @@ export default class GameScene extends Phaser.Scene {
     this.stats = data.stats || { ...BASE_STATS };
 
     const save = new SaveSystem(window.localStorage).load();
-    this.mult = difficultyMultiplier(save);
+    this.mult = levelMultiplier(save, this.levelIndex);
     this.inventory = { potion: 0, elixir: 0, phoenix: 0, ...(save.inventory || {}) };
   }
 
