@@ -36,3 +36,9 @@ export function getStats(save) {
   }
   return stats;
 }
+
+// A branch is available when it has no element, or when its element is mastered.
+export function isBranchUnlocked(save, branch) {
+  if (!branch.element) return true;
+  return ((save && save.elements) || []).includes(branch.element);
+}

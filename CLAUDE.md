@@ -47,7 +47,7 @@ When adding logic, push the decision-making (damage math, phase transitions, pur
 Content is declarative in `src/data/` and consumed by scenes:
 - `regions.js` — the campaign: `REGIONS` keyed by id (`fire`/`water`/`air`/`earth`/`castle`), built by `makeBranch`/`makeCastle`. A region has `element`, `grantsSkill`, and an array of `levels`. A level is built by `makeLevel` (`data/levelBuilder.js`) from a `kind` preset (`basic`/`intermediate`/`pretemple`/`temple`) into an ordered `phases` array. `REGION_ORDER`, `CASTLE_ID`, `REQUIRED_ELEMENTS` drive the map and gating.
 - `enemies.js` — enemy defs keyed by type, with `behavior: 'chase' | 'ranged'`. `Enemy.updateBehavior` branches on `def.behavior`.
-- `skilltree.js` — nodes with `cost`, `requires` (prereq node ids), and `effect: { stat, add }` (`add` may be negative, e.g. faster `shotRate`). `SKILL_TREE_ORDER` controls UI layout.
+- `skilltree.js` — `SKILL_TREE` nodes (`cost`, `requires` prereq ids, `effect: { stat, add }`; `add` may be negative, e.g. faster `shotRate`) plus `SKILL_BRANCHES` (tabs → tracks → ordered node ids) that drives the tabbed skill-tree UI and elemental gating (`isBranchUnlocked`).
 - `stats.js` — `BASE_STATS` (time fields in ms; lower is better) and `STAT_FLOORS` (clamps so reductions can't break the game).
 
 ### Scene flow

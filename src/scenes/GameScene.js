@@ -64,6 +64,7 @@ export default class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.orbs.group, this.enemies, (orb, enemy) => {
       if (!orb.active || !enemy.active) return;
       this.hitEnemy(enemy, orb.damage);
+      if (orb.burnDps > 0 && enemy.active) enemy.applyBurn(orb.burnDps, orb.burnMs);
       if (orb.aoeRadius > 0) this.explode(orb, enemy);
       this.orbs.despawn(orb);
     });
@@ -156,7 +157,10 @@ export default class GameScene extends Phaser.Scene {
       if (Phaser.Math.Distance.Between(orb.x, orb.y, e.x, e.y) <= orb.aoeRadius) targets.push(e);
       return true;
     });
-    for (const e of targets) this.hitEnemy(e, orb.damage);
+    for (const e of targets) {
+      if (orb.burnDps > 0) e.applyBurn(orb.burnDps, orb.burnMs);
+      this.hitEnemy(e, orb.damage);
+    }
   }
 
   damageCaster(amount) {
@@ -240,7 +244,8 @@ export default class GameScene extends Phaser.Scene {
   cast_fireball() {
     const target = this.caster.nearestEnemy(this.liveEnemies());
     if (!target) return false;
-    this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage, 70);
+    const orb = this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage, this.stats.fireballRadius);
+    if (orb && this.stats.burnDamage > 0) { orb.burnDps = this.stats.burnDamage; orb.burnMs = this.stats.burnDuration; }
     return true;
   }
 
@@ -295,6 +300,10 @@ export default class GameScene extends Phaser.Scene {
 
   update(time, delta) {
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
+    if (this.stats.healthRegen > 0 && this.caster.hp > 0) {
+      this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
+    }
+    this.updateBurns(delta);
     this.caster.moveBy(this.joystick.vector);
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
@@ -348,5 +357,15 @@ export default class GameScene extends Phaser.Scene {
       z.gfx.destroy();
       return false;
     });
+  }
+
+  updateBurns(delta) {
+    const dt = delta / 1000;
+    // Snapshot (filter returns a new array) so a kill mid-loop can't skip an enemy.
+    const live = this.enemies.getChildren().filter((e) => e.active && e.burnRemaining > 0);
+    for (const e of live) {
+      e.burnRemaining -= delta;
+      this.hitEnemy(e, e.burnDps * dt);
+    }
   }
 }
