@@ -5,10 +5,14 @@ export const BASE_STATS = {
   shotRate: 500,
   moveSpeed: 200,
   maxHealth: 100,
+  healthRegen: 0,       // hp/sec passive regen (skill-tree)
 
-  // Fireball (already playable)
+  // Fireball
   fireballDamage: 40,
   fireballCooldown: 4000,
+  fireballRadius: 70,   // explosion radius (skill-tree "Área" track)
+  burnDamage: 0,        // burn DoT/sec applied on fireball hit (0 = no burn until unlocked)
+  burnDuration: 2500,   // burn duration (ms)
 
   // Lightning (air): chain strike
   lightningDamage: 30,
@@ -17,17 +21,17 @@ export const BASE_STATS = {
   lightningJumpRadius: 150,
 
   // Poison (earth): heal-zone at the caster's feet
-  poisonDamage: 15,     // damage/sec to enemies inside
+  poisonDamage: 15,
   poisonCooldown: 7000,
   poisonDuration: 4000,
   poisonRadius: 70,
-  poisonHeal: 8,        // hp/sec healed to the caster while inside
+  poisonHeal: 8,
 
   // Freeze (water): frost burst on nearest enemy
   freezeCooldown: 8000,
   freezeRadius: 90,
   freezeDuration: 2500,
-  freezeSlowPct: 0.5,   // elite speed multiplier while slowed
+  freezeSlowPct: 0.5,
 };
 
 // Hard floors so reductions can't break the game.
@@ -37,4 +41,5 @@ export const STAT_FLOORS = {
   lightningCooldown: 1500,
   poisonCooldown: 2000,
   freezeCooldown: 2500,
+  freezeSlowPct: 0.2,
 };
