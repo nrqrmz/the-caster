@@ -17,7 +17,7 @@ function buildPhase(type, spec, waveCursor) {
     return { type: 'wave', spawnDelay: w.spawnDelay, spawns: w.spawns };
   }
   if (type === 'miniboss')  return { type: 'miniboss', enemyDef: spec.miniboss, minions: spec.minions };
-  if (type === 'levelBoss') return { type: 'levelBoss', enemyDef: spec.levelBoss, minions: spec.minions };
+  if (type === 'levelBoss') return { type: 'levelBoss', enemyDef: spec.levelBoss, bosses: spec.bosses, triangle: spec.triangle, minions: spec.minions };
   if (type === 'templeBoss') {
     return { type: 'templeBoss', enemyDef: spec.templeBoss, mechanics: spec.templeBoss?.mechanics, minions: spec.minions };
   }

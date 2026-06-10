@@ -33,16 +33,17 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   // Returns an intent for GameScene to execute: { velocity, fires }.
   // `fires` is the list of attack defs whose timer fired this frame.
   think(delta, target) {
-    if (!this.active) return { velocity: { x: 0, y: 0 }, fires: [], telegraphs: [] };
+    if (!this.active) return { velocity: { x: 0, y: 0 }, fires: [], telegraphs: [], enters: [] };
 
     if (this.freezeRemaining > 0) this.freezeRemaining -= delta;
     if (this.slowRemaining > 0) this.slowRemaining -= delta;
 
-    if (this.freezeRemaining > 0) return { velocity: { x: 0, y: 0 }, fires: [], telegraphs: [] };
+    if (this.freezeRemaining > 0) return { velocity: { x: 0, y: 0 }, fires: [], telegraphs: [], enters: [] };
 
     const slow = this.slowRemaining > 0 ? this.slowFactor : 1;
     const fires = [];
     const telegraphs = [];
+    const enters = [];
     let movementDef = this.def;
     let speedMul = 1;
 
@@ -52,6 +53,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       speedMul = out.speedMul;
       if (out.telegraph) telegraphs.push(out.telegraph);
       if (out.fire) fires.push({ ...out.fire, type: out.fire.do }); // step.do → attack.type (type wins)
+      if (out.enter && out.enter.length) for (const h of out.enter) enters.push(h);
     } else {
       const attacks = this.def.attacks || [];
       for (let i = 0; i < attacks.length; i++) {
@@ -63,10 +65,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     const ctx = {
       self: { x: this.x, y: this.y },
       target: { x: target.x, y: target.y },
-      speed: this.def.speed * slow * speedMul,
+      speed: this.def.speed * slow * speedMul * (this.enrageMul ?? 1),
       dt: delta,
     };
     const velocity = computeMovement(movementDef, this.brainState.move, ctx);
-    return { velocity, fires, telegraphs };
+    return { velocity, fires, telegraphs, enters };
   }
 }

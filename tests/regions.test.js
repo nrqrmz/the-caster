@@ -8,7 +8,14 @@ test('four elemental regions each have 7 levels ending in a temple', () => {
     assert.equal(r.levels.length, 7, `${id} level count`);
     assert.equal(r.levels[6].kind, 'temple', `${id} last is temple`);
     assert.equal(r.levels[6].phases[0].type, 'templeBoss');
-    assert.ok(Array.isArray(r.levels[6].phases[0].mechanics), `${id} temple boss has mechanics`);
+    // Fire's temple boss is Ignatius, a phases-driven sequencer boss with no
+    // BossMechanics; the other three keep elemental `mechanics`.
+    if (id === 'fire') {
+      assert.equal(r.levels[6].phases[0].enemyDef.key, 'ignatius', 'fire temple boss is Ignatius');
+      assert.ok(Array.isArray(r.levels[6].phases[0].enemyDef.phases), 'Ignatius runs the sequencer');
+    } else {
+      assert.ok(Array.isArray(r.levels[6].phases[0].mechanics), `${id} temple boss has mechanics`);
+    }
     assert.equal(r.element, id);
     assert.ok(r.grantsSkill, `${id} grants a skill`);
   }
@@ -41,7 +48,10 @@ test('all temple/level/mini bosses are flagged elite', () => {
   for (const id of REGION_ORDER) {
     for (const level of REGIONS[id].levels) {
       for (const phase of level.phases) {
-        if (phase.type === 'miniboss' || phase.type === 'levelBoss' || phase.type === 'templeBoss') {
+        if (phase.type === 'levelBoss' && Array.isArray(phase.bosses)) {
+          // Fire's level-6 boss is the trio (SISTERS_TRIO) instead of a single enemyDef.
+          for (const def of phase.bosses) assert.equal(def.elite, true, `${level.id} trio member elite`);
+        } else if (phase.type === 'miniboss' || phase.type === 'levelBoss' || phase.type === 'templeBoss') {
           assert.equal(phase.enemyDef.elite, true, `${level.id} ${phase.type} elite`);
         }
       }

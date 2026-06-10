@@ -14,6 +14,7 @@ import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
 import { buildProjectiles, findModifier } from '../systems/EnemyBrain.js';
+import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
@@ -50,9 +51,12 @@ export default class GameScene extends Phaser.Scene {
     this.damageBuffRemaining = 0; // ms of elixir buff left
     this.damageBuffMult = 1;
     this.boss = null;
+    this.bosses = [];
     this.bossMechanics = null;   // set in Phase 3
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
     this.telegraphGfx = this.add.graphics().setDepth(1400);
+    this.triangleGfx = this.add.graphics().setDepth(6);
+    this.triangle = null; // { mode, t } while a trio fight is active
     this.casterBurnRemaining = 0;
     this.casterBurnDps = 0;
     this.scene.launch('UI', { gameScene: this });
@@ -103,7 +107,12 @@ export default class GameScene extends Phaser.Scene {
       this.spawnWave(phase);
     } else if (phase.type === 'miniboss' || phase.type === 'levelBoss') {
       this.spawnMinions(phase.minions);
-      this.spawnBoss(phase.enemyDef);
+      if (phase.bosses && phase.bosses.length) {
+        this.spawnBosses(phase.bosses);
+        if (phase.triangle) this.startTriangle();
+      } else {
+        this.spawnBoss(phase.enemyDef);
+      }
     } else if (phase.type === 'templeBoss') {
       this.spawnMinions(phase.minions);
       this.spawnBoss(phase.enemyDef);
@@ -114,6 +123,23 @@ export default class GameScene extends Phaser.Scene {
   spawnBoss(def) {
     this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.mult));
     this.enemies.add(this.boss);
+    this.bosses = [this.boss];
+    return this.boss;
+  }
+
+  spawnBosses(defs) {
+    this.boss = null; // multi-boss encounters don't use the single BossMechanics path
+    this.bosses = defs.map((def, i) => {
+      const x = GAME_WIDTH * (i + 1) / (defs.length + 1);
+      const b = new Boss(this, x, -40, scaleEnemyDef(def, this.mult));
+      this.enemies.add(b);
+      return b;
+    });
+    return this.bosses;
+  }
+
+  startTriangle() {
+    this.triangle = { mode: 'cooldown', t: 2500 };
   }
 
   attachBossMechanics(mechanics) {
@@ -176,6 +202,11 @@ export default class GameScene extends Phaser.Scene {
     }
     this.onEnemyDeath(enemy);
     if (enemy === this.boss) this.boss = null;
+    if (this.bosses.includes(enemy)) {
+      const wasGroup = this.bosses.length >= 2;
+      this.bosses = this.bosses.filter((b) => b !== enemy);
+      if (wasGroup) for (const b of this.bosses) b.enrageMul = (b.enrageMul || 1) * 1.25; // "¡Hermana!"
+    }
     enemy.destroy();
     this.checkPhaseCleared();
   }
@@ -234,6 +265,8 @@ export default class GameScene extends Phaser.Scene {
     } else if (phase === 'miniboss' || phase === 'levelBoss' || phase === 'templeBoss') {
       if (this.enemies.countActive(true) === 0) {
         this.bossMechanics = null;
+        this.triangle = null;
+        if (this.triangleGfx) this.triangleGfx.clear();
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
         if (dialogue && dialogue.length) {
           this.scene.pause();
@@ -446,15 +479,17 @@ export default class GameScene extends Phaser.Scene {
       e.setVelocity(intent.velocity.x, intent.velocity.y);
       for (const att of intent.fires) this.executeAttack(e, att);
       if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
+      if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.steerHomingShots(delta);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     if (this.bossMechanics) this.bossMechanics.update(delta);
     this.updateZones(delta);
+    this.updateTriangle(delta);
     this.updateAuras(delta);
     this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
-    if (this.boss && this.boss.active) this.boss.drawBar();
+    for (const b of this.bosses) if (b && b.active) b.drawBar();
   }
 
   // Generic ground zone. opts: { x, y, radius, duration, color?, casterDps?, casterHeal?, enemyDps? }
@@ -469,9 +504,49 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  runBossHook(boss, hook) {
+    if (hook === 'spawnLavaFloor') {
+      const lanes = 4;
+      for (let i = 0; i < lanes; i++) {
+        const x = GAME_WIDTH * (i + 0.5) / lanes;
+        this.spawnZone({ x, y: GAME_HEIGHT / 2, radius: 46, duration: 6000, casterDps: 20, color: COLORS.fireball });
+      }
+    }
+  }
+
   // Back-compat wrapper used by BossMechanics' poisonFloor (damages the caster).
   spawnPoisonZone(x, y, radius, dps, duration) {
     this.spawnZone({ x, y, radius, duration, casterDps: dps, color: COLORS.poison });
+  }
+
+  updateTriangle(delta) {
+    if (!this.triangle) return;
+    const live = this.bosses.filter((b) => b && b.active);
+    this.triangleGfx.clear();
+    if (live.length < 2) return; // degraded to nothing; the sisters' own kits remain
+    const edges = hazardEdges(live.map((b) => ({ x: b.x, y: b.y })));
+
+    const t = this.triangle;
+    t.t -= delta;
+    if (t.mode === 'cooldown') {
+      if (t.t <= 0) { t.mode = 'telegraph'; t.t = 1200; }
+    } else if (t.mode === 'telegraph') {
+      this.drawTriangleEdges(edges, 0xffffff, 0.5, 2);   // warning outline
+      if (t.t <= 0) { t.mode = 'active'; t.t = 2600; }
+    } else if (t.mode === 'active') {
+      this.drawTriangleEdges(edges, 0xff5722, 0.95, 6);  // lava
+      if (onAnyEdge(this.caster.x, this.caster.y, edges, 14)) {
+        this.damageCaster(28 * (delta / 1000));
+        this.applyCasterBurn(8, 1200); // crossing the lava self-inflicts burn
+      }
+      if (t.t <= 0) { t.mode = 'cooldown'; t.t = 2500; }
+    }
+  }
+
+  drawTriangleEdges(edges, color, alpha, width) {
+    const g = this.triangleGfx;
+    g.lineStyle(width, color, alpha);
+    for (const [a, b] of edges) { g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.strokePath(); }
   }
 
   updateZones(delta) {
