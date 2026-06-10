@@ -2,28 +2,35 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { REGIONS, REGION_ORDER, REQUIRED_ELEMENTS } from '../src/data/regions.js';
 
-test('four elemental regions each have 7 levels ending in a temple', () => {
+test('four elemental regions each have 8 levels ending in a temple', () => {
   for (const id of REGION_ORDER) {
     const r = REGIONS[id];
-    assert.equal(r.levels.length, 7, `${id} level count`);
-    assert.equal(r.levels[6].kind, 'temple', `${id} last is temple`);
-    assert.equal(r.levels[6].phases[0].type, 'templeBoss');
-    // Fire's temple boss is Ignatius, a phases-driven sequencer boss with no
-    // BossMechanics; the other three keep elemental `mechanics`.
+    assert.equal(r.levels.length, 8, `${id} level count`);
+    assert.equal(r.levels[7].kind, 'temple', `${id} last is temple`);
+    assert.equal(r.levels[7].phases[0].type, 'templeBoss');
     if (id === 'fire') {
-      assert.equal(r.levels[6].phases[0].enemyDef.key, 'ignatius', 'fire temple boss is Ignatius');
-      assert.ok(Array.isArray(r.levels[6].phases[0].enemyDef.phases), 'Ignatius runs the sequencer');
+      assert.equal(r.levels[7].phases[0].enemyDef.key, 'ignatius', 'fire temple boss is Ignatius');
+      assert.ok(Array.isArray(r.levels[7].phases[0].enemyDef.phases), 'Ignatius runs the sequencer');
     } else {
-      assert.ok(Array.isArray(r.levels[6].phases[0].mechanics), `${id} temple boss has mechanics`);
+      assert.ok(Array.isArray(r.levels[7].phases[0].mechanics), `${id} temple boss has mechanics`);
     }
     assert.equal(r.element, id);
     assert.ok(r.grantsSkill, `${id} grants a skill`);
   }
 });
 
-test('standard branch kind layout is 3 basic, 2 intermediate, 1 pretemple, 1 temple', () => {
+test('standard branch layout: 3 basic, 3 intermediate, 1 levelboss, 1 temple', () => {
   const kinds = REGIONS.fire.levels.map((l) => l.kind);
-  assert.deepEqual(kinds, ['basic', 'basic', 'basic', 'intermediate', 'intermediate', 'pretemple', 'temple']);
+  assert.deepEqual(kinds, ['basic', 'basic', 'basic', 'intermediate', 'intermediate', 'intermediate', 'levelboss', 'temple']);
+});
+
+test('level 7 is a dedicated levelboss level; fire holds the sisters trio there', () => {
+  const lvl7 = REGIONS.fire.levels[6];
+  assert.equal(lvl7.kind, 'levelboss');
+  assert.deepEqual(lvl7.phases.map((p) => p.type), ['levelBoss']);
+  assert.ok(Array.isArray(lvl7.phases[0].bosses), 'fire level 7 is the trio (multi-boss)');
+  assert.equal(lvl7.phases[0].bosses.length, 3);
+  assert.equal(lvl7.phases[0].triangle, true);
 });
 
 test('castle is locked, has no element, and ends in the King reveal', () => {

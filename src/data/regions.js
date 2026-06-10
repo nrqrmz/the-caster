@@ -51,17 +51,20 @@ const MECHANICS = {
   earth: [{ type: 'poisonFloor', every: 3200, radius: 70, dps: 30, duration: 4000 }, { type: 'boulder', every: 2400, speed: 170, damage: 28 }],
 };
 
-// Build a standard elemental branch: 7 levels.
+// Build a standard elemental branch: 8 levels, one boss per level.
 function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, templeBoss = null }) {
-  const lvl6Boss = levelBosses ? { bosses: levelBosses, triangle: true } : { levelBoss: lb(650, 24) };
+  // nv7 is a dedicated levelboss level (boss only): the trio (multi-boss + lava
+  // triangle) when provided, else a single default level-boss blob.
+  const levelBossSpec = levelBosses ? { bosses: levelBosses, triangle: true } : { levelBoss: lb(650, 24) };
   const levels = [
     makeLevel(`${id}_1`, id, 'basic', { waves: basic(1), dialogue: { onEnter: intro } }),
     makeLevel(`${id}_2`, id, 'basic', { waves: basic(2) }),
     makeLevel(`${id}_3`, id, 'basic', { waves: basic(3) }),
     makeLevel(`${id}_4`, id, 'intermediate', { waves: inter(2), miniboss: minibosses[0] || mb(300, 18) }),
     makeLevel(`${id}_5`, id, 'intermediate', { waves: inter(3), miniboss: minibosses[1] || mb(360, 20) }),
-    makeLevel(`${id}_6`, id, 'pretemple', { waves: inter(4), miniboss: minibosses[2] || mb(380, 20), ...lvl6Boss }),
-    makeLevel(`${id}_7`, id, 'temple', {
+    makeLevel(`${id}_6`, id, 'intermediate', { waves: inter(4), miniboss: minibosses[2] || mb(380, 20) }),
+    makeLevel(`${id}_7`, id, 'levelboss', { ...levelBossSpec }),
+    makeLevel(`${id}_8`, id, 'temple', {
       templeBoss: templeBoss || tb(950, 26, MECHANICS[element]),
       minions: [{ type: 'villager', count: 4 }],
       dialogue: { onClear: mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'The Caster' : mageName, text })) },
