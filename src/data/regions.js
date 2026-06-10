@@ -3,7 +3,7 @@
 // geometric keys; temple/level bosses reuse TEX.miniboss / TEX.boss.
 import { TEX, COLORS } from '../config.js';
 import { makeLevel } from './levelBuilder.js';
-import { PYRA, VESTA, FAVILLA } from './bosses/fire.js';
+import { PYRA, VESTA, FAVILLA, SISTERS_TRIO, IGNATIUS } from './bosses/fire.js';
 
 const wave = (spawnDelay, spawns) => ({ spawnDelay, spawns });
 const ramp = (base, tier) => Math.round(base * (1 + 0.4 * (tier - 1)));
@@ -52,16 +52,17 @@ const MECHANICS = {
 };
 
 // Build a standard elemental branch: 7 levels.
-function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [] }) {
+function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, templeBoss = null }) {
+  const lvl6Boss = levelBosses ? { bosses: levelBosses, triangle: true } : { levelBoss: lb(650, 24) };
   const levels = [
     makeLevel(`${id}_1`, id, 'basic', { waves: basic(1), dialogue: { onEnter: intro } }),
     makeLevel(`${id}_2`, id, 'basic', { waves: basic(2) }),
     makeLevel(`${id}_3`, id, 'basic', { waves: basic(3) }),
     makeLevel(`${id}_4`, id, 'intermediate', { waves: inter(2), miniboss: minibosses[0] || mb(300, 18) }),
     makeLevel(`${id}_5`, id, 'intermediate', { waves: inter(3), miniboss: minibosses[1] || mb(360, 20) }),
-    makeLevel(`${id}_6`, id, 'pretemple', { waves: inter(4), miniboss: minibosses[2] || mb(380, 20), levelBoss: lb(650, 24) }),
+    makeLevel(`${id}_6`, id, 'pretemple', { waves: inter(4), miniboss: minibosses[2] || mb(380, 20), ...lvl6Boss }),
     makeLevel(`${id}_7`, id, 'temple', {
-      templeBoss: tb(950, 26, MECHANICS[element]),
+      templeBoss: templeBoss || tb(950, 26, MECHANICS[element]),
       minions: [{ type: 'villager', count: 4 }],
       dialogue: { onClear: mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'The Caster' : mageName, text })) },
     }),
@@ -98,6 +99,8 @@ export const REGIONS = {
     id: 'fire', element: 'fire', name: 'El Volcán', grantsSkill: 'fireball',
     basic: fireWaves, inter: fireInterWaves,
     minibosses: [PYRA, VESTA, FAVILLA],
+    levelBosses: SISTERS_TRIO,
+    templeBoss: IGNATIUS,
     intro: [
       { speaker: 'Narrador', text: 'Un amor prohibido entre una princesa y un hechicero fue castigado por el Consejo de Magos.' },
       { speaker: 'Narrador', text: 'Tu madre, exiliada. Tu padre, asesinado. Tú, la huérfana que descendió al volcán por venganza.' },

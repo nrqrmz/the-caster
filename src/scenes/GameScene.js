@@ -202,7 +202,7 @@ export default class GameScene extends Phaser.Scene {
     }
     this.onEnemyDeath(enemy);
     if (enemy === this.boss) this.boss = null;
-    if (this.bosses.length) {
+    if (this.bosses.includes(enemy)) {
       const wasGroup = this.bosses.length >= 2;
       this.bosses = this.bosses.filter((b) => b !== enemy);
       if (wasGroup) for (const b of this.bosses) b.enrageMul = (b.enrageMul || 1) * 1.25; // "¡Hermana!"
