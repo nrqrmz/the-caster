@@ -298,6 +298,19 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  steerHomingShots(delta) {
+    const turn = 0.006 * delta; // rad per frame budget; gentle so it's dodgeable
+    this.enemyShots.group.children.iterate((p) => {
+      if (!p || !p.active || !p.homing) return true;
+      const desired = Phaser.Math.Angle.Between(p.x, p.y, this.caster.x, this.caster.y);
+      const current = Math.atan2(p.body.velocity.y, p.body.velocity.x);
+      const next = Phaser.Math.Angle.RotateTo(current, desired, turn);
+      const s = p.homingSpeed || 120;
+      p.setVelocity(Math.cos(next) * s, Math.sin(next) * s);
+      return true;
+    });
+  }
+
   // Cast a skill by key (from UIScene). A cast only consumes its cooldown if it
   // actually fired (e.g. skills needing a target do nothing when none exist).
   tryCast(key) {
@@ -387,6 +400,7 @@ export default class GameScene extends Phaser.Scene {
       for (const att of intent.fires) this.executeAttack(e, att);
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
+    this.steerHomingShots(delta);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     if (this.bossMechanics) this.bossMechanics.update(delta);
     this.updateZones(delta);

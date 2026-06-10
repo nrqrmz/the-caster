@@ -18,6 +18,7 @@ export class ProjectilePool {
     p.aoeRadius = radius || 0; // > 0 means explode-on-impact (fireball)
     p.burnDps = 0;             // reset; only fireball sets this after fire()
     p.burnMs = 0;
+    p.homing = false;
     const angle = Phaser.Math.Angle.Between(x, y, targetX, targetY);
     p.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
     return p;
