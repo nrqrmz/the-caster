@@ -56,3 +56,35 @@ export const FAVILLA = {
     ] },
   ],
 };
+
+// Trio variant: the three sisters fought together (level-6 levelBoss). Attenuated
+// (less hp each, single phase) so three patterns at once stay readable. The lava
+// triangle forms between them (handled by GameScene + TriangleHazard).
+const trio = (def, hp) => ({ ...def, hp, phases: [def.phases[0]] });
+export const SISTERS_TRIO = [trio(PYRA, 280), trio(VESTA, 320), trio(FAVILLA, 300)];
+
+// Ignatius — el padre, mago de templo (nv7). Setpiece de 3 fases. Reusa el
+// secuenciador; las fases 2/3 rompen el suelo en lava (enter: spawnLavaFloor).
+// (El beam rotatorio de la fase 3 se aproxima con nova+lobAoe densos.)
+export const IGNATIUS = {
+  key: 'ignatius', tex: TEX.boss, color: COLORS.fireball, hp: 1300, speed: 55, damage: 22, radius: 30,
+  elite: true, movement: { type: 'kite', range: 220 },
+  modifiers: [{ type: 'onHitBurn', dps: 12, ms: 2500 }],
+  phases: [
+    { from: 1.0, sequence: [
+      { do: 'shootSpread', count: 6, arc: 90, speed: 240, damage: 14, telegraph: 320, dur: 700 },
+      { do: 'shootHoming', speed: 130, damage: 12, telegraph: 350, dur: 900 },
+      { do: 'wait', dur: 400 },
+    ] },
+    { from: 0.66, enter: ['spawnLavaFloor'], sequence: [
+      { do: 'nova', count: 12, speed: 220, damage: 13, telegraph: 350, dur: 700 },
+      { do: 'lobAoe', radius: 70, dps: 26, duration: 3500, telegraph: 450, dur: 800 },
+      { do: 'shootSpread', count: 8, arc: 120, speed: 250, damage: 14, telegraph: 300, dur: 700 },
+    ] },
+    { from: 0.33, speedMul: 1.35, enter: ['spawnLavaFloor'], sequence: [
+      { do: 'nova', count: 16, speed: 240, damage: 14, telegraph: 280, dur: 600 },
+      { do: 'shootHoming', speed: 150, damage: 13, telegraph: 250, dur: 600 },
+      { do: 'lobAoe', radius: 80, dps: 30, duration: 4000, telegraph: 380, dur: 700 },
+    ] },
+  ],
+};
