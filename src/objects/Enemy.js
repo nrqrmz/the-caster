@@ -8,6 +8,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.def = def;
     this.hp = def.hp;
     this.maxHp = def.hp;
+    if (def.color) this.setTint(def.color);
     this.freezeRemaining = 0; // ms immobilized
     this.slowRemaining = 0;   // ms slowed
     this.slowFactor = 1;      // speed multiplier while slowed
