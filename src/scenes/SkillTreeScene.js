@@ -2,6 +2,7 @@ import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config.js';
 import { SKILL_TREE, SKILL_BRANCHES } from '../data/skilltree.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { canPurchase, purchase, isBranchUnlocked } from '../systems/SkillTree.js';
+import { respecCost, canRespec, respec } from '../systems/Economy.js';
 
 export default class SkillTreeScene extends Phaser.Scene {
   constructor() { super('SkillTree'); }
@@ -37,8 +38,17 @@ export default class SkillTreeScene extends Phaser.Scene {
       this.tabObjs.push(bg);
     });
 
-    const cont = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 36, 200, 44, 0x4fc3f7, 0.25).setStrokeStyle(2, 0x4fc3f7).setInteractive();
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 36, 'Continuar', { fontFamily: 'sans-serif', fontSize: '18px', color: '#fff' }).setOrigin(0.5);
+    const rb = this.add.rectangle(GAME_WIDTH / 2 - 110, GAME_HEIGHT - 36, 200, 44, 0xd32f2f, 0.2).setStrokeStyle(2, 0xd32f2f).setInteractive();
+    this.respecLabel = this.add.text(GAME_WIDTH / 2 - 110, GAME_HEIGHT - 36, '', { fontFamily: 'sans-serif', fontSize: '15px', color: '#fff' }).setOrigin(0.5);
+    rb.on('pointerdown', () => {
+      if (!canRespec(this.state)) return;
+      this.state = respec(this.state);
+      this.save.write(this.state);
+      this.renderTab();
+    });
+
+    const cont = this.add.rectangle(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 36, 200, 44, 0x4fc3f7, 0.25).setStrokeStyle(2, 0x4fc3f7).setInteractive();
+    this.add.text(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 36, 'Continuar', { fontFamily: 'sans-serif', fontSize: '18px', color: '#fff' }).setOrigin(0.5);
     cont.on('pointerdown', () => this.scene.start('Map'));
 
     this.nodeLayer = this.add.container(0, 0);
@@ -48,6 +58,8 @@ export default class SkillTreeScene extends Phaser.Scene {
   renderTab() {
     this.nodeLayer.removeAll(true);
     this.pointsText.setText(`Puntos: ${this.state.skillPoints}`);
+    this.respecLabel.setText(`Reiniciar (${respecCost(this.state.respecCount)} oro)`);
+    this.respecLabel.setColor(canRespec(this.state) ? '#fff' : '#777');
     this.tabObjs.forEach((bg, i) => bg.setFillStyle(i === this.activeTab ? 0x2a1c3e : 0x1b1526));
 
     const tab = this.tabs[this.activeTab];
