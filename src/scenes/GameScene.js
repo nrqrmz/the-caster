@@ -51,6 +51,8 @@ export default class GameScene extends Phaser.Scene {
     this.boss = null;
     this.bossMechanics = null;   // set in Phase 3
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
+    this.casterBurnRemaining = 0;
+    this.casterBurnDps = 0;
     this.scene.launch('UI', { gameScene: this });
 
     this.runner = new WaveRunner(this.level);
@@ -81,10 +83,13 @@ export default class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.caster, this.enemies, (caster, enemy) => {
       if (!enemy.active) return;
       this.damageCaster(enemy.def.damage * 0.02 * 16);
+      const burn = findModifier(enemy.def, 'onHitBurn');
+      if (burn) this.applyCasterBurn(burn.dps ?? 6, burn.ms ?? 2000);
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
       this.damageCaster(shot.damage);
+      if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
       this.enemyShots.despawn(shot);
     });
   }
@@ -391,6 +396,7 @@ export default class GameScene extends Phaser.Scene {
       this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
     }
     this.updateBurns(delta);
+    this.updateCasterBurn(delta);
     this.caster.moveBy(this.joystick.vector);
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
@@ -449,6 +455,17 @@ export default class GameScene extends Phaser.Scene {
       z.gfx.destroy();
       return false;
     });
+  }
+
+  applyCasterBurn(dps, ms) {
+    this.casterBurnDps = Math.max(this.casterBurnDps, dps);
+    this.casterBurnRemaining = Math.max(this.casterBurnRemaining, ms);
+  }
+
+  updateCasterBurn(delta) {
+    if (this.casterBurnRemaining <= 0) { this.casterBurnDps = 0; return; }
+    this.casterBurnRemaining -= delta;
+    this.damageCaster(this.casterBurnDps * (delta / 1000));
   }
 
   updateBurns(delta) {
