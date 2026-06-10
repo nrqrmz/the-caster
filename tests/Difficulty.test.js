@@ -27,3 +27,21 @@ test('scaleEnemyDef scales hp and damage, never below base, and keeps other fiel
   const same = scaleEnemyDef(def, 1);
   assert.equal(same.hp, 20);
 });
+
+import { levelMultiplier } from '../src/systems/Difficulty.js';
+
+test('levelMultiplier at level 0 equals the power multiplier (base 1.0)', () => {
+  const save = { purchasedNodes: [], elements: [] };
+  assert.equal(levelMultiplier(save, 0), 1);
+});
+
+test('levelMultiplier rises with level depth for the same save', () => {
+  const save = { purchasedNodes: [], elements: [] };
+  assert.ok(levelMultiplier(save, 6) > levelMultiplier(save, 0));
+});
+
+test('levelMultiplier rises with player power at the same depth', () => {
+  const weak = { purchasedNodes: [], elements: [] };
+  const strong = { purchasedNodes: ['dmg1'], elements: ['fire'] };
+  assert.ok(levelMultiplier(strong, 3) > levelMultiplier(weak, 3));
+});

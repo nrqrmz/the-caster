@@ -1,8 +1,8 @@
 // A reusable physics group of projectiles. fire() activates one from the pool.
 export class ProjectilePool {
-  constructor(scene) {
+  constructor(scene, maxSize = 200) {
     this.scene = scene;
-    this.group = scene.physics.add.group({ maxSize: 200 });
+    this.group = scene.physics.add.group({ maxSize });
   }
 
   fire(texKey, x, y, targetX, targetY, speed, damage, radius) {
@@ -18,6 +18,7 @@ export class ProjectilePool {
     p.aoeRadius = radius || 0; // > 0 means explode-on-impact (fireball)
     p.burnDps = 0;             // reset; only fireball sets this after fire()
     p.burnMs = 0;
+    p.homing = false;
     const angle = Phaser.Math.Angle.Between(x, y, targetX, targetY);
     p.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
     return p;

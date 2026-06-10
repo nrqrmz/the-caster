@@ -1,18 +1,19 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX } from '../config.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
+import { CONCURRENCY_CAP, ENEMY_SHOT_POOL } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
 import { applyDamage } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
-import { difficultyMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
+import { levelMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier } from '../systems/EnemyBrain.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
@@ -31,7 +32,7 @@ export default class GameScene extends Phaser.Scene {
     this.stats = data.stats || { ...BASE_STATS };
 
     const save = new SaveSystem(window.localStorage).load();
-    this.mult = difficultyMultiplier(save);
+    this.mult = levelMultiplier(save, this.levelIndex);
     this.inventory = { potion: 0, elixir: 0, phoenix: 0, ...(save.inventory || {}) };
   }
 
@@ -42,7 +43,7 @@ export default class GameScene extends Phaser.Scene {
     this.caster = new Caster(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, this.stats);
     this.joystick = new VirtualJoystick(this);
     this.orbs = new ProjectilePool(this);
-    this.enemyShots = new ProjectilePool(this);
+    this.enemyShots = new ProjectilePool(this, ENEMY_SHOT_POOL);
     this.enemies = this.physics.add.group();
 
     this.cooldowns = {}; // ms remaining per skill key
@@ -51,6 +52,8 @@ export default class GameScene extends Phaser.Scene {
     this.boss = null;
     this.bossMechanics = null;   // set in Phase 3
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
+    this.casterBurnRemaining = 0;
+    this.casterBurnDps = 0;
     this.scene.launch('UI', { gameScene: this });
 
     this.runner = new WaveRunner(this.level);
@@ -81,10 +84,13 @@ export default class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.caster, this.enemies, (caster, enemy) => {
       if (!enemy.active) return;
       this.damageCaster(enemy.def.damage * 0.02 * 16);
+      const burn = findModifier(enemy.def, 'onHitBurn');
+      if (burn) this.applyCasterBurn(burn.dps ?? 6, burn.ms ?? 2000);
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
       this.damageCaster(shot.damage);
+      if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
       this.enemyShots.despawn(shot);
     });
   }
@@ -130,10 +136,16 @@ export default class GameScene extends Phaser.Scene {
     this.spawnQueue = queue;
     this.spawnEvent = this.time.addEvent({
       delay: phase.spawnDelay,
-      repeat: queue.length - 1,
+      loop: true,
       callback: () => {
+        if (this.enemies.countActive(true) >= CONCURRENCY_CAP) return; // hold; retry next tick
         const type = this.spawnQueue.shift();
         if (type) this.spawnEnemy(ENEMY_TYPES[type]);
+        if (this.spawnQueue.length === 0) {
+          this.spawnEvent.remove(false);
+          this.spawnEvent = null;
+          this.checkPhaseCleared();
+        }
       },
     });
   }
@@ -151,12 +163,34 @@ export default class GameScene extends Phaser.Scene {
   }
 
   hitEnemy(enemy, damage) {
-    const r = applyDamage({ hp: enemy.hp }, damage);
+    const shield = findModifier(enemy.def, 'shielded');
+    const dmg = shield ? damage * (1 - (shield.reduce ?? 0.5)) : damage;
+    const r = applyDamage({ hp: enemy.hp }, dmg);
     enemy.hp = r.hp;
-    if (r.dead) {
-      if (enemy === this.boss) this.boss = null;
-      enemy.destroy();
-      this.checkPhaseCleared();
+    if (!r.dead) return;
+    if (findModifier(enemy.def, 'reviveOnce') && !enemy._revived) {
+      enemy._revived = true;
+      enemy.hp = Math.round(enemy.maxHp * 0.4);
+      return;
+    }
+    this.onEnemyDeath(enemy);
+    if (enemy === this.boss) this.boss = null;
+    enemy.destroy();
+    this.checkPhaseCleared();
+  }
+
+  onEnemyDeath(enemy) {
+    const boom = findModifier(enemy.def, 'explodesOnDeath');
+    if (!boom) return;
+    const n = boom.count ?? 8;
+    const speed = boom.speed ?? 200;
+    const dmg = boom.damage ?? Math.round(enemy.def.damage * 0.8);
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n;
+      const tx = enemy.x + Math.cos(a) * 50;
+      const ty = enemy.y + Math.sin(a) * 50;
+      const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
+      if (shot) shot.setTint(COLORS.fireball);
     }
   }
 
@@ -194,7 +228,7 @@ export default class GameScene extends Phaser.Scene {
     const phase = this.runner.phase;
     if (phase === 'wave') {
       const alive = this.enemies.countActive(true);
-      const stillSpawning = this.spawnEvent && this.spawnEvent.getRepeatCount() > 0;
+      const stillSpawning = this.spawnEvent !== null && this.spawnEvent !== undefined;
       if (alive === 0 && !stillSpawning) { this.runner.onCleared(); this.beginPhase(); }
     } else if (phase === 'miniboss' || phase === 'levelBoss' || phase === 'templeBoss') {
       if (this.enemies.countActive(true) === 0) {
@@ -266,7 +300,22 @@ export default class GameScene extends Phaser.Scene {
   }
 
   executeAttack(enemy, att) {
-    if (att.type === 'melee') return; // contact damage handled by the caster/enemies overlap
+    if (att.type === 'melee') return; // contact damage via the caster/enemies overlap
+    if (att.type === 'lobAoe') {
+      // Telegraphed fire pool dropped on the caster's current position.
+      this.spawnZone({
+        x: this.caster.x, y: this.caster.y,
+        radius: att.radius ?? 60, duration: att.duration ?? 3000,
+        casterDps: att.dps ?? 18, color: COLORS.fireball,
+      });
+      return;
+    }
+    if (att.type === 'summon') {
+      const def = ENEMY_TYPES[att.spawnType];
+      if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
+      return;
+    }
+    const burn = findModifier(enemy.def, 'onHitBurn');
     const projs = buildProjectiles(att, {
       self: { x: enemy.x, y: enemy.y },
       target: { x: this.caster.x, y: this.caster.y },
@@ -275,8 +324,25 @@ export default class GameScene extends Phaser.Scene {
     for (const p of projs) {
       const tx = enemy.x + Math.cos(p.angle) * 50;
       const ty = enemy.y + Math.sin(p.angle) * 50;
-      this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
+      const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
+      if (!shot) continue;
+      shot.setTint(COLORS.fireball); // enemy shots read clearly distinct from the player's cyan orbs
+      if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; }
+      if (burn) { shot.burnDps = burn.dps ?? 6; shot.burnMs = burn.ms ?? 2000; }
     }
+  }
+
+  steerHomingShots(delta) {
+    const turn = 0.006 * delta; // rad per frame budget; gentle so it's dodgeable
+    this.enemyShots.group.children.iterate((p) => {
+      if (!p || !p.active || !p.homing) return true;
+      const desired = Phaser.Math.Angle.Between(p.x, p.y, this.caster.x, this.caster.y);
+      const current = Math.atan2(p.body.velocity.y, p.body.velocity.x);
+      const next = Phaser.Math.Angle.RotateTo(current, desired, turn);
+      const s = p.homingSpeed || 120;
+      p.setVelocity(Math.cos(next) * s, Math.sin(next) * s);
+      return true;
+    });
   }
 
   // Cast a skill by key (from UIScene). A cast only consumes its cooldown if it
@@ -359,6 +425,7 @@ export default class GameScene extends Phaser.Scene {
       this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
     }
     this.updateBurns(delta);
+    this.updateCasterBurn(delta);
     this.caster.moveBy(this.joystick.vector);
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
@@ -368,9 +435,11 @@ export default class GameScene extends Phaser.Scene {
       for (const att of intent.fires) this.executeAttack(e, att);
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
+    this.steerHomingShots(delta);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     if (this.bossMechanics) this.bossMechanics.update(delta);
     this.updateZones(delta);
+    this.updateAuras(delta);
     this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     if (this.boss && this.boss.active) this.boss.drawBar();
   }
@@ -416,6 +485,41 @@ export default class GameScene extends Phaser.Scene {
       z.gfx.destroy();
       return false;
     });
+  }
+
+  updateAuras(delta) {
+    const dt = delta / 1000;
+    const live = this.enemies.getChildren().filter((e) => e.active);
+    for (const e of live) {
+      const heal = findModifier(e.def, 'healAllies');
+      if (heal) {
+        const r = heal.radius ?? 120; const hps = heal.hps ?? 8;
+        for (const o of live) {
+          if (o === e || o.hp >= o.maxHp) continue;
+          if (Phaser.Math.Distance.Between(e.x, e.y, o.x, o.y) <= r) {
+            o.hp = Math.min(o.maxHp, o.hp + hps * dt);
+          }
+        }
+      }
+      const aura = findModifier(e.def, 'auraDamage');
+      if (aura) {
+        const r = aura.radius ?? 40;
+        if (Phaser.Math.Distance.Between(e.x, e.y, this.caster.x, this.caster.y) <= r) {
+          this.damageCaster((aura.dps ?? 10) * dt);
+        }
+      }
+    }
+  }
+
+  applyCasterBurn(dps, ms) {
+    this.casterBurnDps = Math.max(this.casterBurnDps, dps);
+    this.casterBurnRemaining = Math.max(this.casterBurnRemaining, ms);
+  }
+
+  updateCasterBurn(delta) {
+    if (this.casterBurnRemaining <= 0) { this.casterBurnDps = 0; return; }
+    this.casterBurnRemaining -= delta;
+    this.damageCaster(this.casterBurnDps * (delta / 1000));
   }
 
   updateBurns(delta) {

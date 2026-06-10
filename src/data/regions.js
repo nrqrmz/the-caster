@@ -23,6 +23,21 @@ function interWaves(tier) {
   ];
 }
 
+// Fire waves: denser, mostly ranged, with a melee rusher that forces movement.
+function fireWaves(tier) {
+  return [
+    wave(560, [{ type: 'acolito_brasa', count: ramp(3, tier) }, { type: 'iniciado_veloz', count: ramp(2, tier) }, { type: 'lanzabrasas', count: tier }]),
+    wave(520, [{ type: 'lanzabrasas', count: ramp(2, tier) }, { type: 'salamandra', count: ramp(2, tier) }, { type: 'larva_magma', count: tier }]),
+    wave(480, [{ type: 'piromante', count: tier + 1 }, { type: 'pirovidente', count: tier }, { type: 'espiritu_ceniza', count: ramp(2, tier) }]),
+  ];
+}
+function fireInterWaves(tier) {
+  return [
+    wave(500, [{ type: 'acolito_brasa', count: ramp(3, tier) }, { type: 'caballero_brasa', count: 1 }, { type: 'sacerdote_llama', count: 1 }, { type: 'can_lava', count: tier }]),
+    wave(440, [{ type: 'piromante', count: ramp(2, tier) }, { type: 'elemental_fuego', count: 1 }, { type: 'avispa_brasa', count: ramp(3, tier) }, { type: 'totem_pira', count: 1 }]),
+  ];
+}
+
 const mb = (hp, dmg) => ({ key: 'miniboss', tex: TEX.miniboss, color: COLORS.miniboss, hp, speed: 70, damage: dmg, radius: 22, behavior: 'chase', elite: true });
 const lb = (hp, dmg) => ({ key: 'levelboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 60, damage: dmg, radius: 28, behavior: 'chase', elite: true });
 const tb = (hp, dmg, mechanics) => ({ key: 'templeboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 55, damage: dmg, radius: 32, behavior: 'chase', elite: true, mechanics });
@@ -36,14 +51,14 @@ const MECHANICS = {
 };
 
 // Build a standard elemental branch: 7 levels.
-function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines }) {
+function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves }) {
   const levels = [
-    makeLevel(`${id}_1`, id, 'basic', { waves: basicWaves(1), dialogue: { onEnter: intro } }),
-    makeLevel(`${id}_2`, id, 'basic', { waves: basicWaves(2) }),
-    makeLevel(`${id}_3`, id, 'basic', { waves: basicWaves(3) }),
-    makeLevel(`${id}_4`, id, 'intermediate', { waves: interWaves(2), miniboss: mb(300, 18) }),
-    makeLevel(`${id}_5`, id, 'intermediate', { waves: interWaves(3), miniboss: mb(360, 20) }),
-    makeLevel(`${id}_6`, id, 'pretemple', { waves: interWaves(4), miniboss: mb(380, 20), levelBoss: lb(650, 24) }),
+    makeLevel(`${id}_1`, id, 'basic', { waves: basic(1), dialogue: { onEnter: intro } }),
+    makeLevel(`${id}_2`, id, 'basic', { waves: basic(2) }),
+    makeLevel(`${id}_3`, id, 'basic', { waves: basic(3) }),
+    makeLevel(`${id}_4`, id, 'intermediate', { waves: inter(2), miniboss: mb(300, 18) }),
+    makeLevel(`${id}_5`, id, 'intermediate', { waves: inter(3), miniboss: mb(360, 20) }),
+    makeLevel(`${id}_6`, id, 'pretemple', { waves: inter(4), miniboss: mb(380, 20), levelBoss: lb(650, 24) }),
     makeLevel(`${id}_7`, id, 'temple', {
       templeBoss: tb(950, 26, MECHANICS[element]),
       minions: [{ type: 'villager', count: 4 }],
@@ -80,6 +95,7 @@ function makeCastle() {
 export const REGIONS = {
   fire: makeBranch({
     id: 'fire', element: 'fire', name: 'El Volcán', grantsSkill: 'fireball',
+    basic: fireWaves, inter: fireInterWaves,
     intro: [
       { speaker: 'Narrador', text: 'Un amor prohibido entre una princesa y un hechicero fue castigado por el Consejo de Magos.' },
       { speaker: 'Narrador', text: 'Tu madre, exiliada. Tu padre, asesinado. Tú, la huérfana que descendió al volcán por venganza.' },

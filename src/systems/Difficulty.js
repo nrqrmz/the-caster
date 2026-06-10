@@ -1,6 +1,7 @@
 // src/systems/Difficulty.js
 // Pure power-based difficulty scaling. No Phaser.
 import { SKILL_TREE } from '../data/skilltree.js';
+import { baseDifficulty } from '../data/tuning.js';
 
 const PER_POINT = 0.04;    // each skill point spent
 const PER_ELEMENT = 0.15;  // each element mastered
@@ -16,6 +17,11 @@ export function difficultyMultiplier(save) {
   const spent = spentPoints(save || {});
   const elements = ((save && save.elements) || []).length;
   return 1 + spent * PER_POINT + elements * PER_ELEMENT;
+}
+
+// Absolute difficulty curve (by level depth) × player power.
+export function levelMultiplier(save, levelIndex) {
+  return baseDifficulty(levelIndex) * difficultyMultiplier(save);
 }
 
 // Returns a new def with hp/damage scaled (mult >= 1, so never below base).
