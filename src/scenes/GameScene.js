@@ -50,6 +50,7 @@ export default class GameScene extends Phaser.Scene {
     this.damageBuffRemaining = 0; // ms of elixir buff left
     this.damageBuffMult = 1;
     this.boss = null;
+    this.bosses = [];
     this.bossMechanics = null;   // set in Phase 3
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
     this.telegraphGfx = this.add.graphics().setDepth(1400);
@@ -103,7 +104,12 @@ export default class GameScene extends Phaser.Scene {
       this.spawnWave(phase);
     } else if (phase.type === 'miniboss' || phase.type === 'levelBoss') {
       this.spawnMinions(phase.minions);
-      this.spawnBoss(phase.enemyDef);
+      if (phase.bosses && phase.bosses.length) {
+        this.spawnBosses(phase.bosses);
+        if (phase.triangle) this.startTriangle();
+      } else {
+        this.spawnBoss(phase.enemyDef);
+      }
     } else if (phase.type === 'templeBoss') {
       this.spawnMinions(phase.minions);
       this.spawnBoss(phase.enemyDef);
@@ -114,7 +120,22 @@ export default class GameScene extends Phaser.Scene {
   spawnBoss(def) {
     this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.mult));
     this.enemies.add(this.boss);
+    this.bosses = [this.boss];
+    return this.boss;
   }
+
+  spawnBosses(defs) {
+    this.boss = null; // multi-boss encounters don't use the single BossMechanics path
+    this.bosses = defs.map((def, i) => {
+      const x = GAME_WIDTH * (i + 1) / (defs.length + 1);
+      const b = new Boss(this, x, -40, scaleEnemyDef(def, this.mult));
+      this.enemies.add(b);
+      return b;
+    });
+    return this.bosses;
+  }
+
+  startTriangle() { /* completed in a later task */ }
 
   attachBossMechanics(mechanics) {
     if (!mechanics || !this.boss) return;
@@ -176,6 +197,7 @@ export default class GameScene extends Phaser.Scene {
     }
     this.onEnemyDeath(enemy);
     if (enemy === this.boss) this.boss = null;
+    if (this.bosses.length) this.bosses = this.bosses.filter((b) => b !== enemy);
     enemy.destroy();
     this.checkPhaseCleared();
   }
@@ -454,7 +476,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateZones(delta);
     this.updateAuras(delta);
     this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
-    if (this.boss && this.boss.active) this.boss.drawBar();
+    for (const b of this.bosses) if (b && b.active) b.drawBar();
   }
 
   // Generic ground zone. opts: { x, y, radius, duration, color?, casterDps?, casterHeal?, enemyDps? }
