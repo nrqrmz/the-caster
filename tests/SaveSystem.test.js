@@ -71,3 +71,19 @@ test('reset clears stored state', () => {
   save.reset();
   assert.equal(save.load().gold, 0);
 });
+
+test('reset() removes the save key so the next load is fresh', () => {
+  const store = new Map();
+  const storage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, v),
+    removeItem: (k) => store.delete(k),
+  };
+  const sys = new SaveSystem(storage);
+  const s = sys.load();
+  s.skillPoints = 99;
+  sys.write(s);
+  sys.reset();
+  const reloaded = sys.load();
+  assert.equal(reloaded.skillPoints, 0);
+});

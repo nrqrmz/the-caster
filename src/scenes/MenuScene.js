@@ -1,4 +1,5 @@
-import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, DEBUG } from '../config.js';
+import { SaveSystem } from '../systems/SaveSystem.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -28,6 +29,21 @@ export default class MenuScene extends Phaser.Scene {
       }
       this.startCampaign();
     });
+
+    if (DEBUG) {
+      const wipe = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, '⟲ borrar guardado (debug)', {
+        fontFamily: 'sans-serif', fontSize: '14px', color: '#ef5350',
+      }).setOrigin(0.5).setInteractive();
+      wipe.on('pointerdown', () => {
+        if (wipe.getData('armed')) {
+          new SaveSystem(window.localStorage).reset();
+          this.scene.start('Boot');
+        } else {
+          wipe.setData('armed', true);
+          wipe.setText('⟲ ¿seguro? toca otra vez');
+        }
+      });
+    }
   }
 
   startCampaign() {
