@@ -50,3 +50,11 @@ test('respec is a no-op when gold is insufficient', () => {
   assert.equal(canRespec(save), false);
   assert.equal(respec(save), save); // same ref
 });
+
+test('levelboss levels earn pretemple-parity gold', () => {
+  const ms = 50000;
+  assert.equal(
+    goldReward({ kind: 'levelboss' }, 1, ms),
+    goldReward({ kind: 'pretemple' }, 1, ms),
+  );
+});

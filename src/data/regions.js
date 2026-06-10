@@ -16,7 +16,7 @@ function basicWaves(tier) {
     wave(600, [{ type: 'warrior', count: ramp(2, tier) }, { type: 'archer', count: tier }]),
   ];
 }
-// Two waves for an `intermediate`/`pretemple` level at depth `tier`.
+// Two waves for an `intermediate` or castle `pretemple` level at depth `tier`.
 function interWaves(tier) {
   return [
     wave(620, [{ type: 'villager', count: ramp(4, tier) }, { type: 'archer', count: tier + 1 }]),

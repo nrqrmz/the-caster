@@ -4,7 +4,7 @@ import { SaveSystem } from '../systems/SaveSystem.js';
 import { getStats } from '../systems/SkillTree.js';
 import { clearedCount, isLevelUnlocked } from '../systems/Campaign.js';
 
-const KIND_LABEL = { basic: 'Básico', intermediate: 'Intermedio', pretemple: 'Pre-templo', temple: 'Templo' };
+const KIND_LABEL = { basic: 'Básico', intermediate: 'Intermedio', pretemple: 'Pre-templo', levelboss: 'Jefe de Nivel', temple: 'Templo' };
 
 export default class BranchScene extends Phaser.Scene {
   constructor() { super('Branch'); }
