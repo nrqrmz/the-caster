@@ -12,6 +12,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
+import { buildProjectiles } from '../systems/EnemyBrain.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
@@ -264,8 +265,18 @@ export default class GameScene extends Phaser.Scene {
     this.orbs.fire(TEX.orb, this.caster.x, this.caster.y, target.x, target.y, 420, this.stats.basicDamage * this.dmgMult(), 0);
   }
 
-  fireArrow(enemy) {
-    this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, this.caster.x, this.caster.y, 260, enemy.def.damage, 0);
+  executeAttack(enemy, att) {
+    if (att.type === 'melee') return; // contact damage handled by the caster/enemies overlap
+    const projs = buildProjectiles(att, {
+      self: { x: enemy.x, y: enemy.y },
+      target: { x: this.caster.x, y: this.caster.y },
+      damage: enemy.def.damage,
+    });
+    for (const p of projs) {
+      const tx = enemy.x + Math.cos(p.angle) * 50;
+      const ty = enemy.y + Math.sin(p.angle) * 50;
+      this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
+    }
   }
 
   // Cast a skill by key (from UIScene). A cast only consumes its cooldown if it
@@ -351,7 +362,11 @@ export default class GameScene extends Phaser.Scene {
     this.caster.moveBy(this.joystick.vector);
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
-    for (const e of liveEnemies) e.updateBehavior(delta, this.caster, (en) => this.fireArrow(en));
+    for (const e of liveEnemies) {
+      const intent = e.think(delta, this.caster);
+      e.setVelocity(intent.velocity.x, intent.velocity.y);
+      for (const att of intent.fires) this.executeAttack(e, att);
+    }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     if (this.bossMechanics) this.bossMechanics.update(delta);
