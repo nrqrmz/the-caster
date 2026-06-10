@@ -56,7 +56,7 @@ test('all temple/level/mini bosses are flagged elite', () => {
     for (const level of REGIONS[id].levels) {
       for (const phase of level.phases) {
         if (phase.type === 'levelBoss' && Array.isArray(phase.bosses)) {
-          // Fire's level-6 boss is the trio (SISTERS_TRIO) instead of a single enemyDef.
+          // Fire's level-7 boss is the trio (SISTERS_TRIO) instead of a single enemyDef.
           for (const def of phase.bosses) assert.equal(def.elite, true, `${level.id} trio member elite`);
         } else if (phase.type === 'miniboss' || phase.type === 'levelBoss' || phase.type === 'templeBoss') {
           assert.equal(phase.enemyDef.elite, true, `${level.id} ${phase.type} elite`);

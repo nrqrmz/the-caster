@@ -17,3 +17,8 @@ test('caps are positive', () => {
   assert.ok(CONCURRENCY_CAP > 0);
   assert.ok(ENEMY_SHOT_POOL > 0);
 });
+
+test('base curve covers all 8 level depths and the temple scales above the level boss', () => {
+  assert.ok(BASE_CURVE.length >= 8, 'curve has an entry for each of the 8 levels');
+  assert.ok(baseDifficulty(7) > baseDifficulty(6), 'nv8 temple is harder than nv7 level boss');
+});

@@ -57,7 +57,7 @@ export const FAVILLA = {
   ],
 };
 
-// Trio variant: the three sisters fought together (level-6 levelBoss). Attenuated
+// Trio variant: the three sisters fought together (level-7 levelBoss). Attenuated
 // (less hp each, single phase) so three patterns at once stay readable. The lava
 // triangle forms between them (handled by GameScene + TriangleHazard).
 const trio = (def, hp) => ({ ...def, hp, phases: [def.phases[0]] });
