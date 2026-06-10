@@ -1,6 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX } from '../config.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
+import { CONCURRENCY_CAP, ENEMY_SHOT_POOL } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
@@ -42,7 +43,7 @@ export default class GameScene extends Phaser.Scene {
     this.caster = new Caster(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, this.stats);
     this.joystick = new VirtualJoystick(this);
     this.orbs = new ProjectilePool(this);
-    this.enemyShots = new ProjectilePool(this);
+    this.enemyShots = new ProjectilePool(this, ENEMY_SHOT_POOL);
     this.enemies = this.physics.add.group();
 
     this.cooldowns = {}; // ms remaining per skill key
@@ -135,10 +136,16 @@ export default class GameScene extends Phaser.Scene {
     this.spawnQueue = queue;
     this.spawnEvent = this.time.addEvent({
       delay: phase.spawnDelay,
-      repeat: queue.length - 1,
+      loop: true,
       callback: () => {
+        if (this.enemies.countActive(true) >= CONCURRENCY_CAP) return; // hold; retry next tick
         const type = this.spawnQueue.shift();
         if (type) this.spawnEnemy(ENEMY_TYPES[type]);
+        if (this.spawnQueue.length === 0) {
+          this.spawnEvent.remove(false);
+          this.spawnEvent = null;
+          this.checkPhaseCleared();
+        }
       },
     });
   }
@@ -221,7 +228,7 @@ export default class GameScene extends Phaser.Scene {
     const phase = this.runner.phase;
     if (phase === 'wave') {
       const alive = this.enemies.countActive(true);
-      const stillSpawning = this.spawnEvent && this.spawnEvent.getRepeatCount() > 0;
+      const stillSpawning = this.spawnEvent !== null && this.spawnEvent !== undefined;
       if (alive === 0 && !stillSpawning) { this.runner.onCleared(); this.beginPhase(); }
     } else if (phase === 'miniboss' || phase === 'levelBoss' || phase === 'templeBoss') {
       if (this.enemies.countActive(true) === 0) {

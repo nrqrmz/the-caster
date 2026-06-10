@@ -1,8 +1,8 @@
 // A reusable physics group of projectiles. fire() activates one from the pool.
 export class ProjectilePool {
-  constructor(scene) {
+  constructor(scene, maxSize = 200) {
     this.scene = scene;
-    this.group = scene.physics.add.group({ maxSize: 200 });
+    this.group = scene.physics.add.group({ maxSize });
   }
 
   fire(texKey, x, y, targetX, targetY, speed, damage, radius) {
