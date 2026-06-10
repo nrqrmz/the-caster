@@ -7,8 +7,8 @@ test('base multiplier is 1 for a fresh save', () => {
 });
 
 test('multiplier rises with spent points and mastered elements', () => {
-  const m1 = difficultyMultiplier({ purchasedNodes: ['basic_dmg_1'], elements: [] }); // cost 1
-  const m2 = difficultyMultiplier({ purchasedNodes: ['basic_dmg_1'], elements: ['fire'] });
+  const m1 = difficultyMultiplier({ purchasedNodes: ['dmg1'], elements: [] }); // cost 1
+  const m2 = difficultyMultiplier({ purchasedNodes: ['dmg1'], elements: ['fire'] });
   assert.ok(m1 > 1);
   assert.ok(m2 > m1);
 });
