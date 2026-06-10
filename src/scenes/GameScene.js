@@ -63,10 +63,10 @@ export default class GameScene extends Phaser.Scene {
 
     this.runner = new WaveRunner(this.level);
     // dev-only debug HUD (region/level/difficulty/phase); gated behind DEBUG so it
-    // doesn't overlap the UIScene HP bar in release. Placed below the bar (y=40) to
-    // avoid the overlap even when enabled.
+    // doesn't overlap the UIScene HP bar in release. Placed below the HP bar AND the
+    // pause/elixir button row (y=92) to avoid overlapping either, even when enabled.
     this.debug = DEBUG
-      ? this.add.text(8, 40, '', { fontFamily: 'monospace', fontSize: '14px', color: '#fff' }).setDepth(2000)
+      ? this.add.text(8, 92, '', { fontFamily: 'monospace', fontSize: '14px', color: '#fff' }).setDepth(2000)
       : null;
 
     this.setupCollisions();
@@ -193,6 +193,28 @@ export default class GameScene extends Phaser.Scene {
     return e;
   }
 
+  // Enemies spawn just off-screen and walk in; once on-screen they must not be able
+  // to wander or flee back out. An escaped enemy never dies (orbs cull off-screen),
+  // so the wave's `countActive === 0` clear condition would never fire — trapping the
+  // player in the level forever. Latch `_entered` on first arrival, then clamp.
+  containEnemy(e) {
+    if (!e._entered) {
+      if (e.x >= 0 && e.x <= GAME_WIDTH && e.y >= 0 && e.y <= GAME_HEIGHT) e._entered = true;
+      return;
+    }
+    e.x = Phaser.Math.Clamp(e.x, 0, GAME_WIDTH);
+    e.y = Phaser.Math.Clamp(e.y, 0, GAME_HEIGHT);
+  }
+
+  // Opens the pause overlay. Pauses both Game and its UI overlay so nothing ticks or
+  // fires underneath; PauseScene resumes them or abandons the level.
+  openPauseMenu() {
+    if (!this.scene.isActive('Game')) return; // already paused (dialogue / game over)
+    this.scene.pause();
+    this.scene.pause('UI');
+    this.scene.launch('Pause', { regionId: this.regionId, levelIndex: this.levelIndex, stats: this.stats });
+  }
+
   hitEnemy(enemy, damage) {
     const shield = findModifier(enemy.def, 'shielded');
     const dmg = shield ? damage * (1 - (shield.reduce ?? 0.5)) : damage;
@@ -251,8 +273,12 @@ export default class GameScene extends Phaser.Scene {
         this.caster.hp = Math.round(this.caster.maxHp * ITEM.phoenix.revivePct);
         return;
       }
-      this.scene.stop('UI');
-      this.scene.start('Game', { regionId: this.regionId, levelIndex: this.levelIndex, stats: this.stats });
+      // Death no longer silently restarts: pause and show a Game Over overlay with
+      // Retry / Back-to-map, so the player is never stuck looping a level they can't beat.
+      this.physics.pause();
+      this.scene.pause();
+      this.scene.pause('UI');
+      this.scene.launch('GameOver', { regionId: this.regionId, levelIndex: this.levelIndex, stats: this.stats });
       return;
     }
     if (this.caster.hp / this.caster.maxHp < ITEM.potion.threshold && this.consumeItem('potion')) {
@@ -481,6 +507,7 @@ export default class GameScene extends Phaser.Scene {
     for (const e of liveEnemies) {
       const intent = e.think(delta, this.caster);
       e.setVelocity(intent.velocity.x, intent.velocity.y);
+      this.containEnemy(e);
       for (const att of intent.fires) this.executeAttack(e, att);
       if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
       if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);

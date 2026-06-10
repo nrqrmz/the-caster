@@ -8,6 +8,8 @@ import SkillTreeScene from './scenes/SkillTreeScene.js';
 import BranchScene from './scenes/BranchScene.js';
 import MapScene from './scenes/MapScene.js';
 import ShopScene from './scenes/ShopScene.js';
+import PauseScene from './scenes/PauseScene.js';
+import GameOverScene from './scenes/GameOverScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -23,7 +25,7 @@ const config = {
     default: 'arcade',
     arcade: { debug: false },
   },
-  scene: [BootScene, MenuScene, GameScene, MapScene, BranchScene, UIScene, DialogueScene, SkillTreeScene, ShopScene],
+  scene: [BootScene, MenuScene, GameScene, MapScene, BranchScene, UIScene, DialogueScene, SkillTreeScene, ShopScene, PauseScene, GameOverScene],
 };
 
 const game = new Phaser.Game(config);
