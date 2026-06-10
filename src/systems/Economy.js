@@ -36,7 +36,7 @@ export function buy(save, itemKey) {
 }
 
 export function canRespec(save) {
-  return (save.gold || 0) >= respecCost(save.respecCount);
+  return (save.purchasedNodes || []).length > 0 && (save.gold || 0) >= respecCost(save.respecCount);
 }
 
 export function respec(save) {

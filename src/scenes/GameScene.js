@@ -58,7 +58,8 @@ export default class GameScene extends Phaser.Scene {
 
     this.setupCollisions();
 
-    const startCombat = () => { this.startedAt = this.time.now; this.beginPhase(); };
+    this.startedAt = null; // captured on the first update tick (scene clock is 0 in create)
+    const startCombat = () => { this.beginPhase(); };
     const intro = this.level.dialogue && this.level.dialogue.onEnter;
     if (intro && intro.length) {
       this.scene.pause();
@@ -216,7 +217,7 @@ export default class GameScene extends Phaser.Scene {
 
   finishLevel() {
     this.physics.pause();
-    const clearMs = this.time.now - (this.startedAt || this.time.now);
+    const clearMs = this.startedAt !== null ? this.time.now - this.startedAt : 0;
     const gold = goldReward(this.level, this.mult, clearMs);
     const save = new SaveSystem(window.localStorage);
     let state = save.load();
@@ -340,6 +341,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    if (this.startedAt === null) this.startedAt = time; // valid game time on the first active frame
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
     if (this.damageBuffRemaining > 0) this.damageBuffRemaining -= delta;
     if (this.stats.healthRegen > 0 && this.caster.hp > 0) {
