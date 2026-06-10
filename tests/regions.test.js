@@ -32,3 +32,19 @@ test('castle is locked, has no element, and ends in the King reveal', () => {
 test('required elements match the elemental region ids', () => {
   assert.deepEqual([...REQUIRED_ELEMENTS].sort(), [...REGION_ORDER].sort());
 });
+
+test('air branch grants the lightning skill', () => {
+  assert.equal(REGIONS.air.grantsSkill, 'lightning');
+});
+
+test('all temple/level/mini bosses are flagged elite', () => {
+  for (const id of REGION_ORDER) {
+    for (const level of REGIONS[id].levels) {
+      for (const phase of level.phases) {
+        if (phase.type === 'miniboss' || phase.type === 'levelBoss' || phase.type === 'templeBoss') {
+          assert.equal(phase.enemyDef.elite, true, `${level.id} ${phase.type} elite`);
+        }
+      }
+    }
+  }
+});
