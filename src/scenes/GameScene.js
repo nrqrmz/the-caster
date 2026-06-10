@@ -9,6 +9,7 @@ import { applyDamage } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { difficultyMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
+import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
 import Caster from '../objects/Caster.js';
@@ -51,12 +52,13 @@ export default class GameScene extends Phaser.Scene {
 
     this.setupCollisions();
 
+    const startCombat = () => { this.startedAt = this.time.now; this.beginPhase(); };
     const intro = this.level.dialogue && this.level.dialogue.onEnter;
     if (intro && intro.length) {
       this.scene.pause();
-      this.scene.launch('Dialogue', { lines: intro, onDone: () => { this.scene.resume(); this.beginPhase(); } });
+      this.scene.launch('Dialogue', { lines: intro, onDone: () => { this.scene.resume(); startCombat(); } });
     } else {
-      this.beginPhase();
+      startCombat();
     }
   }
 
@@ -200,9 +202,12 @@ export default class GameScene extends Phaser.Scene {
 
   finishLevel() {
     this.physics.pause();
+    const clearMs = this.time.now - (this.startedAt || this.time.now);
+    const gold = goldReward(this.level, this.mult, clearMs);
     const save = new SaveSystem(window.localStorage);
     let state = save.load();
     state = grantClear(state, this.region, this.levelIndex);
+    state.gold = (state.gold || 0) + gold;
     save.write(state);
 
     const isEnding = this.regionId === 'castle' && this.levelIndex === this.region.levels.length - 1;
@@ -210,7 +215,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.scene.stop('UI');
     this.scene.launch('Dialogue', {
-      lines: [{ speaker: 'Narrador', text: `Nivel superado. +${reward} punto(s) de habilidad.` }],
+      lines: [{ speaker: 'Narrador', text: `Nivel superado. +${reward} punto(s) de habilidad, +${gold} oro.` }],
       onDone: () => {
         if (isEnding) this.scene.start('Map');
         else this.scene.start('Branch', { regionId: this.regionId });
