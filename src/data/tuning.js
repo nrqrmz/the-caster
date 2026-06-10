@@ -1,8 +1,9 @@
 // src/data/tuning.js
 // Pure. Central balance knobs (curves, caps). No Phaser.
 
-// Absolute difficulty by level depth (index 0..6), independent of player power.
-export const BASE_CURVE = [1.0, 1.15, 1.3, 1.5, 1.7, 1.95, 2.3];
+// Absolute difficulty by level depth (index 0..7), independent of player power.
+// nv8 (index 7, temple boss) scales above nv7 (index 6, level boss).
+export const BASE_CURVE = [1.0, 1.15, 1.3, 1.5, 1.7, 1.95, 2.3, 2.6];
 
 // Max enemies alive at once; waves keep queuing but the spawner throttles to this.
 export const CONCURRENCY_CAP = 16;

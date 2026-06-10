@@ -5,11 +5,12 @@
 export const KIND_PHASES = {
   basic:        ['wave', 'wave', 'wave'],
   intermediate: ['wave', 'wave', 'miniboss'],
-  pretemple:    ['wave', 'wave', 'miniboss', 'levelBoss'],
+  pretemple:    ['wave', 'wave', 'miniboss', 'levelBoss'],  // se mantiene: lo usa el Castillo
+  levelboss:    ['levelBoss'],                              // nivel dedicado, solo el jefe
   temple:       ['templeBoss'],
 };
 
-export const DEFAULT_REWARD = { basic: 1, intermediate: 2, pretemple: 3, temple: 4 };
+export const DEFAULT_REWARD = { basic: 1, intermediate: 2, pretemple: 3, levelboss: 3, temple: 4 };
 
 function buildPhase(type, spec, waveCursor) {
   if (type === 'wave') {

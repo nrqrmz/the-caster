@@ -3,8 +3,8 @@
 import { SHOP_ITEMS } from '../data/shop.js';
 import { SKILL_TREE } from '../data/skilltree.js';
 
-const GOLD_BASE = { basic: 8, intermediate: 12, pretemple: 20, temple: 35 };
-const GOLD_PAR_MS = { basic: 30000, intermediate: 45000, pretemple: 60000, temple: 50000 };
+const GOLD_BASE = { basic: 8, intermediate: 12, pretemple: 20, levelboss: 20, temple: 35 };
+const GOLD_PAR_MS = { basic: 30000, intermediate: 45000, pretemple: 60000, levelboss: 60000, temple: 50000 };
 
 // Gold for clearing a level: base(kind) × difficulty mult × time factor (fast = more).
 export function goldReward(level, mult, clearMs) {
