@@ -1,4 +1,5 @@
 import { computeMovement, stepAttack } from '../systems/EnemyBrain.js';
+import { stepBoss } from '../systems/BossBrain.js';
 
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, def) {
@@ -14,7 +15,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.slowFactor = 1;      // speed multiplier while slowed
     this.burnRemaining = 0;   // ms burning
     this.burnDps = 0;         // burn damage/sec
-    this.brainState = { move: {}, attacks: (def.attacks || []).map(() => ({})) };
+    this.brainState = { move: {}, attacks: (def.attacks || []).map(() => ({})), boss: {} };
   }
 
   applyBurn(dps, ms) {
@@ -32,28 +33,40 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   // Returns an intent for GameScene to execute: { velocity, fires }.
   // `fires` is the list of attack defs whose timer fired this frame.
   think(delta, target) {
-    if (!this.active) return { velocity: { x: 0, y: 0 }, fires: [] };
+    if (!this.active) return { velocity: { x: 0, y: 0 }, fires: [], telegraphs: [] };
 
     if (this.freezeRemaining > 0) this.freezeRemaining -= delta;
     if (this.slowRemaining > 0) this.slowRemaining -= delta;
 
-    // Frozen: immobilized and cannot fire.
-    if (this.freezeRemaining > 0) return { velocity: { x: 0, y: 0 }, fires: [] };
+    if (this.freezeRemaining > 0) return { velocity: { x: 0, y: 0 }, fires: [], telegraphs: [] };
 
-    const speed = this.def.speed * (this.slowRemaining > 0 ? this.slowFactor : 1);
+    const slow = this.slowRemaining > 0 ? this.slowFactor : 1;
+    const fires = [];
+    const telegraphs = [];
+    let movementDef = this.def;
+    let speedMul = 1;
+
+    if (this.def.phases) {
+      const out = stepBoss(this.def, this.brainState.boss, this.hp / this.maxHp, delta);
+      movementDef = { movement: out.movement };
+      speedMul = out.speedMul;
+      if (out.telegraph) telegraphs.push(out.telegraph);
+      if (out.fire) fires.push({ ...out.fire, type: out.fire.do }); // step.do → attack.type (type wins)
+    } else {
+      const attacks = this.def.attacks || [];
+      for (let i = 0; i < attacks.length; i++) {
+        const r = stepAttack(attacks[i], this.brainState.attacks[i], delta);
+        if (r.fire) fires.push(attacks[i]);
+      }
+    }
+
     const ctx = {
       self: { x: this.x, y: this.y },
       target: { x: target.x, y: target.y },
-      speed, dt: delta,
+      speed: this.def.speed * slow * speedMul,
+      dt: delta,
     };
-    const velocity = computeMovement(this.def, this.brainState.move, ctx);
-
-    const fires = [];
-    const attacks = this.def.attacks || [];
-    for (let i = 0; i < attacks.length; i++) {
-      const r = stepAttack(attacks[i], this.brainState.attacks[i], delta);
-      if (r.fire) fires.push(attacks[i]);
-    }
-    return { velocity, fires };
+    const velocity = computeMovement(movementDef, this.brainState.move, ctx);
+    return { velocity, fires, telegraphs };
   }
 }
