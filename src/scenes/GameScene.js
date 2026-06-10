@@ -468,6 +468,7 @@ export default class GameScene extends Phaser.Scene {
       e.setVelocity(intent.velocity.x, intent.velocity.y);
       for (const att of intent.fires) this.executeAttack(e, att);
       if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
+      if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.steerHomingShots(delta);
@@ -489,6 +490,16 @@ export default class GameScene extends Phaser.Scene {
       casterHeal: opts.casterHeal || 0,
       enemyDps: opts.enemyDps || 0,
     });
+  }
+
+  runBossHook(boss, hook) {
+    if (hook === 'spawnLavaFloor') {
+      const lanes = 4;
+      for (let i = 0; i < lanes; i++) {
+        const x = GAME_WIDTH * (i + 0.5) / lanes;
+        this.spawnZone({ x, y: GAME_HEIGHT / 2, radius: 46, duration: 6000, casterDps: 20, color: COLORS.fireball });
+      }
+    }
   }
 
   // Back-compat wrapper used by BossMechanics' poisonFloor (damages the caster).
