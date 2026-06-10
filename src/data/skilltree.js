@@ -89,6 +89,3 @@ export const SKILL_BRANCHES = [
     { label: 'Duración',      nodes: ['w_dur1', 'w_dur2'] },
     { label: 'Ralentización', nodes: ['w_slow1', 'w_slow2'] } ] },
 ];
-
-// Display order for the skill tree UI (top to bottom) — kept for SkillTreeScene compatibility.
-export const SKILL_TREE_ORDER = Object.keys(SKILL_TREE);
