@@ -10,6 +10,13 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.freezeRemaining = 0; // ms immobilized
     this.slowRemaining = 0;   // ms slowed
     this.slowFactor = 1;      // speed multiplier while slowed
+    this.burnRemaining = 0;   // ms burning
+    this.burnDps = 0;         // burn damage/sec
+  }
+
+  applyBurn(dps, ms) {
+    this.burnDps = Math.max(this.burnDps, dps);
+    this.burnRemaining = Math.max(this.burnRemaining, ms);
   }
 
   applyFreeze(ms) { this.freezeRemaining = Math.max(this.freezeRemaining, ms); }
