@@ -59,5 +59,22 @@ test('unknown kind throws', () => {
 
 test('KIND_PHASES documents the presets', () => {
   assert.deepEqual(KIND_PHASES.basic, ['wave', 'wave', 'wave']);
+  assert.deepEqual(KIND_PHASES.levelboss, ['levelBoss']);
   assert.deepEqual(KIND_PHASES.temple, ['templeBoss']);
+});
+
+test('levelboss kind = a single levelBoss phase (no preceding wave)', () => {
+  const lv = makeLevel('fire_7', 'fire', 'levelboss', {
+    bosses: [{ hp: 280, elite: true }, { hp: 320, elite: true }], triangle: true,
+  });
+  assert.deepEqual(lv.phases.map((p) => p.type), ['levelBoss']);
+  assert.equal(lv.phases[0].bosses.length, 2);
+  assert.equal(lv.phases[0].triangle, true);
+  assert.equal(lv.reward.skillPoints, DEFAULT_REWARD.levelboss);
+});
+
+test('levelboss kind also supports a single levelBoss enemyDef', () => {
+  const lv = makeLevel('water_7', 'water', 'levelboss', { levelBoss: { hp: 650, damage: 24 } });
+  assert.deepEqual(lv.phases.map((p) => p.type), ['levelBoss']);
+  assert.equal(lv.phases[0].enemyDef.hp, 650);
 });
