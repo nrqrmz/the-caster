@@ -12,9 +12,12 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
+import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
 import Boss from '../objects/Boss.js';
+
+const ITEM = Object.fromEntries(SHOP_ITEMS.map((i) => [i.key, i]));
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -28,6 +31,7 @@ export default class GameScene extends Phaser.Scene {
 
     const save = new SaveSystem(window.localStorage).load();
     this.mult = difficultyMultiplier(save);
+    this.inventory = { potion: 0, elixir: 0, phoenix: 0, ...(save.inventory || {}) };
   }
 
   create() {
@@ -169,8 +173,16 @@ export default class GameScene extends Phaser.Scene {
     const r = applyDamage({ hp: this.caster.hp }, amount);
     this.caster.hp = r.hp;
     if (r.dead) {
+      if (this.consumeItem('phoenix')) {
+        this.caster.hp = Math.round(this.caster.maxHp * ITEM.phoenix.revivePct);
+        return;
+      }
       this.scene.stop('UI');
       this.scene.start('Game', { regionId: this.regionId, levelIndex: this.levelIndex, stats: this.stats });
+      return;
+    }
+    if (this.caster.hp / this.caster.maxHp < ITEM.potion.threshold && this.consumeItem('potion')) {
+      this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.caster.maxHp * ITEM.potion.healPct);
     }
   }
 
@@ -221,6 +233,17 @@ export default class GameScene extends Phaser.Scene {
         else this.scene.start('Branch', { regionId: this.regionId });
       },
     });
+  }
+
+  // Decrement an owned consumable and persist immediately (spent items stay spent).
+  consumeItem(key) {
+    if ((this.inventory[key] || 0) <= 0) return false;
+    this.inventory[key] -= 1;
+    const save = new SaveSystem(window.localStorage);
+    const s = save.load();
+    s.inventory = { ...s.inventory, [key]: this.inventory[key] };
+    save.write(s);
+    return true;
   }
 
   fireOrb(target) {
