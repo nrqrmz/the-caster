@@ -61,3 +61,21 @@ test('castle unlocks only when all required elements are mastered', () => {
   assert.equal(isCastleUnlocked({ elements: ['fire', 'water', 'air'] }, req), false);
   assert.equal(isCastleUnlocked({ elements: ['fire', 'water', 'air', 'earth'] }, req), true);
 });
+
+test('an 8-level region gates the final level and completes only after all 8', () => {
+  const r8 = {
+    id: 'water', element: 'water', grantsSkill: 'freeze',
+    levels: Array.from({ length: 8 }, () => ({ kind: 'basic', reward: { skillPoints: 1 } })),
+  };
+  let s = fresh();
+  for (let i = 0; i < 7; i++) {
+    assert.equal(isLevelUnlocked(s, 'water', i), true, `level ${i} unlocked`);
+    assert.equal(isRegionComplete(s, r8), false, `not complete before clearing level ${i}`);
+    s = grantClear(s, r8, i);
+  }
+  assert.equal(isLevelUnlocked(s, 'water', 7), true, 'final level unlocked after 7 clears');
+  assert.equal(isRegionComplete(s, r8), false, 'not complete until the 8th is cleared');
+  s = grantClear(s, r8, 7);
+  assert.equal(isRegionComplete(s, r8), true, 'complete after all 8');
+  assert.equal(s.skillPoints, 8, 'earned one point per level');
+});
