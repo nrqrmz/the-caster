@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG } from '../config.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
 import { CONCURRENCY_CAP, ENEMY_SHOT_POOL } from '../data/tuning.js';
@@ -62,8 +62,12 @@ export default class GameScene extends Phaser.Scene {
     this.scene.launch('UI', { gameScene: this });
 
     this.runner = new WaveRunner(this.level);
-    // dev-only debug HUD (region/level/difficulty/phase); strip or gate before release
-    this.debug = this.add.text(8, 8, '', { fontFamily: 'monospace', fontSize: '14px', color: '#fff' }).setDepth(2000);
+    // dev-only debug HUD (region/level/difficulty/phase); gated behind DEBUG so it
+    // doesn't overlap the UIScene HP bar in release. Placed below the bar (y=40) to
+    // avoid the overlap even when enabled.
+    this.debug = DEBUG
+      ? this.add.text(8, 40, '', { fontFamily: 'monospace', fontSize: '14px', color: '#fff' }).setDepth(2000)
+      : null;
 
     this.setupCollisions();
 
@@ -488,7 +492,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateZones(delta);
     this.updateTriangle(delta);
     this.updateAuras(delta);
-    this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
+    if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     for (const b of this.bosses) if (b && b.active) b.drawBar();
   }
 
