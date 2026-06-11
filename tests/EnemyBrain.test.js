@@ -153,3 +153,158 @@ test('findModifier returns the entry (normalizing string form) or null', () => {
   assert.equal(findModifier(def, 'shielded'), null);
   assert.equal(findModifier({}, 'shielded'), null);
 });
+
+import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS } from '../src/data/tuning.js';
+
+// Helper: run burrow for `ms` ms in one step.
+function runBurrow(state, ms, ctx) {
+  return MOVEMENTS.burrow({ ...ctx, params: {}, state, dt: ms });
+}
+
+const burrowCtx = () => ({
+  self: { x: 0, y: 0 },
+  target: { x: 100, y: 100 },
+  speed: 80,
+  dt: 16,
+});
+
+test('burrow: starts in submerged state with zero velocity', () => {
+  const state = {};
+  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state });
+  assert.equal(v.x, 0);
+  assert.equal(v.y, 0);
+  assert.equal(state.mode, 'submerged');
+  assert.equal(v.submerged, true);
+});
+
+test('burrow: stays submerged until BURROW_SUBMERGE_MS elapses', () => {
+  const state = {};
+  // Consume all but the last ms.
+  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_SUBMERGE_MS - 1 });
+  assert.equal(state.mode, 'submerged');
+});
+
+test('burrow: transitions to reposition after submerge window', () => {
+  const state = {};
+  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_SUBMERGE_MS + 1 });
+  assert.equal(state.mode, 'reposition');
+});
+
+test('burrow: reposition snaps to near target immediately (same frame)', () => {
+  const state = { mode: 'reposition', t: 0 };
+  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 16 });
+  // After reposition the mode advances to 'telegraph'.
+  assert.equal(state.mode, 'telegraph');
+  // Velocity during reposition is zero (snap is a position write, not velocity).
+  assert.equal(v.x, 0);
+  assert.equal(v.y, 0);
+  // The intent carries a reposition target.
+  assert.ok(v.repositionTo, 'should carry repositionTo {x,y}');
+});
+
+test('burrow: telegraph mode signals surfacing for BURROW_TELEGRAPH_MS', () => {
+  const state = { mode: 'telegraph', t: 0 };
+  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_TELEGRAPH_MS - 1 });
+  assert.equal(v.surfacing, true);
+  assert.equal(state.mode, 'telegraph');
+});
+
+test('burrow: telegraph transitions to attack after window', () => {
+  const state = { mode: 'telegraph', t: 0 };
+  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_TELEGRAPH_MS + 1 });
+  assert.equal(state.mode, 'attack');
+});
+
+test('burrow: attack mode fires a dashStrike and transitions to recover', () => {
+  const state = { mode: 'attack', t: 0 };
+  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 16 });
+  assert.equal(v.dashStrike, true);
+  assert.equal(state.mode, 'recover');
+});
+
+test('burrow: recover is vulnerable and returns to submerged after BURROW_RECOVER_MS', () => {
+  const state = { mode: 'recover', t: 0 };
+  let v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_RECOVER_MS - 1 });
+  assert.equal(v.vulnerable, true);
+  assert.equal(state.mode, 'recover');
+  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 2 }); // push past threshold
+  assert.equal(state.mode, 'submerged');
+});
+
+test('every movement type (including burrow) returns finite velocity', () => {
+  for (const type of Object.keys(MOVEMENTS)) {
+    const v = MOVEMENTS[type]({ self: { x: 0, y: 0 }, target: { x: 100, y: 0 }, speed: 60, dt: 16, params: {}, state: {} });
+    assert.ok(Number.isFinite(v.x) && Number.isFinite(v.y), `${type} produced NaN`);
+  }
+});
+
+import { buildSplitChildren } from '../src/systems/EnemyBrain.js';
+
+test('buildSplitChildren returns count child defs scaled to 0.5x hp/radius', () => {
+  const def = { hp: 80, radius: 18, speed: 60, tex: 'circle', damage: 6,
+                modifiers: [{ type: 'splitsOnDeath', spawnType: null, count: 2 }] };
+  const children = buildSplitChildren(def);
+  assert.equal(children.length, 2);
+  for (const c of children) {
+    assert.equal(c.hp, 40);
+    assert.ok(c.radius < def.radius);
+    assert.equal(c._split, true);
+  }
+});
+
+test('buildSplitChildren returns [] when modifier absent or _split is already set', () => {
+  const def = { hp: 80, modifiers: [] };
+  assert.deepEqual(buildSplitChildren(def), []);
+
+  const split = { hp: 80, modifiers: [{ type: 'splitsOnDeath', count: 2 }], _split: true };
+  assert.deepEqual(buildSplitChildren(split), []);
+});
+
+test('buildSplitChildren respects custom spawnType by recording it on the child def', () => {
+  const def = { hp: 100, radius: 20, speed: 70, tex: 'circle', damage: 8,
+                modifiers: [{ type: 'splitsOnDeath', spawnType: 'medusaChild', count: 2 }] };
+  const children = buildSplitChildren(def);
+  assert.equal(children[0]._spawnType, 'medusaChild');
+});
+
+import { tickLifecycle, LIFECYCLE } from '../src/systems/EnemyBrain.js';
+import { EGG_HATCH_MS, TADPOLE_GROW_MS } from '../src/data/tuning.js';
+
+test('tickLifecycle: egg stays egg until EGG_HATCH_MS elapses', () => {
+  const state = { lifecycle: LIFECYCLE.EGG, lifecycleTimer: 0 };
+  const result = tickLifecycle(state, EGG_HATCH_MS - 1);
+  assert.equal(result.promote, false);
+  assert.equal(state.lifecycle, LIFECYCLE.EGG);
+});
+
+test('tickLifecycle: egg promotes to tadpole after EGG_HATCH_MS', () => {
+  const state = { lifecycle: LIFECYCLE.EGG, lifecycleTimer: 0 };
+  const result = tickLifecycle(state, EGG_HATCH_MS + 1);
+  assert.equal(result.promote, true);
+  assert.equal(result.promoteTo, LIFECYCLE.TADPOLE);
+  assert.equal(state.lifecycle, LIFECYCLE.TADPOLE);
+  assert.equal(state.lifecycleTimer, 0);
+});
+
+test('tickLifecycle: tadpole promotes to adult after TADPOLE_GROW_MS', () => {
+  const state = { lifecycle: LIFECYCLE.TADPOLE, lifecycleTimer: 0 };
+  tickLifecycle(state, TADPOLE_GROW_MS + 1);
+  const result = tickLifecycle({ lifecycle: LIFECYCLE.TADPOLE, lifecycleTimer: TADPOLE_GROW_MS + 1 }, 0);
+  // Direct: force already-elapsed.
+  const s2 = { lifecycle: LIFECYCLE.TADPOLE, lifecycleTimer: TADPOLE_GROW_MS + 100 };
+  const r2 = tickLifecycle(s2, 0);
+  assert.equal(r2.promote, true);
+  assert.equal(r2.promoteTo, LIFECYCLE.ADULT);
+});
+
+test('tickLifecycle: adult has no further promotion', () => {
+  const state = { lifecycle: LIFECYCLE.ADULT, lifecycleTimer: 99999 };
+  const result = tickLifecycle(state, 0);
+  assert.equal(result.promote, false);
+});
+
+test('tickLifecycle: no lifecycle field → no promotion (non-frog enemy)', () => {
+  const state = {};
+  const result = tickLifecycle(state, 1000);
+  assert.equal(result.promote, false);
+});

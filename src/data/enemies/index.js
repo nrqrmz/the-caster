@@ -1,5 +1,6 @@
 import { COLORS, TEX } from '../../config.js';
 import { FIRE_ENEMIES } from './fire.js';
+import { WATER_ENEMIES } from './water.js';
 
 // Generic enemies shared across worlds (the original three, as recipes).
 const GENERIC = {
@@ -11,4 +12,4 @@ const GENERIC = {
     movement: { type: 'kite', range: 220 }, attacks: [{ type: 'shootStraight', every: 1500, speed: 260 }] },
 };
 
-export const ENEMY_TYPES = { ...GENERIC, ...FIRE_ENEMIES };
+export const ENEMY_TYPES = { ...GENERIC, ...FIRE_ENEMIES, ...WATER_ENEMIES };

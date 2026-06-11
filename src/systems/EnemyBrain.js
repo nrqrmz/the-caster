@@ -3,6 +3,14 @@
 // Intent that GameScene executes. Movement and attack-pattern decisions live here
 // so they can be unit-tested under `node --test`.
 
+import {
+  BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS,
+  EGG_HATCH_MS, TADPOLE_GROW_MS,
+} from '../data/tuning.js';
+import { GAME_WIDTH, GAME_HEIGHT } from '../config.js'; // config.js is Phaser-free (constants only)
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
 function angleBetween(ax, ay, bx, by) { return Math.atan2(by - ay, bx - ax); }
 function distance(ax, ay, bx, by) { return Math.hypot(bx - ax, by - ay); }
 
@@ -86,6 +94,55 @@ export const MOVEMENTS = {
     }
     if (state.t >= recover) { state.mode = 'windup'; state.t = 0; }
     return { x: 0, y: 0 };
+  },
+
+  burrow({ self, target, speed, dt, params, state }) {
+    const submergeMs    = params?.submergeMs    ?? BURROW_SUBMERGE_MS;
+    const telegraphMs   = params?.surfaceTelegraphMs ?? params?.emergeMs ?? BURROW_TELEGRAPH_MS;
+    const recoverMs     = params?.recoverMs     ?? BURROW_RECOVER_MS;
+    const dashSpeed     = speed * (params?.dashMul ?? 3.5);
+
+    state.mode = state.mode || 'submerged';
+    state.t    = (state.t || 0) + dt;
+
+    if (state.mode === 'submerged') {
+      if (state.t >= submergeMs) { state.mode = 'reposition'; state.t = 0; }
+      return { x: 0, y: 0, submerged: true };
+    }
+
+    if (state.mode === 'reposition') {
+      // Teleport to a spot near the target (caller handles the position write).
+      state.mode = 'telegraph';
+      state.t = 0;
+      // Offset so the enemy doesn't land exactly on the caster.
+      const a = angleBetween(target.x, target.y, self.x, self.y);
+      const dist = 80;
+      const r = self.radius || 16;
+      const rx = clamp(target.x + Math.cos(a) * dist, r, GAME_WIDTH - r);
+      const ry = clamp(target.y + Math.sin(a) * dist, r, GAME_HEIGHT - r);
+      return { x: 0, y: 0, repositionTo: { x: rx, y: ry } };
+    }
+
+    if (state.mode === 'telegraph') {
+      if (state.t >= telegraphMs) { state.mode = 'attack'; state.t = 0; }
+      return { x: 0, y: 0, surfacing: true };
+    }
+
+    if (state.mode === 'attack') {
+      // Fire once, immediately transition to recover.
+      state.mode = 'recover';
+      state.t = 0;
+      const heading = angleBetween(self.x, self.y, target.x, target.y);
+      state.dashHeading = heading;
+      return { x: Math.cos(heading) * dashSpeed, y: Math.sin(heading) * dashSpeed, dashStrike: true };
+    }
+
+    if (state.mode === 'recover') {
+      if (state.t >= recoverMs) { state.mode = 'submerged'; state.t = 0; }
+      return { x: 0, y: 0, vulnerable: true };
+    }
+
+    return { x: 0, y: 0 }; // fallback
   },
 
   erratic({ speed, dt, state }) {
@@ -180,4 +237,60 @@ export function findModifier(def, type) {
     else if (m && m.type === type) return { ...m };
   }
   return null;
+}
+
+// Builds the child enemy defs when an enemy with splitsOnDeath dies.
+// Returns [] if the modifier is absent or the enemy is already a split child.
+export function buildSplitChildren(def) {
+  if (def._split) return []; // one generation only
+  const mod = findModifier(def, 'splitsOnDeath');
+  if (!mod) return [];
+  const count = mod.count ?? 2;
+  const children = [];
+  for (let i = 0; i < count; i++) {
+    const child = {
+      ...def,
+      hp: Math.max(1, Math.round((def.hp ?? 40) * 0.5)),
+      radius: Math.round((def.radius ?? 16) * 0.7),
+      _split: true, // prevents re-splitting
+      _spawnType: mod.spawnType || null,
+      // Strip splitsOnDeath from children so they definitely cannot split again.
+      modifiers: (def.modifiers || []).filter(
+        (m) => (typeof m === 'string' ? m : m.type) !== 'splitsOnDeath'
+      ),
+    };
+    children.push(child);
+  }
+  return children;
+}
+
+export const LIFECYCLE = Object.freeze({ EGG: 'egg', TADPOLE: 'tadpole', ADULT: 'adult' });
+
+// Ticks the per-enemy lifecycle timer (egg→tadpole→adult).
+// state: { lifecycle?: string, lifecycleTimer?: number }
+// Returns { promote: bool, promoteTo?: string }.
+export function tickLifecycle(state, delta) {
+  if (!state.lifecycle) return { promote: false };
+  state.lifecycleTimer = (state.lifecycleTimer ?? 0) + delta;
+
+  if (state.lifecycle === LIFECYCLE.EGG) {
+    if (state.lifecycleTimer >= EGG_HATCH_MS) {
+      state.lifecycle = LIFECYCLE.TADPOLE;
+      state.lifecycleTimer = 0;
+      return { promote: true, promoteTo: LIFECYCLE.TADPOLE };
+    }
+    return { promote: false };
+  }
+
+  if (state.lifecycle === LIFECYCLE.TADPOLE) {
+    if (state.lifecycleTimer >= TADPOLE_GROW_MS) {
+      state.lifecycle = LIFECYCLE.ADULT;
+      state.lifecycleTimer = 0;
+      return { promote: true, promoteTo: LIFECYCLE.ADULT };
+    }
+    return { promote: false };
+  }
+
+  // ADULT: no further promotion.
+  return { promote: false };
 }

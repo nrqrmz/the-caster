@@ -44,6 +44,11 @@ export default class UIScene extends Phaser.Scene {
     this.elixirBtn.on('pointerdown', () => {
       if (this.game_scene.scene.isActive('Game')) this.game_scene.useElixir();
     });
+
+    // Multi-form boss indicator (e.g. "2/5"): shows which shapeshifter form is active.
+    this.bossFormLabel = this.add.text(GAME_WIDTH / 2, 40, '', {
+      fontFamily: 'sans-serif', fontSize: '13px', color: '#' + COLORS.ice.toString(16).padStart(6, '0'),
+    }).setOrigin(0.5).setDepth(1600);
   }
 
   update() {
@@ -54,6 +59,17 @@ export default class UIScene extends Phaser.Scene {
     if (this.elixirCount) {
       this.elixirCount.setText(`x${(gs.inventory && gs.inventory.elixir) || 0}`);
       this.elixirBtn.setStrokeStyle(2, gs.damageBuffRemaining > 0 ? 0xffd54f : COLORS.fireball);
+    }
+    // Per-form boss indicator: only shown for shapeshifter bosses with a FormSequencer.
+    if (this.bossFormLabel) {
+      const boss = gs.boss;
+      if (boss && boss.active && boss._formSeq) {
+        const idx = boss._formSeq.activeFormIndex + 1;
+        const total = boss._formSeq.forms.length;
+        this.bossFormLabel.setText(`${idx}/${total}`);
+      } else {
+        this.bossFormLabel.setText('');
+      }
     }
 
     for (const b of this.buttons) {

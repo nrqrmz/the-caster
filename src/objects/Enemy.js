@@ -16,6 +16,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.burnRemaining = 0;   // ms burning
     this.burnDps = 0;         // burn damage/sec
     this.brainState = { move: {}, attacks: (def.attacks || []).map(() => ({})), boss: {} };
+    this._formSeq = null; // set by GameScene when the boss has `forms`
   }
 
   applyBurn(dps, ms) {
@@ -23,8 +24,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.burnRemaining = Math.max(this.burnRemaining, ms);
   }
 
-  applyFreeze(ms) { this.freezeRemaining = Math.max(this.freezeRemaining, ms); }
+  applyFreeze(ms) {
+    if (this.def.elite) return; // elites resist CC (freeze/slow ignored)
+    this.freezeRemaining = Math.max(this.freezeRemaining, ms);
+  }
   applySlow(factor, ms) {
+    if (this.def.elite) return;
     // Fresh slow uses the new factor; stacking onto an active slow keeps the stronger (lower) one.
     this.slowFactor = this.slowRemaining > 0 ? Math.min(this.slowFactor, factor) : factor;
     this.slowRemaining = Math.max(this.slowRemaining, ms);
@@ -69,6 +74,25 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       dt: delta,
     };
     const velocity = computeMovement(movementDef, this.brainState.move, ctx);
+
+    // Burrow side-effects: write the _burrowed / _surfacing flags that GameScene reads.
+    if (velocity.submerged !== undefined) {
+      this._burrowed = !!velocity.submerged;
+      this._surfacing = false;
+    }
+    if (velocity.surfacing) {
+      this._burrowed = false;
+      this._surfacing = true;
+    }
+    if (velocity.vulnerable || velocity.dashStrike) {
+      this._burrowed = false;
+      this._surfacing = false;
+    }
+    if (velocity.repositionTo) {
+      this.x = velocity.repositionTo.x;
+      this.y = velocity.repositionTo.y;
+    }
+
     return { velocity, fires, telegraphs, enters };
   }
 }

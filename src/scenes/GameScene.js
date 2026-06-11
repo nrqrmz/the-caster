@@ -1,20 +1,25 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG } from '../config.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
-import { CONCURRENCY_CAP, ENEMY_SHOT_POOL, HOMING_TTL_MS } from '../data/tuning.js';
+import {
+  CONCURRENCY_CAP, ENEMY_SHOT_POOL, HOMING_TTL_MS,
+  WHIRLPOOL_RADIUS, WHIRLPOOL_ACTIVE_MS, WHIRLPOOL_COOLDOWN_MS, WHIRLPOOL_TELEGRAPH_MS,
+} from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
-import { applyDamage } from '../systems/CombatSystem.js';
+import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE } from '../systems/EnemyBrain.js';
 import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
+import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
+import { FormSequencer } from '../systems/FormSequencer.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
@@ -56,7 +61,9 @@ export default class GameScene extends Phaser.Scene {
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
     this.telegraphGfx = this.add.graphics().setDepth(1400);
     this.triangleGfx = this.add.graphics().setDepth(6);
+    this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
     this.triangle = null; // { mode, t } while a trio fight is active
+    this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
     this.casterBurnRemaining = 0;
     this.casterBurnDps = 0;
     this.scene.launch('UI', { gameScene: this });
@@ -95,11 +102,14 @@ export default class GameScene extends Phaser.Scene {
       this.damageCaster(enemy.def.damage * 0.02 * 16);
       const burn = findModifier(enemy.def, 'onHitBurn');
       if (burn) this.applyCasterBurn(burn.dps ?? 6, burn.ms ?? 2000);
+      const slow = findModifier(enemy.def, 'onHitSlow');
+      if (slow) this.applyCasterSlowFx(slow.factor ?? 0.6, slow.ms ?? 1200);
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
       this.damageCaster(shot.damage);
       if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
+      if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
       this.enemyShots.despawn(shot);
     });
   }
@@ -128,7 +138,41 @@ export default class GameScene extends Phaser.Scene {
     this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.mult));
     this.enemies.add(this.boss);
     this.bosses = [this.boss];
+    if (def.forms && def.forms.length) {
+      this.boss._formSeq = new FormSequencer(def.forms);
+      // Bootstrap the boss def to the first form.
+      this._applyBossForm(this.boss, 0);
+    }
     return this.boss;
+  }
+
+  _applyBossForm(boss, formIndex) {
+    const form = boss._formSeq.forms[formIndex];
+    // Merge form fields onto def (movement, speed, hp, resist).
+    boss.def = { ...boss.def, ...form };
+    boss.hp = form.hp;
+    boss.maxHp = form.hp;
+    if (form.color) boss.setTint(form.color);
+    if (form.radius) boss.setDisplaySize(form.radius * 2, form.radius * 2);
+    // Reset BossBrain phase state for the new form.
+    boss.brainState.boss = {};
+  }
+
+  _beginBossTransform(boss) {
+    boss._transforming = true;
+    boss.setAlpha(0.3); // brief dim during transform telegraph
+    // Clear this form's adds.
+    const live = this.enemies.getChildren().filter((e) => e.active && e !== boss);
+    for (const e of live) e.destroy();
+    this.time.delayedCall(1000, () => { // ~1000ms telegraph/invuln window
+      if (!boss.active) return;
+      boss._transforming = false;
+      boss.setAlpha(1);
+      boss._formSeq.completeTransform();
+      this._applyBossForm(boss, boss._formSeq.activeFormIndex);
+      boss.clearTint();
+      if (boss._formSeq.activeForm().color) boss.setTint(boss._formSeq.activeForm().color);
+    });
   }
 
   spawnBosses(defs) {
@@ -189,8 +233,33 @@ export default class GameScene extends Phaser.Scene {
     else if (edge === 2) { x = Phaser.Math.Between(0, GAME_WIDTH); y = GAME_HEIGHT + 20; }
     else { x = -20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
     const e = new Enemy(this, x, y, scaleEnemyDef(def, this.mult));
+    // Arm the generational lifecycle on freshly-laid eggs so tickLifecycle (update loop)
+    // can hatch them. Without this, an egg's brainState.lifecycle is undefined and it
+    // sits inert forever. promoteEnemy carries the TADPOLE/ADULT stages forward from here.
+    if (def.lifecycle === 'egg') {
+      e.brainState.lifecycle = LIFECYCLE.EGG;
+      e.brainState.lifecycleTimer = 0;
+    }
     this.enemies.add(e);
     return e;
+  }
+
+  promoteEnemy(enemy, toLifecycle) {
+    // Respect CONCURRENCY_CAP.
+    if (this.enemies.countActive(true) >= CONCURRENCY_CAP) { enemy.destroy(); return; }
+    const typeKey = toLifecycle === LIFECYCLE.TADPOLE ? (enemy.def._hatchType || 'tadpole')
+                                                       : (enemy.def._growType  || 'adultFrog');
+    const def = ENEMY_TYPES[typeKey];
+    if (!def) { enemy.destroy(); return; }
+    const scaled = scaleEnemyDef(def, this.mult);
+    const e = new Enemy(this, enemy.x, enemy.y, scaled);
+    // Carry lifecycle state through so adults can continue to adult.
+    if (toLifecycle === LIFECYCLE.TADPOLE) {
+      e.brainState.lifecycle = LIFECYCLE.TADPOLE;
+      e.brainState.lifecycleTimer = 0;
+    }
+    this.enemies.add(e);
+    enemy.destroy();
   }
 
   // No enemy may ever leave the play area — for ANY reason. An escaped enemy never
@@ -214,8 +283,34 @@ export default class GameScene extends Phaser.Scene {
   }
 
   hitEnemy(enemy, damage) {
+    // Burrow invuln gate (set by burrow movement; always falsy on non-burrow enemies).
+    if (enemy._burrowed) return;
+    // Form sequencer: route damage through FormSequencer and handle transform.
+    if (enemy._formSeq) {
+      if (enemy._transforming) return; // invuln during the transform telegraph
+      enemy._formSeq.applyDamage(damage);
+      enemy.hp = enemy._formSeq.currentHp; // keep hp in sync for BossBrain hpFrac
+      if (enemy._formSeq.fightOver) {
+        this.onEnemyDeath(enemy);
+        if (enemy === this.boss) this.boss = null;
+        this.bosses = this.bosses.filter((b) => b !== enemy);
+        enemy.destroy();
+        this.checkPhaseCleared();
+        return;
+      }
+      if (enemy._formSeq.transformPending && !enemy._transforming) {
+        this._beginBossTransform(enemy);
+      }
+      return;
+    }
+    // Resist (base damage reduction). Honor both shapes: a top-level `resist`
+    // field (set by boss FormSequencer forms) OR a `resist` modifier's `factor`
+    // (declared on content defs, e.g. tortuga_acorazada).
+    const resistMod = findModifier(enemy.def, 'resist');
+    const resistVal = enemy.def.resist ?? resistMod?.factor ?? 0;
+    const resistedDmg = resistVal ? applyResist(damage, resistVal) : damage;
     const shield = findModifier(enemy.def, 'shielded');
-    const dmg = shield ? damage * (1 - (shield.reduce ?? 0.5)) : damage;
+    const dmg = shield ? resistedDmg * (1 - (shield.reduce ?? 0.5)) : resistedDmg;
     const r = applyDamage({ hp: enemy.hp }, dmg);
     enemy.hp = r.hp;
     if (!r.dead) return;
@@ -237,16 +332,26 @@ export default class GameScene extends Phaser.Scene {
 
   onEnemyDeath(enemy) {
     const boom = findModifier(enemy.def, 'explodesOnDeath');
-    if (!boom) return;
-    const n = boom.count ?? 8;
-    const speed = boom.speed ?? 200;
-    const dmg = boom.damage ?? Math.round(enemy.def.damage * 0.8);
-    for (let i = 0; i < n; i++) {
-      const a = (Math.PI * 2 * i) / n;
-      const tx = enemy.x + Math.cos(a) * 50;
-      const ty = enemy.y + Math.sin(a) * 50;
-      const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
-      if (shot) shot.setTint(COLORS.fireball);
+    if (boom) {
+      const n = boom.count ?? 8;
+      const speed = boom.speed ?? 200;
+      const dmg = boom.damage ?? Math.round(enemy.def.damage * 0.8);
+      for (let i = 0; i < n; i++) {
+        const a = (Math.PI * 2 * i) / n;
+        const tx = enemy.x + Math.cos(a) * 50;
+        const ty = enemy.y + Math.sin(a) * 50;
+        const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
+        if (shot) shot.setTint(COLORS.fireball);
+      }
+    }
+    const split = buildSplitChildren(enemy.def);
+    for (const childDef of split) {
+      // Respect CONCURRENCY_CAP: only spawn if there is room.
+      if (this.enemies.countActive(true) >= CONCURRENCY_CAP) break;
+      const scaled = scaleEnemyDef(childDef, this.mult);
+      const e = new Enemy(this, enemy.x + Phaser.Math.Between(-20, 20), enemy.y + Phaser.Math.Between(-20, 20), scaled);
+      this.enemies.add(e);
+      if (childDef.radius) e.setDisplaySize(childDef.radius * 2, childDef.radius * 2);
     }
   }
 
@@ -295,6 +400,8 @@ export default class GameScene extends Phaser.Scene {
         this.bossMechanics = null;
         this.triangle = null;
         if (this.triangleGfx) this.triangleGfx.clear();
+        this.whirlpool = null;
+        if (this.whirlpoolGfx) this.whirlpoolGfx.clear();
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
         if (dialogue && dialogue.length) {
           this.scene.pause();
@@ -494,6 +601,7 @@ export default class GameScene extends Phaser.Scene {
   update(time, delta) {
     if (this.startedAt === null) this.startedAt = time; // valid game time on the first active frame
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
+    tickCasterSlow(this.caster, delta);
     if (this.damageBuffRemaining > 0) this.damageBuffRemaining -= delta;
     if (this.stats.healthRegen > 0 && this.caster.hp > 0) {
       this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
@@ -508,9 +616,21 @@ export default class GameScene extends Phaser.Scene {
       const intent = e.think(delta, this.caster);
       e.setVelocity(intent.velocity.x, intent.velocity.y);
       this.containEnemy(e);
+      // Lifecycle promotion (egg→tadpole→adult).
+      if (e.brainState && e.brainState.lifecycle !== undefined) {
+        const life = tickLifecycle(e.brainState, delta);
+        if (life.promote) this.promoteEnemy(e, life.promoteTo);
+      }
       for (const att of intent.fires) this.executeAttack(e, att);
       if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
       if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);
+      // Burrow surface telegraph: draw warning ring while _surfacing.
+      if (e._surfacing) {
+        this.telegraphGfx.lineStyle(3, COLORS.water, 0.85);
+        this.telegraphGfx.strokeCircle(e.x, e.y, (e.def.radius || 20) + 24);
+      }
+      // Hide the sprite while submerged; show it otherwise.
+      if (e._burrowed !== undefined) e.setAlpha(e._burrowed ? 0.15 : 1);
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.steerHomingShots(delta);
@@ -518,6 +638,7 @@ export default class GameScene extends Phaser.Scene {
     if (this.bossMechanics) this.bossMechanics.update(delta);
     this.updateZones(delta);
     this.updateTriangle(delta);
+    this.updateWhirlpool(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     for (const b of this.bosses) if (b && b.active) b.drawBar();
@@ -542,6 +663,63 @@ export default class GameScene extends Phaser.Scene {
         const x = GAME_WIDTH * (i + 0.5) / lanes;
         this.spawnZone({ x, y: GAME_HEIGHT / 2, radius: 46, duration: 6000, casterDps: 20, color: COLORS.fireball });
       }
+    }
+    if (hook === 'spawnWhirlpool') {
+      const phase = typeof boss._whirlpoolPhase === 'number' ? boss._whirlpoolPhase : 1;
+      this.whirlpool = {
+        center: { x: Phaser.Math.Between(80, GAME_WIDTH - 80), y: Phaser.Math.Between(80, GAME_HEIGHT - 80) },
+        radius: WHIRLPOOL_RADIUS,
+        phase,
+        mode: 'telegraph',
+        t: WHIRLPOOL_TELEGRAPH_MS,
+      };
+    }
+  }
+
+  updateWhirlpool(delta) {
+    if (!this.whirlpool) return;
+    const w = this.whirlpool;
+    w.t -= delta;
+
+    // Clear old spiral each frame.
+    if (!this.whirlpoolGfx) this.whirlpoolGfx = this.add.graphics().setDepth(7);
+    this.whirlpoolGfx.clear();
+
+    if (w.mode === 'telegraph') {
+      // Draw dashed warning circle.
+      this.whirlpoolGfx.lineStyle(2, COLORS.water, 0.5);
+      this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, w.radius);
+      if (w.t <= 0) { w.mode = 'active'; w.t = WHIRLPOOL_ACTIVE_MS; }
+      return;
+    }
+
+    if (w.mode === 'active') {
+      // Draw animated spiral (approximate with concentric arcs).
+      const phaseMul = scaleForPhase(w.phase);
+      const activeRadius = w.radius * phaseMul;
+      this.whirlpoolGfx.lineStyle(3, COLORS.waterDeep, 0.75);
+      this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, activeRadius);
+      this.whirlpoolGfx.lineStyle(1, COLORS.waterDeep, 0.4);
+      this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, activeRadius * 0.5);
+
+      // Apply force to caster.
+      if (this.caster && this.caster.hp > 0 && isInside(w.center, activeRadius, this.caster)) {
+        const f = forceAt(w.center, activeRadius, this.caster, this.stats.moveSpeed);
+        this.caster.x += f.x * (delta / 1000);
+        this.caster.y += f.y * (delta / 1000);
+        this.caster.x = Phaser.Math.Clamp(this.caster.x, 0, GAME_WIDTH);
+        this.caster.y = Phaser.Math.Clamp(this.caster.y, 0, GAME_HEIGHT);
+        // Center DoT.
+        const dot = centerDot(w.center, activeRadius, this.caster);
+        if (dot > 0) this.damageCaster(dot * (delta / 1000));
+      }
+
+      if (w.t <= 0) { w.mode = 'cooldown'; w.t = WHIRLPOOL_COOLDOWN_MS; }
+      return;
+    }
+
+    if (w.mode === 'cooldown') {
+      if (w.t <= 0) this.whirlpool = null; // boss will re-trigger via hook
     }
   }
 
@@ -628,6 +806,13 @@ export default class GameScene extends Phaser.Scene {
         }
       }
     }
+  }
+
+  // Applies an onHitSlow to the caster (pure math) plus a brief blue tint as feedback.
+  applyCasterSlowFx(factor, ms) {
+    applyCasterSlow(this.caster, factor, ms);
+    this.caster.setTint(COLORS.ice);
+    this.time.delayedCall(200, () => this.caster.clearTint());
   }
 
   applyCasterBurn(dps, ms) {

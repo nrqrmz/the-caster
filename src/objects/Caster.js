@@ -10,10 +10,13 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
     this.hp = stats.maxHealth;
     this.maxHp = stats.maxHealth;
     this._shotTimer = 0;
+    this.slowRemaining = 0;   // ms
+    this.slowFactor = 1;      // speed multiplier (floor = CASTER_SLOW_FLOOR)
   }
 
   moveBy(vector) {
-    this.setVelocity(vector.x * this.stats.moveSpeed, vector.y * this.stats.moveSpeed);
+    const mul = this.slowRemaining > 0 ? this.slowFactor : 1;
+    this.setVelocity(vector.x * this.stats.moveSpeed * mul, vector.y * this.stats.moveSpeed * mul);
   }
 
   // Called every frame. enemies = array of live enemy sprites. onFire(target) spawns the orb.

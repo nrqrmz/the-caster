@@ -20,3 +20,25 @@ export function baseDifficulty(levelIndex) {
   if (levelIndex >= BASE_CURVE.length) return BASE_CURVE[BASE_CURVE.length - 1];
   return BASE_CURVE[levelIndex];
 }
+
+// --- Water world ---
+
+// Caster slow (onHitSlow applied by water enemies).
+export const CASTER_SLOW_FLOOR = 0.45; // never below 45% speed
+
+// Whirlpool / Maelstrom hazard.
+export const WHIRLPOOL_RADIUS = 120;          // px, influence circle
+export const WHIRLPOOL_CENTER_PULL = 0.7;     // fraction of caster speed at the very center
+export const WHIRLPOOL_CENTER_DPS = 16;       // damage/sec when caster is within 20% of center
+export const WHIRLPOOL_TELEGRAPH_MS = 1200;   // warning before the vortex activates
+export const WHIRLPOOL_ACTIVE_MS = 4500;      // vortex is live for this long
+export const WHIRLPOOL_COOLDOWN_MS = 5000;    // gap before the boss can trigger it again
+
+// Burrow movement.
+export const BURROW_SUBMERGE_MS = 1500;       // invuln + hidden window
+export const BURROW_TELEGRAPH_MS = 400;       // surface-warning ring duration
+export const BURROW_RECOVER_MS = 600;         // vulnerable window after the dash
+
+// Frog lifecycle (generational summon).
+export const EGG_HATCH_MS = 3500;             // egg → tadpole
+export const TADPOLE_GROW_MS = 6000;          // tadpole → adult frog

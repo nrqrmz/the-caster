@@ -4,6 +4,7 @@
 import { TEX, COLORS } from '../config.js';
 import { makeLevel } from './levelBuilder.js';
 import { PYRA, VESTA, FAVILLA, SISTERS_TRIO, IGNATIUS } from './bosses/fire.js';
+import { SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL, KRAKEN, DAMA_LAGO } from './bosses/water.js';
 
 const wave = (spawnDelay, spawns) => ({ spawnDelay, spawns });
 const ramp = (base, tier) => Math.round(base * (1 + 0.4 * (tier - 1)));
@@ -39,6 +40,61 @@ function fireInterWaves(tier) {
   ];
 }
 
+// Water waves: control + attrition (more HP, healers, mobility threats).
+// Composition rule — anchor (healer/slower) + filler (ahogados/renacuajos)
+//                  + mobility threat (burrow shark or charger).
+// Tier 1 = only nv1 introductory creatures; tiers 2–3 add healers + frogs;
+// tiers 4–6 add heavy beasts. See spec §3.4 intro schedule.
+function waterWaves(tier) {
+  if (tier === 1) {
+    // Nv1: Ahogado filler + Acólito (slow anchor). No mobility threat yet.
+    return [
+      wave(700, [{ type: 'ahogado', count: ramp(4, tier) }, { type: 'acolito_escarcha', count: ramp(2, tier) }]),
+      wave(650, [{ type: 'ahogado', count: ramp(3, tier) }, { type: 'lanzahielos', count: tier }]),
+      wave(600, [{ type: 'acolito_escarcha', count: ramp(2, tier) }, { type: 'lanzahielos', count: tier }, { type: 'ahogado', count: ramp(2, tier) }]),
+    ];
+  }
+  if (tier === 2) {
+    // Nv2: Introduce Sacerdotisa (anchor/kill-priority) + Renacuajo filler.
+    return [
+      wave(670, [{ type: 'ahogado', count: ramp(3, tier) }, { type: 'acolito_escarcha', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(2, tier) }]),
+      wave(630, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: ramp(3, tier) }, { type: 'lanzahielos', count: tier }]),
+      wave(580, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'acolito_escarcha', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(3, tier) }]),
+    ];
+  }
+  // Tier 3: Nv3 — introduce Vidente (forcing dodge), Sapo Escupidor, Rana Saltarina.
+  return [
+    wave(640, [{ type: 'ahogado', count: ramp(3, tier) }, { type: 'vidente_marea', count: tier }, { type: 'rana_saltarina', count: ramp(2, tier) }]),
+    wave(600, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'sapo_escupidor', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(2, tier) }]),
+    wave(550, [{ type: 'lanzahielos', count: tier }, { type: 'vidente_marea', count: tier }, { type: 'rana_saltarina', count: ramp(2, tier) }, { type: 'ahogado', count: ramp(2, tier) }]),
+  ];
+}
+
+function waterInterWaves(tier) {
+  if (tier <= 2) {
+    // Nv4: introduce Guardia de Hielo (slow charger, mobility threat), Cangrejo (tank), Pez Globo.
+    // Anchor = Sacerdotisa. Filler = Ahogados. Threat = Guardia de Hielo.
+    return [
+      wave(580, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: ramp(3, tier) }, { type: 'guardia_hielo', count: 1 }, { type: 'acolito_escarcha', count: tier }]),
+      wave(530, [{ type: 'cangrejo_acorazado', count: 1 }, { type: 'pez_globo', count: ramp(2, tier) }, { type: 'vidente_marea', count: tier }, { type: 'ahogado', count: ramp(2, tier) }]),
+    ];
+  }
+  if (tier === 3) {
+    // Nv5: introduce Corista del Abismo (aura kill-priority), Serpiente Marina, Burbuja Gélida.
+    // Anchor = Sacerdotisa + Corista. Filler = Renacuajos/Ahogados. Threat = Guardia de Hielo.
+    return [
+      wave(540, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: ramp(3, tier) }, { type: 'guardia_hielo', count: 1 }, { type: 'burbuja_gelida', count: tier }]),
+      wave(490, [{ type: 'corista_abismo', count: 1 }, { type: 'serpiente_marina', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(3, tier) }, { type: 'pez_globo', count: tier }]),
+    ];
+  }
+  // Tier 4 (inter(4) = Nv6): introduce Medusa (splitsOnDeath), Tiburón Joven (burrow), Tortuga Acorazada.
+  // Anchor = Sacerdotisa. Filler = Ahogados/Renacuajos. Threat = Tiburón Joven (burrow).
+  return [
+    wave(510, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'medusa', count: tier }, { type: 'ahogado', count: ramp(3, tier) }, { type: 'tiburon_joven', count: 1 }]),
+    wave(460, [{ type: 'tortuga_acorazada', count: 1 }, { type: 'serpiente_marina', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(3, tier) }, { type: 'burbuja_gelida', count: tier }]),
+  ];
+}
+
 const mb = (hp, dmg) => ({ key: 'miniboss', tex: TEX.miniboss, color: COLORS.miniboss, hp, speed: 70, damage: dmg, radius: 22, behavior: 'chase', elite: true });
 const lb = (hp, dmg) => ({ key: 'levelboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 60, damage: dmg, radius: 28, behavior: 'chase', elite: true });
 const tb = (hp, dmg, mechanics) => ({ key: 'templeboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 55, damage: dmg, radius: 32, behavior: 'chase', elite: true, mechanics });
@@ -52,10 +108,14 @@ const MECHANICS = {
 };
 
 // Build a standard elemental branch: 8 levels, one boss per level.
-function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, templeBoss = null }) {
+function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, levelBoss = null, templeBoss = null }) {
   // nv7 is a dedicated levelboss level (boss only): the trio (multi-boss + lava
   // triangle) when provided, else a single default level-boss blob.
-  const levelBossSpec = levelBosses ? { bosses: levelBosses, triangle: true } : { levelBoss: lb(650, 24) };
+  const levelBossSpec = levelBosses
+    ? { bosses: levelBosses, triangle: true }
+    : levelBoss
+      ? { levelBoss }
+      : { levelBoss: lb(650, 24) };
   const levels = [
     makeLevel(`${id}_1`, id, 'basic', { waves: basic(1), dialogue: { onEnter: intro } }),
     makeLevel(`${id}_2`, id, 'basic', { waves: basic(2) }),
@@ -116,6 +176,10 @@ export const REGIONS = {
   }),
   water: makeBranch({
     id: 'water', element: 'water', name: 'El Lago', grantsSkill: 'freeze',
+    basic: waterWaves, inter: waterInterWaves,
+    minibosses: [SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL],
+    levelBoss: KRAKEN,
+    templeBoss: DAMA_LAGO,
     intro: [{ speaker: 'Narrador', text: 'Bajo el lago habita la maga que firmó el exilio de tu madre.' }],
     mageName: 'Dama del Lago',
     mageLines: [
