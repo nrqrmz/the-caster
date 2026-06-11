@@ -46,7 +46,7 @@ test('paletteFor derive path: different base colors produce different palettes',
 test('projectile recipes exist and forge', () => {
   for (const k of ['orb', 'fireball', 'arrow']) {
     assert.ok(hasRecipe(k), `missing projectile recipe ${k}`);
-    const out = forge(getRecipe(k), PARTS, paletteFor(k, 0x80d8ff));
+    const out = forge(getRecipe(k), PARTS, paletteFor(k, getRecipe(k).baseColor));
     assert.ok(out.anims['idle-down']);
   }
 });
