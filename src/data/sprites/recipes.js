@@ -46,6 +46,19 @@ export const RECIPES = {
   vesta:    { archetype: 'boss', size: 48, baseColor: 0xff5722, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
   ignatius: { archetype: 'boss', size: 48, baseColor: 0xff7043, parts: ['body_ignatius', 'horns', 'eye_single'] },
 
+  // --- Water bosses (single-form) ---
+  soldado_hielo:   { archetype: 'boss', size: 48, baseColor: 0xb3e5fc, parts: ['body_armor', 'head_round', 'eyes_dots'] },
+  sapo_desovador:  { archetype: 'boss', size: 48, baseColor: 0x7cb342, parts: ['body_frog', 'eyes_dots'] },
+  tiburon_abisal:  { archetype: 'boss', size: 48, baseColor: 0x4fc3f7, parts: ['body_fish', 'fin', 'eyes_dots'] },
+  kraken:          { archetype: 'boss', size: 48, baseColor: 0xab47bc, parts: ['body_kraken', 'eye_single'] },
+  // --- Dama del Lago + her 5 forms (each a distinct creature) ---
+  dama_lago:       { archetype: 'boss', size: 48, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
+  dama_maga:       { archetype: 'boss', size: 48, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
+  dama_tiburon:    { archetype: 'boss', size: 48, baseColor: 0x4fc3f7, parts: ['body_fish', 'fin', 'eyes_dots'] },
+  dama_kraken:     { archetype: 'boss', size: 48, baseColor: 0xab47bc, parts: ['body_kraken', 'eye_single'] },
+  dama_ballena:    { archetype: 'boss', size: 48, baseColor: 0xd32f2f, parts: ['body_whale', 'eyes_dots'] },
+  dama_maga_final: { archetype: 'boss', size: 48, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
+
   // --- Water cultists (humanoid) ---
   acolito_escarcha:  { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_hood', 'eyes_dots'] },
   ahogado:           { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_round', 'eyes_dots'] },

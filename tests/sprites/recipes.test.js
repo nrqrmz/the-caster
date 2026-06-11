@@ -87,3 +87,16 @@ test('every water enemy has a recipe with known parts', () => {
     }
   }
 });
+
+test('every water boss + form has a recipe with baseColor and known parts', () => {
+  const keys = ['soldado_hielo','sapo_desovador','tiburon_abisal','kraken','dama_lago','dama_maga','dama_tiburon','dama_kraken','dama_ballena','dama_maga_final'];
+  for (const key of keys) {
+    assert.ok(hasRecipe(key), `water boss '${key}' has no recipe`);
+    const r = getRecipe(key);
+    assert.equal(typeof r.baseColor, 'number', `boss '${key}' recipe must set baseColor`);
+    for (const ref of r.parts) {
+      const name = typeof ref === 'string' ? ref : ref.name;
+      assert.ok(PARTS[name], `recipe '${key}' references unknown part '${name}'`);
+    }
+  }
+});
