@@ -13,7 +13,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren } from '../systems/EnemyBrain.js';
 import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
@@ -254,6 +254,15 @@ export default class GameScene extends Phaser.Scene {
       const ty = enemy.y + Math.sin(a) * 50;
       const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
       if (shot) shot.setTint(COLORS.fireball);
+    }
+    const split = buildSplitChildren(enemy.def);
+    for (const childDef of split) {
+      // Respect CONCURRENCY_CAP: only spawn if there is room.
+      if (this.enemies.countActive(true) >= CONCURRENCY_CAP) break;
+      const scaled = scaleEnemyDef(childDef, this.mult);
+      const e = new Enemy(this, enemy.x + Phaser.Math.Between(-20, 20), enemy.y + Phaser.Math.Between(-20, 20), scaled);
+      this.enemies.add(e);
+      if (childDef.radius) e.setDisplaySize(childDef.radius * 2, childDef.radius * 2);
     }
   }
 

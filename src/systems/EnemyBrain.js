@@ -231,3 +231,28 @@ export function findModifier(def, type) {
   }
   return null;
 }
+
+// Builds the child enemy defs when an enemy with splitsOnDeath dies.
+// Returns [] if the modifier is absent or the enemy is already a split child.
+export function buildSplitChildren(def) {
+  if (def._split) return []; // one generation only
+  const mod = findModifier(def, 'splitsOnDeath');
+  if (!mod) return [];
+  const count = mod.count ?? 2;
+  const children = [];
+  for (let i = 0; i < count; i++) {
+    const child = {
+      ...def,
+      hp: Math.max(1, Math.round((def.hp ?? 40) * 0.5)),
+      radius: Math.round((def.radius ?? 16) * 0.7),
+      _split: true, // prevents re-splitting
+      _spawnType: mod.spawnType || null,
+      // Strip splitsOnDeath from children so they definitely cannot split again.
+      modifiers: (def.modifiers || []).filter(
+        (m) => (typeof m === 'string' ? m : m.type) !== 'splitsOnDeath'
+      ),
+    };
+    children.push(child);
+  }
+  return children;
+}

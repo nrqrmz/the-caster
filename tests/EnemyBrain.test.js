@@ -237,3 +237,32 @@ test('every movement type (including burrow) returns finite velocity', () => {
     assert.ok(Number.isFinite(v.x) && Number.isFinite(v.y), `${type} produced NaN`);
   }
 });
+
+import { buildSplitChildren } from '../src/systems/EnemyBrain.js';
+
+test('buildSplitChildren returns count child defs scaled to 0.5x hp/radius', () => {
+  const def = { hp: 80, radius: 18, speed: 60, tex: 'circle', damage: 6,
+                modifiers: [{ type: 'splitsOnDeath', spawnType: null, count: 2 }] };
+  const children = buildSplitChildren(def);
+  assert.equal(children.length, 2);
+  for (const c of children) {
+    assert.equal(c.hp, 40);
+    assert.ok(c.radius < def.radius);
+    assert.equal(c._split, true);
+  }
+});
+
+test('buildSplitChildren returns [] when modifier absent or _split is already set', () => {
+  const def = { hp: 80, modifiers: [] };
+  assert.deepEqual(buildSplitChildren(def), []);
+
+  const split = { hp: 80, modifiers: [{ type: 'splitsOnDeath', count: 2 }], _split: true };
+  assert.deepEqual(buildSplitChildren(split), []);
+});
+
+test('buildSplitChildren respects custom spawnType by recording it on the child def', () => {
+  const def = { hp: 100, radius: 20, speed: 70, tex: 'circle', damage: 8,
+                modifiers: [{ type: 'splitsOnDeath', spawnType: 'medusaChild', count: 2 }] };
+  const children = buildSplitChildren(def);
+  assert.equal(children[0]._spawnType, 'medusaChild');
+});
