@@ -98,7 +98,7 @@ export const MOVEMENTS = {
 
   burrow({ self, target, speed, dt, params, state }) {
     const submergeMs    = params?.submergeMs    ?? BURROW_SUBMERGE_MS;
-    const telegraphMs   = params?.surfaceTelegraphMs ?? BURROW_TELEGRAPH_MS;
+    const telegraphMs   = params?.surfaceTelegraphMs ?? params?.emergeMs ?? BURROW_TELEGRAPH_MS;
     const recoverMs     = params?.recoverMs     ?? BURROW_RECOVER_MS;
     const dashSpeed     = speed * (params?.dashMul ?? 3.5);
 

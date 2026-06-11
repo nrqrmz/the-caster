@@ -296,8 +296,12 @@ export default class GameScene extends Phaser.Scene {
       }
       return;
     }
-    // Resist (base damage reduction, e.g. boss forms).
-    const resistedDmg = enemy.def.resist ? applyResist(damage, enemy.def.resist) : damage;
+    // Resist (base damage reduction). Honor both shapes: a top-level `resist`
+    // field (set by boss FormSequencer forms) OR a `resist` modifier's `factor`
+    // (declared on content defs, e.g. tortuga_acorazada).
+    const resistMod = findModifier(enemy.def, 'resist');
+    const resistVal = enemy.def.resist ?? resistMod?.factor ?? 0;
+    const resistedDmg = resistVal ? applyResist(damage, resistVal) : damage;
     const shield = findModifier(enemy.def, 'shielded');
     const dmg = shield ? resistedDmg * (1 - (shield.reduce ?? 0.5)) : resistedDmg;
     const r = applyDamage({ hp: enemy.hp }, dmg);
@@ -321,16 +325,17 @@ export default class GameScene extends Phaser.Scene {
 
   onEnemyDeath(enemy) {
     const boom = findModifier(enemy.def, 'explodesOnDeath');
-    if (!boom) return;
-    const n = boom.count ?? 8;
-    const speed = boom.speed ?? 200;
-    const dmg = boom.damage ?? Math.round(enemy.def.damage * 0.8);
-    for (let i = 0; i < n; i++) {
-      const a = (Math.PI * 2 * i) / n;
-      const tx = enemy.x + Math.cos(a) * 50;
-      const ty = enemy.y + Math.sin(a) * 50;
-      const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
-      if (shot) shot.setTint(COLORS.fireball);
+    if (boom) {
+      const n = boom.count ?? 8;
+      const speed = boom.speed ?? 200;
+      const dmg = boom.damage ?? Math.round(enemy.def.damage * 0.8);
+      for (let i = 0; i < n; i++) {
+        const a = (Math.PI * 2 * i) / n;
+        const tx = enemy.x + Math.cos(a) * 50;
+        const ty = enemy.y + Math.sin(a) * 50;
+        const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
+        if (shot) shot.setTint(COLORS.fireball);
+      }
     }
     const split = buildSplitChildren(enemy.def);
     for (const childDef of split) {
