@@ -108,3 +108,13 @@ test('GLOBAL: every registered enemy type has a sprite recipe', () => {
   const missing = Object.keys(ENEMY_TYPES).filter((k) => !hasRecipe(k));
   assert.deepEqual(missing, [], `enemy types without recipe: ${missing.join(', ')}`);
 });
+
+// Mirror BootScene's exact forge path for EVERY recipe so a bad part/role char
+// in any creature fails `node --test`, not only at runtime boot.
+test('every recipe forges without throwing (mirrors BootScene)', () => {
+  for (const [key, recipe] of Object.entries(RECIPES)) {
+    const baseColor = recipe.baseColor ?? ENEMY_TYPES[key]?.color ?? 0x4fc3f7;
+    const out = forge(recipe, PARTS, paletteFor(key, baseColor));
+    assert.ok(out.anims['idle-down'] && out.anims['idle-down'][0], `${key} produced no idle-down frame`);
+  }
+});
