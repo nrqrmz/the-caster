@@ -48,6 +48,6 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
 
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
-    if (this.facing) this.facing.update(this.body.velocity.x, this.body.velocity.y, this._aimTarget);
+    if (this.facing && this.body) this.facing.update(this.body.velocity.x, this.body.velocity.y, this._aimTarget);
   }
 }
