@@ -107,10 +107,14 @@ const MECHANICS = {
 };
 
 // Build a standard elemental branch: 8 levels, one boss per level.
-function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, templeBoss = null }) {
+function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, levelBoss = null, templeBoss = null }) {
   // nv7 is a dedicated levelboss level (boss only): the trio (multi-boss + lava
   // triangle) when provided, else a single default level-boss blob.
-  const levelBossSpec = levelBosses ? { bosses: levelBosses, triangle: true } : { levelBoss: lb(650, 24) };
+  const levelBossSpec = levelBosses
+    ? { bosses: levelBosses, triangle: true }
+    : levelBoss
+      ? { levelBoss }
+      : { levelBoss: lb(650, 24) };
   const levels = [
     makeLevel(`${id}_1`, id, 'basic', { waves: basic(1), dialogue: { onEnter: intro } }),
     makeLevel(`${id}_2`, id, 'basic', { waves: basic(2) }),
