@@ -1,15 +1,26 @@
 import { computeMovement, stepAttack } from '../systems/EnemyBrain.js';
 import { stepBoss } from '../systems/BossBrain.js';
+import { spriteKey } from '../config.js';
+import { hasRecipe } from '../data/sprites/recipes.js';
+import { FacingController } from './FacingController.js';
 
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, def) {
-    super(scene, x, y, def.tex);
+    const useSprite = hasRecipe(def.key);
+    super(scene, x, y, useSprite ? spriteKey(def.key) : def.tex);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.def = def;
     this.hp = def.hp;
     this.maxHp = def.hp;
-    if (def.color) this.setTint(def.color);
+    if (useSprite) {
+      const px = def.radius * 2;
+      this.setDisplaySize(px, px); // visual footprint ~ old circle diameter; physics body unchanged
+      this.facing = new FacingController(this, def.key);
+    } else {
+      if (def.color) this.setTint(def.color);
+      this.facing = null;
+    }
     this.freezeRemaining = 0; // ms immobilized
     this.slowRemaining = 0;   // ms slowed
     this.slowFactor = 1;      // speed multiplier while slowed
@@ -94,5 +105,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     return { velocity, fires, telegraphs, enters };
+  }
+
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+    if (this.facing && this.body) this.facing.update(this.body.velocity.x, this.body.velocity.y);
   }
 }
