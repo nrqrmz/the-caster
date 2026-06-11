@@ -6,7 +6,7 @@ import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
-import { applyDamage } from '../systems/CombatSystem.js';
+import { applyDamage, applyCasterSlow, tickCasterSlow } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
@@ -95,11 +95,14 @@ export default class GameScene extends Phaser.Scene {
       this.damageCaster(enemy.def.damage * 0.02 * 16);
       const burn = findModifier(enemy.def, 'onHitBurn');
       if (burn) this.applyCasterBurn(burn.dps ?? 6, burn.ms ?? 2000);
+      const slow = findModifier(enemy.def, 'onHitSlow');
+      if (slow) this.applyCasterSlowFx(slow.factor ?? 0.6, slow.ms ?? 1200);
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
       this.damageCaster(shot.damage);
       if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
+      if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
       this.enemyShots.despawn(shot);
     });
   }
@@ -494,6 +497,7 @@ export default class GameScene extends Phaser.Scene {
   update(time, delta) {
     if (this.startedAt === null) this.startedAt = time; // valid game time on the first active frame
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
+    tickCasterSlow(this.caster, delta);
     if (this.damageBuffRemaining > 0) this.damageBuffRemaining -= delta;
     if (this.stats.healthRegen > 0 && this.caster.hp > 0) {
       this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
@@ -628,6 +632,13 @@ export default class GameScene extends Phaser.Scene {
         }
       }
     }
+  }
+
+  // Applies an onHitSlow to the caster (pure math) plus a brief blue tint as feedback.
+  applyCasterSlowFx(factor, ms) {
+    applyCasterSlow(this.caster, factor, ms);
+    this.caster.setTint(COLORS.ice);
+    this.time.delayedCall(200, () => this.caster.clearTint());
   }
 
   applyCasterBurn(dps, ms) {
