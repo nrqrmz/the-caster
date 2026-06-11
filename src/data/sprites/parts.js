@@ -1,6 +1,7 @@
 // src/data/sprites/parts.js
 // PURE. Each part is a stamp on a 16x16 design grid.
 // Chars: '.'=transparent o=outline b=base s=shade h=highlight a=accent
+// anchor: {x,y} = top-left offset (in 16x16 design-grid pixels) where this stamp is placed.
 // A direction set to null means the part is not drawn for that facing.
 
 export const PARTS = {
@@ -62,8 +63,7 @@ export const PARTS = {
     up:   ['...aa...', '..aaaa..', '.aaaaaa.', 'aaaaaaaa', '...oo...'],
     side: ['...aa...', '..aaaa..', '.aaaaaa.', 'aaaaaaaa', '...oo...'],
   },
-  // Staff. Rendered as a thin vertical pole; side is the primary view.
-  // down/up show only the tip so the part is present (test requires p.down to be an array).
+  // Staff: a vertical pole; looks the same from any facing, so down/up/side share the matrix.
   staff: {
     w: 2, h: 11, anchor: { x: 12, y: 3 },
     down: ['aa', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo'],
