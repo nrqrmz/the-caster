@@ -266,3 +266,45 @@ test('buildSplitChildren respects custom spawnType by recording it on the child 
   const children = buildSplitChildren(def);
   assert.equal(children[0]._spawnType, 'medusaChild');
 });
+
+import { tickLifecycle, LIFECYCLE } from '../src/systems/EnemyBrain.js';
+import { EGG_HATCH_MS, TADPOLE_GROW_MS } from '../src/data/tuning.js';
+
+test('tickLifecycle: egg stays egg until EGG_HATCH_MS elapses', () => {
+  const state = { lifecycle: LIFECYCLE.EGG, lifecycleTimer: 0 };
+  const result = tickLifecycle(state, EGG_HATCH_MS - 1);
+  assert.equal(result.promote, false);
+  assert.equal(state.lifecycle, LIFECYCLE.EGG);
+});
+
+test('tickLifecycle: egg promotes to tadpole after EGG_HATCH_MS', () => {
+  const state = { lifecycle: LIFECYCLE.EGG, lifecycleTimer: 0 };
+  const result = tickLifecycle(state, EGG_HATCH_MS + 1);
+  assert.equal(result.promote, true);
+  assert.equal(result.promoteTo, LIFECYCLE.TADPOLE);
+  assert.equal(state.lifecycle, LIFECYCLE.TADPOLE);
+  assert.equal(state.lifecycleTimer, 0);
+});
+
+test('tickLifecycle: tadpole promotes to adult after TADPOLE_GROW_MS', () => {
+  const state = { lifecycle: LIFECYCLE.TADPOLE, lifecycleTimer: 0 };
+  tickLifecycle(state, TADPOLE_GROW_MS + 1);
+  const result = tickLifecycle({ lifecycle: LIFECYCLE.TADPOLE, lifecycleTimer: TADPOLE_GROW_MS + 1 }, 0);
+  // Direct: force already-elapsed.
+  const s2 = { lifecycle: LIFECYCLE.TADPOLE, lifecycleTimer: TADPOLE_GROW_MS + 100 };
+  const r2 = tickLifecycle(s2, 0);
+  assert.equal(r2.promote, true);
+  assert.equal(r2.promoteTo, LIFECYCLE.ADULT);
+});
+
+test('tickLifecycle: adult has no further promotion', () => {
+  const state = { lifecycle: LIFECYCLE.ADULT, lifecycleTimer: 99999 };
+  const result = tickLifecycle(state, 0);
+  assert.equal(result.promote, false);
+});
+
+test('tickLifecycle: no lifecycle field → no promotion (non-frog enemy)', () => {
+  const state = {};
+  const result = tickLifecycle(state, 1000);
+  assert.equal(result.promote, false);
+});

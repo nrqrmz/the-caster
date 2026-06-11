@@ -3,7 +3,10 @@
 // Intent that GameScene executes. Movement and attack-pattern decisions live here
 // so they can be unit-tested under `node --test`.
 
-import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS } from '../data/tuning.js';
+import {
+  BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS,
+  EGG_HATCH_MS, TADPOLE_GROW_MS,
+} from '../data/tuning.js';
 
 function angleBetween(ax, ay, bx, by) { return Math.atan2(by - ay, bx - ax); }
 function distance(ax, ay, bx, by) { return Math.hypot(bx - ax, by - ay); }
@@ -255,4 +258,35 @@ export function buildSplitChildren(def) {
     children.push(child);
   }
   return children;
+}
+
+export const LIFECYCLE = Object.freeze({ EGG: 'egg', TADPOLE: 'tadpole', ADULT: 'adult' });
+
+// Ticks the per-enemy lifecycle timer (egg→tadpole→adult).
+// state: { lifecycle?: string, lifecycleTimer?: number }
+// Returns { promote: bool, promoteTo?: string }.
+export function tickLifecycle(state, delta) {
+  if (!state.lifecycle) return { promote: false };
+  state.lifecycleTimer = (state.lifecycleTimer ?? 0) + delta;
+
+  if (state.lifecycle === LIFECYCLE.EGG) {
+    if (state.lifecycleTimer >= EGG_HATCH_MS) {
+      state.lifecycle = LIFECYCLE.TADPOLE;
+      state.lifecycleTimer = 0;
+      return { promote: true, promoteTo: LIFECYCLE.TADPOLE };
+    }
+    return { promote: false };
+  }
+
+  if (state.lifecycle === LIFECYCLE.TADPOLE) {
+    if (state.lifecycleTimer >= TADPOLE_GROW_MS) {
+      state.lifecycle = LIFECYCLE.ADULT;
+      state.lifecycleTimer = 0;
+      return { promote: true, promoteTo: LIFECYCLE.ADULT };
+    }
+    return { promote: false };
+  }
+
+  // ADULT: no further promotion.
+  return { promote: false };
 }

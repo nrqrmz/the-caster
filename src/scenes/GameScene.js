@@ -13,7 +13,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE } from '../systems/EnemyBrain.js';
 import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
@@ -194,6 +194,24 @@ export default class GameScene extends Phaser.Scene {
     const e = new Enemy(this, x, y, scaleEnemyDef(def, this.mult));
     this.enemies.add(e);
     return e;
+  }
+
+  promoteEnemy(enemy, toLifecycle) {
+    // Respect CONCURRENCY_CAP.
+    if (this.enemies.countActive(true) >= CONCURRENCY_CAP) { enemy.destroy(); return; }
+    const typeKey = toLifecycle === LIFECYCLE.TADPOLE ? (enemy.def._hatchType || 'tadpole')
+                                                       : (enemy.def._growType  || 'adultFrog');
+    const def = ENEMY_TYPES[typeKey];
+    if (!def) { enemy.destroy(); return; }
+    const scaled = scaleEnemyDef(def, this.mult);
+    const e = new Enemy(this, enemy.x, enemy.y, scaled);
+    // Carry lifecycle state through so adults can continue to adult.
+    if (toLifecycle === LIFECYCLE.TADPOLE) {
+      e.brainState.lifecycle = LIFECYCLE.TADPOLE;
+      e.brainState.lifecycleTimer = 0;
+    }
+    this.enemies.add(e);
+    enemy.destroy();
   }
 
   // No enemy may ever leave the play area — for ANY reason. An escaped enemy never
@@ -525,6 +543,11 @@ export default class GameScene extends Phaser.Scene {
       const intent = e.think(delta, this.caster);
       e.setVelocity(intent.velocity.x, intent.velocity.y);
       this.containEnemy(e);
+      // Lifecycle promotion (egg→tadpole→adult).
+      if (e.brainState && e.brainState.lifecycle !== undefined) {
+        const life = tickLifecycle(e.brainState, delta);
+        if (life.promote) this.promoteEnemy(e, life.promoteTo);
+      }
       for (const att of intent.fires) this.executeAttack(e, att);
       if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
       if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);
