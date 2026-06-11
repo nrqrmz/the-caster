@@ -1,0 +1,900 @@
+// src/data/sprites/parts.js
+// PURE. Each part is a stamp on a 16x16 design grid.
+// Chars: '.'=transparent o=outline b=base s=shade h=highlight a=accent
+// anchor: {x,y} = top-left offset (in 16x16 design-grid pixels) where this stamp is placed.
+// A direction set to null means the part is not drawn for that facing.
+
+export const PARTS = {
+  // Lower-body robe (humanoid). Bottom 3 rows are the "leg region" that walk-animates.
+  body_robe: {
+    w: 10, h: 9, anchor: { x: 3, y: 6 },
+    down: [
+      '...oooo...',
+      '..obbbbo..',
+      '..obhhbo..',
+      '..obbbbo..',
+      '..obbbbo..',
+      '.obbbbbbo.',
+      '.obssssbo.',
+      '.obs..sbo.',
+      '.oo....oo.',
+    ],
+    up: [
+      '...oooo...',
+      '..obbbbo..',
+      '..obbbbo..',
+      '..obbbbo..',
+      '..obbbbo..',
+      '.obbbbbbo.',
+      '.obssssbo.',
+      '.obs..sbo.',
+      '.oo....oo.',
+    ],
+    side: [
+      '...ooo....',
+      '..obbbo...',
+      '..obhbo...',
+      '..obbbo...',
+      '..obbbo...',
+      '..obbbbo..',
+      '..obssbo..',
+      '..obs.bo..',
+      '..oo..oo..',
+    ],
+  },
+  // Round head. up = back of head (no face).
+  head_round: {
+    w: 6, h: 5, anchor: { x: 5, y: 2 },
+    down: ['.oooo.', 'obbbbo', 'obhbbo', 'obbbbo', '.oooo.'],
+    up:   ['.oooo.', 'obbbbo', 'obbbbo', 'obbbbo', '.oooo.'],
+    side: ['.oooo.', 'obbbbo', 'obbbho', 'obbbbo', '.oooo.'],
+  },
+  // Eyes overlay on the face. No eyes on the back (up = null).
+  eyes_dots: {
+    w: 6, h: 2, anchor: { x: 5, y: 4 },
+    down: ['.o..o.', '......'],
+    up: null,
+    side: ['....o.', '......'],
+  },
+  // Witch hat (accent-colored).
+  hat_witch: {
+    w: 8, h: 5, anchor: { x: 4, y: 0 },
+    down: ['...aa...', '..aaaa..', '.aaaaaa.', 'aaaaaaaa', '...oo...'],
+    up:   ['...aa...', '..aaaa..', '.aaaaaa.', 'aaaaaaaa', '...oo...'],
+    side: ['...aa...', '..aaaa..', '.aaaaaa.', 'aaaaaaaa', '...oo...'],
+  },
+  // Staff: a vertical pole; looks the same from any facing, so down/up/side share the matrix.
+  staff: {
+    w: 2, h: 11, anchor: { x: 12, y: 3 },
+    down: ['aa', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo'],
+    up:   ['aa', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo'],
+    side: ['aa', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo'],
+  },
+
+  // Hooded cultist head — pointed cowl covers more than head_round.
+  head_hood: {
+    w: 6, h: 6, anchor: { x: 5, y: 1 },
+    down: [
+      '.oaao.',
+      'oaaaao',
+      'obbbbo',
+      'obhbbo',
+      'obbbbo',
+      '.oooo.',
+    ],
+    up: [
+      '.oaao.',
+      'oaaaao',
+      'obbbbo',
+      'obbbbo',
+      'obbbbo',
+      '.oooo.',
+    ],
+    side: [
+      '.oaao.',
+      'oaaaao',
+      'obbbbo',
+      'obbbho',
+      'obbbbo',
+      '.oooo.',
+    ],
+  },
+
+  // Low quadruped/creature body — wider, sits low on the grid.
+  body_beast: {
+    w: 12, h: 8, anchor: { x: 2, y: 7 },
+    down: [
+      '...oooooo...',
+      '..obbbbbbo..',
+      '.obbhhhhbbo.',
+      '.obbbbbbbbo.',
+      '.obssssssbo.',
+      '.oboooooobo.',
+      '.oo......oo.',
+      '..o......o..',
+    ],
+    up: [
+      '...oooooo...',
+      '..obbbbbbo..',
+      '.obbbbbbbo..',
+      '.obbbbbbbbo.',
+      '.obssssssbo.',
+      '.oboooooobo.',
+      '.oo......oo.',
+      '..o......o..',
+    ],
+    side: [
+      '....oooo....',
+      '..oobbbboo..',
+      '.obbhhhhbbo.',
+      'obbbbbbbbbbo',
+      'obssssssssbo',
+      'oboo....oobo',
+      'oo........oo',
+      'o..........o',
+    ],
+  },
+
+  // Rounded blob/elemental body — symmetric puffball.
+  body_blob: {
+    w: 10, h: 8, anchor: { x: 3, y: 7 },
+    down: [
+      '..oooooo..',
+      '.obbbbbbo.',
+      'obbhhhbbbo',
+      'obbbbbbsbo',
+      'obbbbbbsbo',
+      '.obssssbo.',
+      '..obbbbo..',
+      '...oooo...',
+    ],
+    up: [
+      '..oooooo..',
+      '.obbbbbbo.',
+      'obbbbbbbo.',
+      'obbbbbbsbo',
+      'obbbbbbsbo',
+      '.obssssbo.',
+      '..obbbbo..',
+      '...oooo...',
+    ],
+    side: [
+      '..oooooo..',
+      '.obbbbbbo.',
+      'obbhbbbbo.',
+      'obbbbbbsbo',
+      'obbbbbbsbo',
+      '.obssssbo.',
+      '..obbbbo..',
+      '...oooo...',
+    ],
+  },
+
+  // Small body with wings to the sides — wasp/phoenix silhouette.
+  body_winged: {
+    w: 12, h: 7, anchor: { x: 2, y: 8 },
+    down: [
+      'oo..oooo..oo',
+      'oboobbbboobo',
+      'obbobhbbobbo',
+      '.obbbbbbbo..',
+      '.obssssbo...',
+      '..obbbbo....',
+      '...oooo.....',
+    ],
+    up: [
+      'oo..oooo..oo',
+      'oboobbbboobo',
+      'obbobbbbobbo',
+      '.obbbbbbbo..',
+      '.obssssbo...',
+      '..obbbbo....',
+      '...oooo.....',
+    ],
+    side: [
+      'oo..oooo....',
+      'oboobbbboo..',
+      'obbobhbbobb.',
+      '.obbbbbbbo..',
+      '.obssssbo...',
+      '..obbbbo....',
+      '...oooo.....',
+    ],
+  },
+
+  // Bulkier armored humanoid torso — knight/warrior silhouette.
+  body_armor: {
+    w: 10, h: 9, anchor: { x: 3, y: 6 },
+    down: [
+      '...oooo...',
+      '..obbbbo..',
+      '.obhhhhbo.',
+      '.obbbbbbo.',
+      '.obbssbbo.',
+      'obbbbbbbbo',
+      'obssssssbo',
+      'obs....sbo',
+      '.oo....oo.',
+    ],
+    up: [
+      '...oooo...',
+      '..obbbbo..',
+      '..obbbbo..',
+      '.obbbbbbo.',
+      '.obbssbbo.',
+      'obbbbbbbbo',
+      'obssssssbo',
+      'obs....sbo',
+      '.oo....oo.',
+    ],
+    side: [
+      '...oooo...',
+      '..obbbbo..',
+      '..obhbbo..',
+      '..obbbbo..',
+      '..obssbo..',
+      '.obbbbbbo.',
+      '.obssssbo.',
+      '.obs..sbo.',
+      '..oo..oo..',
+    ],
+  },
+
+  // Tall totem/standard pole body — vertical with rune-marks.
+  body_totem: {
+    w: 6, h: 12, anchor: { x: 5, y: 2 },
+    down: [
+      'oaaaao',
+      'obaabo',
+      'oobboo',
+      '.obbo.',
+      '.obbo.',
+      'oahhao',
+      'oobboo',
+      '.obbo.',
+      '.obbo.',
+      '.obbo.',
+      '.obbo.',
+      '.oooo.',
+    ],
+    up: [
+      'oaaaao',
+      'obaabo',
+      'oobboo',
+      '.obbo.',
+      '.obbo.',
+      'oahhao',
+      'oobboo',
+      '.obbo.',
+      '.obbo.',
+      '.obbo.',
+      '.obbo.',
+      '.oooo.',
+    ],
+    side: [
+      'oaaaao',
+      'obaabo',
+      'oobboo',
+      '.obbo.',
+      '.obbo.',
+      'oahhao',
+      'oobboo',
+      '.obbo.',
+      '.obbo.',
+      '.obbo.',
+      '.obbo.',
+      '.oooo.',
+    ],
+  },
+
+  // A pair of horns overlay — sits atop a head.
+  horns: {
+    w: 8, h: 3, anchor: { x: 4, y: 0 },
+    down: [
+      'o.oooo.o',
+      'oabbbbao',
+      '.obbbbo.',
+    ],
+    up: [
+      'o.oooo.o',
+      'oabbbbao',
+      '.obbbbo.',
+    ],
+    side: [
+      'o....ooo',
+      'oa..abbo',
+      '.o..obo.',
+    ],
+  },
+
+  // Flame crest/plume overlay — for salamander/phoenix head.
+  crest_flame: {
+    w: 6, h: 4, anchor: { x: 5, y: 0 },
+    down: [
+      '.oaao.',
+      'oahhao',
+      'oahbao',
+      '.oaao.',
+    ],
+    up: [
+      '.oaao.',
+      'oahhao',
+      'oahbao',
+      '.oaao.',
+    ],
+    side: [
+      '..oao.',
+      '.oahao',
+      '.oabao',
+      '..oao.',
+    ],
+  },
+
+  // Banner/flag overlay — standard bearer flag to one side.
+  banner: {
+    w: 5, h: 8, anchor: { x: 11, y: 3 },
+    down: [
+      'ooooo',
+      'oaaao',
+      'oahao',
+      'oaaao',
+      'ooooo',
+      '..oo.',
+      '..oo.',
+      '..oo.',
+    ],
+    up: [
+      'ooooo',
+      'oaaao',
+      'oahao',
+      'oaaao',
+      'ooooo',
+      '..oo.',
+      '..oo.',
+      '..oo.',
+    ],
+    side: [
+      'ooooo',
+      'oaaao',
+      'oahao',
+      'oaaao',
+      'ooooo',
+      '..oo.',
+      '..oo.',
+      '..oo.',
+    ],
+  },
+
+  // Single large cyclops eye overlay — for elementals.
+  eye_single: {
+    w: 4, h: 3, anchor: { x: 6, y: 5 },
+    down: [
+      'oooo',
+      'ohbo',
+      'oooo',
+    ],
+    up: null,
+    side: [
+      'oooo',
+      'ohho',
+      'oooo',
+    ],
+  },
+
+  // Elegant tall humanoid sorceress body — flowing gown, regal silhouette (sisters trio).
+  // Bottom 3 rows are the leg region (walk-animated). w=10 h=12.
+  body_sister: {
+    w: 10, h: 12, anchor: { x: 3, y: 3 },
+    down: [
+      '...oooo...',
+      '..obhhbo..',
+      '..obbbbo..',
+      '..obhhbo..',
+      '.obbbbbo..',
+      '.obbbbbbo.',
+      '.obbhbbbo.',
+      'obbbbbbbo.',
+      'obbbbbbbbo',
+      '.obsssbo..',
+      '.obs.sbo..',
+      '..oooooo..',
+    ],
+    up: [
+      '...oooo...',
+      '..obbbbo..',
+      '..obbbbo..',
+      '..obbbbo..',
+      '.obbbbbo..',
+      '.obbbbbbo.',
+      '.obbbbbbo.',
+      'obbbbbbbo.',
+      'obbbbbbbbo',
+      '.obsssbo..',
+      '.obs.sbo..',
+      '..oooooo..',
+    ],
+    side: [
+      '...ooo....',
+      '..obhbo...',
+      '..obbbo...',
+      '..obhbo...',
+      '..obbbbo..',
+      '..obbbbo..',
+      '..obbhbo..',
+      '.obbbbbo..',
+      '.obbbbbbo.',
+      '.obsssbo..',
+      '.obs.sbo..',
+      '..oooooo..',
+    ],
+  },
+
+  // Small crown/tiara overlay — sits atop the head; accent chars = gold.
+  // w=6 h=3, anchor near head top.
+  crown: {
+    w: 6, h: 3, anchor: { x: 5, y: 1 },
+    down: [
+      'oaooao',
+      'aaaaaa',
+      'oooooo',
+    ],
+    up: [
+      'oaooao',
+      'aaaaaa',
+      'oooooo',
+    ],
+    side: [
+      'oaooao',
+      'aaaaaa',
+      'oooooo',
+    ],
+  },
+
+  // Large imposing fire-elemental/dragon body — broad, menacing, flame silhouette (Ignatius).
+  // w=12 h=11, anchor at top-left of design grid center.
+  body_ignatius: {
+    w: 12, h: 11, anchor: { x: 2, y: 4 },
+    down: [
+      '..oaaaaoo...',
+      '.oabbbbabo..',
+      'oabhhhhbabo.',
+      'oabbbbbbabo.',
+      'oabbbbbbbbo.',
+      'oabbbbbbbbo.',
+      'oabbsssbbbo.',
+      'oabbbbbbbbo.',
+      '.obbsssbbbo.',
+      '.oobbbbboo..',
+      '..ooooooo...',
+    ],
+    up: [
+      '..oaaaaoo...',
+      '.oabbbbabo..',
+      'oabbbbbabo..',
+      'oabbbbbbabo.',
+      'oabbbbbbbbo.',
+      'oabbbbbbbbo.',
+      'oabbsssbbbo.',
+      'oabbbbbbbbo.',
+      '.obbsssbbbo.',
+      '.oobbbbboo..',
+      '..ooooooo...',
+    ],
+    side: [
+      '..oaaaoo....',
+      '.oabbbabo...',
+      'oabbhbbabo..',
+      'oabbbbbabo..',
+      'oabbbbbbbo..',
+      'oabbbbbbbo..',
+      'oabssssbbbo.',
+      'oabbbbbbbbo.',
+      '.obbsssbbo..',
+      '.oobbbbboo..',
+      '..ooooooo...',
+    ],
+  },
+
+  // === Water parts ===
+
+  // Sleek fish/shark body — horizontal, tapering tail. side is the iconic profile.
+  // w=12 h=7; side = horizontal fish facing right; down/up = top-down oval.
+  body_fish: {
+    w: 12, h: 7, anchor: { x: 2, y: 7 },
+    down: [
+      '....oooo....',
+      '..oobbboo...',
+      '.obbbhbbboo.',
+      'obbbbbbbbsbo',
+      '.obbbhbbboo.',
+      '..oobbboo...',
+      '....oooo....',
+    ],
+    up: [
+      '....oooo....',
+      '..oobbboo...',
+      '.obbbbbbboo.',
+      'obbbbbbbbsbo',
+      '.obbbbbbboo.',
+      '..oobbboo...',
+      '....oooo....',
+    ],
+    side: [
+      '....oooo....',
+      '..obbbbbo...',
+      '.obhbbbbbboo',
+      'obbbbbbbbsbo',
+      '.obbbbbbboo.',
+      '..obbbboo...',
+      '.....oo.....',
+    ],
+  },
+
+  // Dorsal fin overlay — small triangle on top of a fish body.
+  // w=4 h=4; only visible from down/side (not visible from up perspective).
+  fin: {
+    w: 4, h: 4, anchor: { x: 4, y: 3 },
+    down: [
+      '.oo.',
+      'obbo',
+      'obbo',
+      'oooo',
+    ],
+    up: null,
+    side: [
+      '.oo.',
+      'oabo',
+      'obbo',
+      'oooo',
+    ],
+  },
+
+  // Sinuous sea-serpent body — vertical S-curve silhouette.
+  // w=8 h=12; distinct narrow elongated shape.
+  body_serpent: {
+    w: 8, h: 12, anchor: { x: 4, y: 3 },
+    down: [
+      '..oooo..',
+      '.obbhbo.',
+      '.obbbbo.',
+      'obbbbbo.',
+      'obsssboo',
+      '.obbbbo.',
+      '..obbbo.',
+      '.obbbboo',
+      '.obbbbo.',
+      '.obssboo',
+      '..obbo..',
+      '...oo...',
+    ],
+    up: [
+      '..oooo..',
+      '.obbbbo.',
+      '.obbbbo.',
+      'obbbbboo',
+      'obbbbbo.',
+      '.obbbbo.',
+      '..obbbo.',
+      '.obbbboo',
+      '.obbbbo.',
+      '.obbsbo.',
+      '..obbo..',
+      '...oo...',
+    ],
+    side: [
+      '..oooo..',
+      '.obhbbo.',
+      '.obbbbo.',
+      'obbbbbo.',
+      'obsssboo',
+      '.obbbbo.',
+      '..obbbo.',
+      '.obbbboo',
+      '.obhbbo.',
+      '.obssboo',
+      '..obbo..',
+      '...oo...',
+    ],
+  },
+
+  // Domed shell body — turtle/crab carapace with rounded top and a rim ring.
+  // w=10 h=8; wide dome, rim visible at bottom.
+  body_shell: {
+    w: 10, h: 8, anchor: { x: 3, y: 7 },
+    down: [
+      '..oooooo..',
+      '.obhhhhbo.',
+      'obbhhhbbbo',
+      'obbbbbbbbo',
+      'obbbbbbbbo',
+      'obbssssbo.',
+      '.obbbbbo..',
+      '..oooooo..',
+    ],
+    up: [
+      '..oooooo..',
+      '.obbbbbbo.',
+      'obbbbbbbo.',
+      'obbbbbbbbo',
+      'obbbbbbbbo',
+      'obbssssbo.',
+      '.obbbbbo..',
+      '..oooooo..',
+    ],
+    side: [
+      '..oooooo..',
+      '.obhhhbo..',
+      'obbhhhbbo.',
+      'obbbbbbboo',
+      'obbbbbbboo',
+      'obsssssboo',
+      '.obbbbboo.',
+      '..ooooo...',
+    ],
+  },
+
+  // Jellyfish bell with dangling tentacles — bell on top, strands below.
+  // w=8 h=10; domed top half, wispy tentacle rows below.
+  body_jelly: {
+    w: 8, h: 10, anchor: { x: 4, y: 5 },
+    down: [
+      '..oooo..',
+      '.obhhbo.',
+      'obhhhbbo',
+      'obbbbbbo',
+      'obbssbbo',
+      '.oooooo.',
+      '.o.oo.o.',
+      '.o....o.',
+      '..o..o..',
+      '...oo...',
+    ],
+    up: [
+      '..oooo..',
+      '.obbbbo.',
+      'obbbbbbo',
+      'obbbbbbo',
+      'obbssbbo',
+      '.oooooo.',
+      '.o.oo.o.',
+      '.o....o.',
+      '..o..o..',
+      '...oo...',
+    ],
+    side: [
+      '..oooo..',
+      '.obhhbo.',
+      'obhhhbbo',
+      'obbbbbbo',
+      'obbssbbo',
+      '.oooooo.',
+      '.o.oo.o.',
+      '.o....o.',
+      '..o..o..',
+      '...oo...',
+    ],
+  },
+
+  // Squat frog body — wide crouched stance, prominent mouth, stubby legs.
+  // w=10 h=8; wider than tall, legs visible at bottom corners.
+  body_frog: {
+    w: 10, h: 8, anchor: { x: 3, y: 7 },
+    down: [
+      '.oooooooo.',
+      'obbhhhbbbo',
+      'obbbbbbbbo',
+      'obbssssb.o',
+      'oobbbbbboo',
+      'obo....obo',
+      'obo....obo',
+      '.oo....oo.',
+    ],
+    up: [
+      '.oooooooo.',
+      'obbbbbbbbo',
+      'obbbbbbbbo',
+      'obbssssb.o',
+      'oobbbbbboo',
+      'obo....obo',
+      'obo....obo',
+      '.oo....oo.',
+    ],
+    side: [
+      '..ooooooo.',
+      '.obhhhbbo.',
+      '.obbbbbbo.',
+      '.obbssb.o.',
+      '.obbbbbboo',
+      '.obo...obo',
+      '.obo...obo',
+      '..oo...oo.',
+    ],
+  },
+
+  // Small egg blob — rounded static egg with a slight highlight sheen.
+  // w=6 h=5; down only (static object, up/side null).
+  frog_egg: {
+    w: 6, h: 5, anchor: { x: 5, y: 8 },
+    down: [
+      '.oooo.',
+      'obhhbo',
+      'obbbbo',
+      'obssbo',
+      '.oooo.',
+    ],
+    up: null,
+    side: null,
+  },
+
+  // Tadpole — round head + wiggly tail.
+  // w=8 h=6; head on left, tail curves to right.
+  tadpole_tail: {
+    w: 8, h: 6, anchor: { x: 4, y: 8 },
+    down: [
+      '.oooo...',
+      'obhhbooo',
+      'obbbbbbo',
+      'obbbbsbo',
+      '.oooobo.',
+      '......o.',
+    ],
+    up: null,
+    side: [
+      '.oooo...',
+      'obhhbooo',
+      'obbbbbbo',
+      'obbbbsbo',
+      '.oooobo.',
+      '......o.',
+    ],
+  },
+
+  // Translucent ice-bubble sphere — hollow look via highlight ring, minimal fill.
+  // w=8 h=8; mostly outline/highlight with very sparse center.
+  body_bubble: {
+    w: 8, h: 8, anchor: { x: 4, y: 7 },
+    down: [
+      '..oooo..',
+      '.ohhhho.',
+      'ohb..bho',
+      'oh....ho',
+      'oh....ho',
+      'ohb..bho',
+      '.osssso.',
+      '..oooo..',
+    ],
+    up: [
+      '..oooo..',
+      '.ohhhho.',
+      'ohb..bho',
+      'oh....ho',
+      'oh....ho',
+      'ohb..bho',
+      '.osssso.',
+      '..oooo..',
+    ],
+    side: [
+      '..oooo..',
+      '.ohhhho.',
+      'ohb..bho',
+      'oh....ho',
+      'oh....ho',
+      'ohb..bho',
+      '.osssso.',
+      '..oooo..',
+    ],
+  },
+
+  // Bulbous kraken/octopus mantle with tentacles splaying below.
+  // w=12 h=14; rounded dome head, 6 tentacles dangling from the lower half.
+  body_kraken: {
+    w: 12, h: 14, anchor: { x: 2, y: 1 },
+    down: [
+      '....oooo....',
+      '..oobbboo...',
+      '.obbbhbbbo..',
+      'obbhhhhhbbo.',
+      'obbbbbbbbbo.',
+      'obbbbbbbbbbo',
+      'obbssssssbo.',
+      '.obbbbbbbo..',
+      '..ooooooo...',
+      '.oo.oo.oo...',
+      '.ob.ob.ob...',
+      '.ob.ob.ob...',
+      '..o..o..o...',
+      '............',
+    ],
+    up: [
+      '....oooo....',
+      '..oobbboo...',
+      '.obbbbbbo...',
+      'obbbbbbbboo.',
+      'obbbbbbbbbo.',
+      'obbbbbbbbbbo',
+      'obbssssssbo.',
+      '.obbbbbbbo..',
+      '..ooooooo...',
+      '.oo.oo.oo...',
+      '.ob.ob.ob...',
+      '.ob.ob.ob...',
+      '..o..o..o...',
+      '............',
+    ],
+    side: [
+      '....oooo....',
+      '..oobbboo...',
+      '.obbbhbbo...',
+      'obbhhhbboo..',
+      'obbbbbbbboo.',
+      'obbbbbbbbbo.',
+      'obssssssbo..',
+      '.obbbbbbo...',
+      '..ooooooo...',
+      '.oo..oo.....',
+      '.ob..ob.....',
+      '.ob..ob.....',
+      '..o...o.....',
+      '............',
+    ],
+  },
+
+  // Massive rounded whale/leviathan body — broad with hint of mouth and flukes.
+  // w=14 h=10; wide oval main body, tail flukes at bottom.
+  body_whale: {
+    w: 14, h: 10, anchor: { x: 1, y: 5 },
+    down: [
+      '....oooooo....',
+      '..oobbbbboo...',
+      '.obbbhhhbbbo..',
+      'obbbbbbbbbbboo',
+      'obbbbbbbbbbsbo',
+      'obbssssssssbo.',
+      '.obbbbbbbbboo.',
+      '..obbbbbboo...',
+      '..oo....oo....',
+      '...o....o.....',
+    ],
+    up: [
+      '....oooooo....',
+      '..oobbbbboo...',
+      '.obbbbbbbbbo..',
+      'obbbbbbbbbbboo',
+      'obbbbbbbbbbsbo',
+      'obbssssssssbo.',
+      '.obbbbbbbbboo.',
+      '..obbbbbboo...',
+      '..oo....oo....',
+      '...o....o.....',
+    ],
+    side: [
+      '....ooooooo...',
+      '..oobbbbbboo..',
+      '.obbbhbbbbbbo.',
+      'obbbbbbbbbbbbo',
+      'obbbbbbbbbbsbo',
+      'obsssssssssboo',
+      '.obbbbbbbbboo.',
+      '..obbbbbboo...',
+      '..oo....oo....',
+      '...o....o.....',
+    ],
+  },
+
+  // --- Projectile bodies (radial; only 'down' used) ---
+  orb_body: {
+    w: 6, h: 6, anchor: { x: 5, y: 5 },
+    down: ['.hbbh.', 'hbbbbh', 'bbsbbb', 'bbbsbb', 'hbbbbh', '.hbbh.'],
+    up: null, side: null,
+  },
+  flame_body: {
+    w: 8, h: 8, anchor: { x: 4, y: 4 },
+    down: ['...aa...', '..ahha..', '.ahhhha.', 'ahhbbhha', 'ahbbbbha', '.abbbba.', '..asba..', '...oo...'],
+    up: null, side: null,
+  },
+  arrow_body: {
+    w: 10, h: 4, anchor: { x: 3, y: 6 },
+    down: ['o.........', 'ahhhhhhbbo', 'ahhhhhhbbo', 'o.........'],
+    up: null, side: null,
+  },
+};
