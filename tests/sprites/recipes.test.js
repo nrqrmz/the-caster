@@ -50,3 +50,16 @@ test('projectile recipes exist and forge', () => {
     assert.ok(out.anims['idle-down']);
   }
 });
+
+import { FIRE_ENEMIES } from '../../src/data/enemies/fire.js';
+
+test('every fire enemy + generic has a recipe with known parts', () => {
+  const keys = [...Object.keys(FIRE_ENEMIES), 'villager', 'warrior', 'archer'];
+  for (const key of keys) {
+    assert.ok(hasRecipe(key), `'${key}' has no sprite recipe`);
+    for (const ref of getRecipe(key).parts) {
+      const name = typeof ref === 'string' ? ref : ref.name;
+      assert.ok(PARTS[name], `recipe '${key}' references unknown part '${name}'`);
+    }
+  }
+});
