@@ -29,6 +29,23 @@ export const COLORS = {
   water: 0x00bcd4,      // burrow surface / whirlpool telegraph (cyan)
   waterDeep: 0x0288d1,  // active whirlpool spiral (deep blue)
   poison: 0x7cb342,     // green poison zone
+  // Water world palette (ice blues, deep lake blues, swamp greens)
+  frostBlue: 0x90caf9,      // Acólito de Escarcha, Vidente de Marea — light cornflower blue
+  deepBlue: 0x1565c0,       // Ahogado, Corista del Abismo — dark lake blue (drowned hue)
+  lakeGreen: 0x26a69a,      // Sacerdotisa del Lago, Náyade — teal healer
+  iceGuard: 0x80deea,       // Guardia de Hielo, Tortuga Acorazada — pale cyan armored
+  frostSpread: 0xb2ebf2,    // Lanzahielos — very pale ice, area-denial feel
+  frozenGray: 0x78909c,     // Cangrejo Acorazado — armor grey-blue
+  tadpole: 0x558b2f,        // Renacuajo — dark swamp green (frog lineage)
+  frogJump: 0x689f38,       // Rana Saltarina — lighter swamp green
+  toadSpit: 0x33691e,       // Sapo Escupidor — darker muted toad
+  globeFish: 0x4dd0e1,      // Pez Globo — bright cyan (inflated)
+  jellyfish: 0xce93d8,      // Medusa — soft purple (bioluminescence)
+  sharkYoung: 0x455a64,     // Tiburón Joven — dark blue-grey slate
+  seaSerpent: 0x006064,     // Serpiente Marina — dark teal
+  frostBubble: 0xe0f7fa,    // Burbuja Gélida — near-white ice
+  frostTotem: 0xb0bec5,     // Tótem de Escarcha — cold grey-blue
+  toadEgg: 0x8d6e63,        // Huevo de Sapo — muddy brown egg
   healthBack: 0x33272a,
   healthFill: 0x66bb6a,
 };
