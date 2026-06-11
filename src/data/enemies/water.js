@@ -71,4 +71,90 @@ export const WATER_ENEMIES = {
     hp: 26, speed: 62, damage: 9, radius: 10,
     movement: { type: 'strafe', range: 200 },
     attacks: [{ type: 'shootStraight', every: 1600, speed: 230 }] },
+
+  // #11 — Pez Globo: erratic melee + explodesOnDeath. Punishes close-range kills.
+  pez_globo: { key: 'pez_globo', tex: TEX.villager, color: COLORS.globeFish,
+    hp: 20, speed: 88, damage: 12, radius: 10,
+    movement: { type: 'erratic' },
+    attacks: [{ type: 'melee' }],
+    modifiers: [{ type: 'explodesOnDeath', count: 8, speed: 200 }] },
+
+  // #12 — Cangrejo Acorazado: very slow shielded tank. Flanks and soaks damage.
+  cangrejo_acorazado: { key: 'cangrejo_acorazado', tex: TEX.warrior, color: COLORS.frozenGray,
+    hp: 90, speed: 38, damage: 14, radius: 13,
+    movement: { type: 'chase' },
+    attacks: [{ type: 'melee' }],
+    modifiers: [{ type: 'shielded', reduce: 0.5 }] },
+
+  // #13 — Medusa: erratic auraDamage + splitsOnDeath (2 smaller copies, no re-split).
+  // spawnType 'medusa_cria' is the scaled-down copy: hp×0.5, radius×0.7, same kit
+  // minus the splitsOnDeath modifier (Plan 1 sets the no-re-split flag on children).
+  medusa: { key: 'medusa', tex: TEX.villager, color: COLORS.jellyfish,
+    hp: 38, speed: 55, damage: 0, radius: 12,
+    movement: { type: 'erratic' },
+    attacks: [],
+    modifiers: [
+      { type: 'auraDamage', dps: 14, radius: 50 },
+      { type: 'splitsOnDeath', spawnType: 'medusa_cria', count: 2, hpMul: 0.5, radiusMul: 0.7 },
+    ] },
+
+  // #13b — Medusa cría: the smaller copy spawned by splitsOnDeath (no re-split flag
+  // is set by Plan 1 logic — this def has no splitsOnDeath modifier by design).
+  medusa_cria: { key: 'medusa_cria', tex: TEX.villager, color: COLORS.jellyfish,
+    hp: 19, speed: 60, damage: 0, radius: 8,
+    movement: { type: 'erratic' },
+    attacks: [],
+    modifiers: [{ type: 'auraDamage', dps: 8, radius: 34 }] },
+
+  // #14 — Tiburón Joven: burrow movement (submerge → reposition → emerge → dashStrike).
+  // While submerged: invulnerable + hidden. Emerges with telegraphed ring (~400 ms).
+  tiburon_joven: { key: 'tiburon_joven', tex: TEX.archer, color: COLORS.sharkYoung,
+    hp: 55, speed: 110, damage: 18, radius: 11,
+    movement: { type: 'burrow', submergeMs: 1500, repositionMs: 200, emergeMs: 400, attackMs: 600, recoverMs: 700 },
+    attacks: [{ type: 'dashStrike' }] },
+
+  // #15 — Serpiente Marina: kite spread ranged. Sinuous, keeps distance.
+  serpiente_marina: { key: 'serpiente_marina', tex: TEX.archer, color: COLORS.seaSerpent,
+    hp: 28, speed: 65, damage: 8, radius: 10,
+    movement: { type: 'kite', range: 230 },
+    attacks: [{ type: 'shootSpread', count: 3, arc: 40, every: 1900, speed: 225 }] },
+
+  // #16 — Náyade: flee + summon tadpoles + healAllies. Dual kill-priority threat.
+  nayade: { key: 'nayade', tex: TEX.archer, color: COLORS.lakeGreen,
+    hp: 30, speed: 70, damage: 0, radius: 11,
+    movement: { type: 'flee' },
+    attacks: [{ type: 'summon', spawnType: 'renacuajo', count: 2, every: 3500 }],
+    modifiers: [{ type: 'healAllies', hps: 10, radius: 130 }] },
+
+  // === Invocados / ambientales ===
+
+  // #17 — Burbuja Gélida: erratic auraDamage + onHitSlow. Floating ambient hazard.
+  burbuja_gelida: { key: 'burbuja_gelida', tex: TEX.villager, color: COLORS.frostBubble,
+    hp: 14, speed: 52, damage: 0, radius: 9,
+    movement: { type: 'erratic' },
+    attacks: [],
+    modifiers: [{ type: 'auraDamage', dps: 9, radius: 42 }, { type: 'onHitSlow' }] },
+
+  // #18 — Tótem de Escarcha: static turret — slow nova + aura. Fixed hazard.
+  totem_escarcha: { key: 'totem_escarcha', tex: TEX.warrior, color: COLORS.frostTotem,
+    hp: 50, speed: 0, damage: 8, radius: 12,
+    movement: { type: 'static' },
+    attacks: [{ type: 'nova', count: 8, every: 3200, speed: 170, telegraph: 550 }],
+    modifiers: [{ type: 'auraDamage', dps: 7, radius: 52 }] },
+
+  // #19 — Huevo de Sapo: static, no attack. Hatches into renacuajo after ~3500 ms
+  // via generational spawning logic (Plan 1). The hatching timer lives in GameScene /
+  // EnemyBrain; this def is the inert spawn target Náyade's summon places on the field.
+  huevo_sapo: { key: 'huevo_sapo', tex: TEX.warrior, color: COLORS.toadEgg,
+    hp: 8, speed: 0, damage: 0, radius: 9,
+    movement: { type: 'static' },
+    attacks: [] },
+
+  // #20 — Tortuga Acorazada: charge + heavy shield + resist (flat damage reduction).
+  // resist: 0.35 means incoming damage is multiplied by (1 - 0.35) = 0.65 (Plan 1).
+  tortuga_acorazada: { key: 'tortuga_acorazada', tex: TEX.warrior, color: COLORS.iceGuard,
+    hp: 110, speed: 60, damage: 15, radius: 14,
+    movement: { type: 'charge', windup: 600, dash: 450, recover: 750, dashMul: 2.8 },
+    attacks: [{ type: 'melee' }],
+    modifiers: [{ type: 'shielded', reduce: 0.55 }, { type: 'resist', factor: 0.35 }] },
 };
