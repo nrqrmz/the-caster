@@ -495,6 +495,296 @@ export const PARTS = {
     ],
   },
 
+  // === Water parts ===
+
+  // Sleek fish/shark body — horizontal, tapering tail. side is the iconic profile.
+  // w=12 h=7; side = horizontal fish facing right; down/up = top-down oval.
+  body_fish: {
+    w: 12, h: 7, anchor: { x: 2, y: 7 },
+    down: [
+      '....oooo....',
+      '..oobbboo...',
+      '.obbbhbbboo.',
+      'obbbbbbbbsbo',
+      '.obbbhbbboo.',
+      '..oobbboo...',
+      '....oooo....',
+    ],
+    up: [
+      '....oooo....',
+      '..oobbboo...',
+      '.obbbbbbboo.',
+      'obbbbbbbbsbo',
+      '.obbbbbbboo.',
+      '..oobbboo...',
+      '....oooo....',
+    ],
+    side: [
+      '....oooo....',
+      '..obbbbbo...',
+      '.obhbbbbbboo',
+      'obbbbbbbbsbo',
+      '.obbbbbbboo.',
+      '..obbbboo...',
+      '.....oo.....',
+    ],
+  },
+
+  // Dorsal fin overlay — small triangle on top of a fish body.
+  // w=4 h=4; only visible from down/side (not visible from up perspective).
+  fin: {
+    w: 4, h: 4, anchor: { x: 4, y: 3 },
+    down: [
+      '.oo.',
+      'obbo',
+      'obbo',
+      'oooo',
+    ],
+    up: null,
+    side: [
+      '.oo.',
+      'oabo',
+      'obbo',
+      'oooo',
+    ],
+  },
+
+  // Sinuous sea-serpent body — vertical S-curve silhouette.
+  // w=8 h=12; distinct narrow elongated shape.
+  body_serpent: {
+    w: 8, h: 12, anchor: { x: 4, y: 3 },
+    down: [
+      '..oooo..',
+      '.obbhbo.',
+      '.obbbbo.',
+      'obbbbbo.',
+      'obsssboo',
+      '.obbbbo.',
+      '..obbbo.',
+      '.obbbboo',
+      '.obbbbo.',
+      '.obssboo',
+      '..obbo..',
+      '...oo...',
+    ],
+    up: [
+      '..oooo..',
+      '.obbbbo.',
+      '.obbbbo.',
+      'obbbbboo',
+      'obbbbbo.',
+      '.obbbbo.',
+      '..obbbo.',
+      '.obbbboo',
+      '.obbbbo.',
+      '.obbsbo.',
+      '..obbo..',
+      '...oo...',
+    ],
+    side: [
+      '..oooo..',
+      '.obhbbo.',
+      '.obbbbo.',
+      'obbbbbo.',
+      'obsssboo',
+      '.obbbbo.',
+      '..obbbo.',
+      '.obbbboo',
+      '.obhbbo.',
+      '.obssboo',
+      '..obbo..',
+      '...oo...',
+    ],
+  },
+
+  // Domed shell body — turtle/crab carapace with rounded top and a rim ring.
+  // w=10 h=8; wide dome, rim visible at bottom.
+  body_shell: {
+    w: 10, h: 8, anchor: { x: 3, y: 7 },
+    down: [
+      '..oooooo..',
+      '.obhhhhbo.',
+      'obbhhhbbbo',
+      'obbbbbbbbo',
+      'obbbbbbbbo',
+      'obbssssbo.',
+      '.obbbbbo..',
+      '..oooooo..',
+    ],
+    up: [
+      '..oooooo..',
+      '.obbbbbbo.',
+      'obbbbbbbo.',
+      'obbbbbbbbo',
+      'obbbbbbbbo',
+      'obbssssbo.',
+      '.obbbbbo..',
+      '..oooooo..',
+    ],
+    side: [
+      '..oooooo..',
+      '.obhhhbo..',
+      'obbhhhbbo.',
+      'obbbbbbboo',
+      'obbbbbbboo',
+      'obsssssboo',
+      '.obbbbboo.',
+      '..ooooo...',
+    ],
+  },
+
+  // Jellyfish bell with dangling tentacles — bell on top, strands below.
+  // w=8 h=10; domed top half, wispy tentacle rows below.
+  body_jelly: {
+    w: 8, h: 10, anchor: { x: 4, y: 5 },
+    down: [
+      '..oooo..',
+      '.obhhbo.',
+      'obhhhbbo',
+      'obbbbbbo',
+      'obbssbbo',
+      '.oooooo.',
+      '.o.oo.o.',
+      '.o....o.',
+      '..o..o..',
+      '...oo...',
+    ],
+    up: [
+      '..oooo..',
+      '.obbbbo.',
+      'obbbbbbo',
+      'obbbbbbo',
+      'obbssbbo',
+      '.oooooo.',
+      '.o.oo.o.',
+      '.o....o.',
+      '..o..o..',
+      '...oo...',
+    ],
+    side: [
+      '..oooo..',
+      '.obhhbo.',
+      'obhhhbbo',
+      'obbbbbbo',
+      'obbssbbo',
+      '.oooooo.',
+      '.o.oo.o.',
+      '.o....o.',
+      '..o..o..',
+      '...oo...',
+    ],
+  },
+
+  // Squat frog body — wide crouched stance, prominent mouth, stubby legs.
+  // w=10 h=8; wider than tall, legs visible at bottom corners.
+  body_frog: {
+    w: 10, h: 8, anchor: { x: 3, y: 7 },
+    down: [
+      '.oooooooo.',
+      'obbhhhbbbo',
+      'obbbbbbbbo',
+      'obbssssb.o',
+      'oobbbbbboo',
+      'obo....obo',
+      'obo....obo',
+      '.oo....oo.',
+    ],
+    up: [
+      '.oooooooo.',
+      'obbbbbbbbo',
+      'obbbbbbbbo',
+      'obbssssb.o',
+      'oobbbbbboo',
+      'obo....obo',
+      'obo....obo',
+      '.oo....oo.',
+    ],
+    side: [
+      '..ooooooo.',
+      '.obhhhbbo.',
+      '.obbbbbbo.',
+      '.obbssb.o.',
+      '.obbbbbboo',
+      '.obo...obo',
+      '.obo...obo',
+      '..oo...oo.',
+    ],
+  },
+
+  // Small egg blob — rounded static egg with a slight highlight sheen.
+  // w=6 h=5; down only (static object, up/side null).
+  frog_egg: {
+    w: 6, h: 5, anchor: { x: 5, y: 8 },
+    down: [
+      '.oooo.',
+      'obhhbo',
+      'obbbbo',
+      'obssbo',
+      '.oooo.',
+    ],
+    up: null,
+    side: null,
+  },
+
+  // Tadpole — round head + wiggly tail.
+  // w=8 h=6; head on left, tail curves to right.
+  tadpole_tail: {
+    w: 8, h: 6, anchor: { x: 4, y: 8 },
+    down: [
+      '.oooo...',
+      'obhhbooo',
+      'obbbbbbo',
+      'obbbbsbo',
+      '.oooobo.',
+      '......o.',
+    ],
+    up: null,
+    side: [
+      '.oooo...',
+      'obhhbooo',
+      'obbbbbbo',
+      'obbbbsbo',
+      '.oooobo.',
+      '......o.',
+    ],
+  },
+
+  // Translucent ice-bubble sphere — hollow look via highlight ring, minimal fill.
+  // w=8 h=8; mostly outline/highlight with very sparse center.
+  body_bubble: {
+    w: 8, h: 8, anchor: { x: 4, y: 7 },
+    down: [
+      '..oooo..',
+      '.ohhhho.',
+      'ohb..bho',
+      'oh....ho',
+      'oh....ho',
+      'ohb..bho',
+      '.osssso.',
+      '..oooo..',
+    ],
+    up: [
+      '..oooo..',
+      '.ohhhho.',
+      'ohb..bho',
+      'oh....ho',
+      'oh....ho',
+      'ohb..bho',
+      '.osssso.',
+      '..oooo..',
+    ],
+    side: [
+      '..oooo..',
+      '.ohhhho.',
+      'ohb..bho',
+      'oh....ho',
+      'oh....ho',
+      'ohb..bho',
+      '.osssso.',
+      '..oooo..',
+    ],
+  },
+
   // --- Projectile bodies (radial; only 'down' used) ---
   orb_body: {
     w: 6, h: 6, anchor: { x: 5, y: 5 },

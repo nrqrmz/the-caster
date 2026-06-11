@@ -75,3 +75,15 @@ test('every fire boss has a recipe with known parts', () => {
     }
   }
 });
+
+import { WATER_ENEMIES } from '../../src/data/enemies/water.js';
+
+test('every water enemy has a recipe with known parts', () => {
+  for (const key of Object.keys(WATER_ENEMIES)) {
+    assert.ok(hasRecipe(key), `water enemy '${key}' has no recipe`);
+    for (const ref of getRecipe(key).parts) {
+      const name = typeof ref === 'string' ? ref : ref.name;
+      assert.ok(PARTS[name], `recipe '${key}' references unknown part '${name}'`);
+    }
+  }
+});

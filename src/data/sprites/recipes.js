@@ -45,6 +45,33 @@ export const RECIPES = {
   pyra:     { archetype: 'boss', size: 48, baseColor: 0xe64a19, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
   vesta:    { archetype: 'boss', size: 48, baseColor: 0xff5722, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
   ignatius: { archetype: 'boss', size: 48, baseColor: 0xff7043, parts: ['body_ignatius', 'horns', 'eye_single'] },
+
+  // --- Water cultists (humanoid) ---
+  acolito_escarcha:  { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_hood', 'eyes_dots'] },
+  ahogado:           { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_round', 'eyes_dots'] },
+  corista_abismo:    { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_hood', 'eyes_dots'] },
+  lanzahielos:       { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_hood', 'eyes_dots', 'staff'] },
+  nayade:            { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_round', 'eyes_dots'] },
+  sacerdotisa_lago:  { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_round', 'eyes_dots', 'staff'] },
+  vidente_marea:     { archetype: 'humanoid', size: 16, parts: ['body_robe', 'head_hood', 'eyes_dots', 'staff'] },
+  guardia_hielo:     { archetype: 'humanoid', size: 32, parts: ['body_armor', 'head_round', 'eyes_dots'] },
+  // --- Water beasts ---
+  tiburon_joven:     { archetype: 'fish',    size: 32, parts: ['body_fish', 'fin', 'eyes_dots'] },
+  serpiente_marina:  { archetype: 'serpent', size: 32, parts: ['body_serpent', 'eyes_dots'] },
+  tortuga_acorazada: { archetype: 'shelled', size: 32, parts: ['body_shell', 'head_round', 'eyes_dots'] },
+  cangrejo_acorazado:{ archetype: 'shelled', size: 32, parts: ['body_shell', 'eyes_dots'] },
+  medusa:            { archetype: 'jelly',   size: 32, parts: ['body_jelly', 'eyes_dots'] },
+  medusa_cria:       { archetype: 'jelly',   size: 16, parts: ['body_jelly', 'eyes_dots'] },
+  pez_globo:         { archetype: 'blob',    size: 16, parts: ['body_blob', 'eyes_dots'] },
+  // --- Frog lineage ---
+  huevo_sapo:        { archetype: 'egg',     size: 16, parts: ['frog_egg'] },
+  renacuajo:         { archetype: 'blob',    size: 16, parts: ['tadpole_tail', 'eyes_dots'] },
+  rana_saltarina:    { archetype: 'frog',    size: 16, parts: ['body_frog', 'eyes_dots'] },
+  sapo_escupidor:    { archetype: 'frog',    size: 16, parts: ['body_frog', 'eyes_dots'] },
+  sapo_adulto:       { archetype: 'frog',    size: 32, parts: ['body_frog', 'eyes_dots'] },
+  // --- Ambient ---
+  burbuja_gelida:    { archetype: 'blob',     size: 16, parts: ['body_bubble'] },
+  totem_escarcha:    { archetype: 'floating', size: 32, parts: ['body_totem', 'eye_single'] },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
