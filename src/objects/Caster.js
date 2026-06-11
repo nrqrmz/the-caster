@@ -1,17 +1,23 @@
-import { TEX } from '../config.js';
+import { TEX, spriteKey } from '../config.js';
+import { hasRecipe } from '../data/sprites/recipes.js';
+import { FacingController } from './FacingController.js';
 
 export default class Caster extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, stats) {
-    super(scene, x, y, TEX.caster);
+    const useSprite = hasRecipe('hero');
+    super(scene, x, y, useSprite ? spriteKey('hero') : TEX.caster);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setCollideWorldBounds(true);
-    this.stats = stats;            // from SkillTree.getStats(save)
+    this.stats = stats;
     this.hp = stats.maxHealth;
     this.maxHp = stats.maxHealth;
     this._shotTimer = 0;
-    this.slowRemaining = 0;   // ms
-    this.slowFactor = 1;      // speed multiplier (floor = CASTER_SLOW_FLOOR)
+    this.slowRemaining = 0;
+    this.slowFactor = 1;
+    this._aimTarget = null;
+    this.facing = useSprite ? new FacingController(this, 'hero') : null;
+    if (useSprite) this.setDisplaySize(32, 32); // hero visual footprint ~ old radius 16
   }
 
   moveBy(vector) {
@@ -19,11 +25,11 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(vector.x * this.stats.moveSpeed * mul, vector.y * this.stats.moveSpeed * mul);
   }
 
-  // Called every frame. enemies = array of live enemy sprites. onFire(target) spawns the orb.
   updateAutoAim(time, delta, enemies, onFire) {
     this._shotTimer -= delta;
-    if (this._shotTimer > 0) return;
     const target = this.nearestEnemy(enemies);
+    this._aimTarget = target ? { x: target.x, y: target.y } : null;
+    if (this._shotTimer > 0) return;
     if (!target) return;
     this._shotTimer = this.stats.shotRate;
     onFire(target);
@@ -38,5 +44,10 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
       if (d < bestD) { bestD = d; best = e; }
     }
     return best;
+  }
+
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+    if (this.facing) this.facing.update(this.body.velocity.x, this.body.velocity.y, this._aimTarget);
   }
 }
