@@ -68,3 +68,86 @@ test('all temple/level/mini bosses are flagged elite', () => {
     }
   }
 });
+
+// ─── Water wiring ────────────────────────────────────────────────────────────
+
+test('water branch has 8 levels with the standard kind layout', () => {
+  const kinds = REGIONS.water.levels.map((l) => l.kind);
+  assert.deepEqual(kinds, ['basic', 'basic', 'basic', 'intermediate', 'intermediate', 'intermediate', 'levelboss', 'temple']);
+});
+
+test('water nv4/5/6 minibosses are soldado_hielo, sapo_desovador, tiburon_abisal', () => {
+  const water = REGIONS.water;
+  const mb4 = water.levels[3].phases.find((p) => p.type === 'miniboss');
+  const mb5 = water.levels[4].phases.find((p) => p.type === 'miniboss');
+  const mb6 = water.levels[5].phases.find((p) => p.type === 'miniboss');
+  assert.equal(mb4.enemyDef.key, 'soldado_hielo');
+  assert.equal(mb5.enemyDef.key, 'sapo_desovador');
+  assert.equal(mb6.enemyDef.key, 'tiburon_abisal');
+  // All flagged elite
+  assert.equal(mb4.enemyDef.elite, true);
+  assert.equal(mb5.enemyDef.elite, true);
+  assert.equal(mb6.enemyDef.elite, true);
+});
+
+test('water nv7 levelboss is the Kraken (single boss, no trio)', () => {
+  const lvl7 = REGIONS.water.levels[6];
+  assert.equal(lvl7.kind, 'levelboss');
+  const phase = lvl7.phases[0];
+  assert.equal(phase.type, 'levelBoss');
+  // single boss path: enemyDef present, no bosses array
+  assert.equal(phase.enemyDef.key, 'kraken');
+  assert.equal(phase.enemyDef.elite, true);
+  assert.equal(phase.bosses, undefined, 'Kraken is not a trio');
+});
+
+test('water nv8 templeboss is DAMA_LAGO with a forms array of length 5', () => {
+  const lvl8 = REGIONS.water.levels[7];
+  assert.equal(lvl8.kind, 'temple');
+  const phase = lvl8.phases[0];
+  assert.equal(phase.type, 'templeBoss');
+  assert.equal(phase.enemyDef.key, 'dama_lago');
+  assert.equal(phase.enemyDef.elite, true);
+  assert.ok(Array.isArray(phase.enemyDef.forms));
+  assert.equal(phase.enemyDef.forms.length, 5);
+  assert.equal(phase.enemyDef.forms.at(-1).key, 'dama_maga_final');
+});
+
+test('water region grants freeze skill and preserves narrative', () => {
+  const water = REGIONS.water;
+  assert.equal(water.grantsSkill, 'freeze');
+  const clearDialogue = water.levels[7].dialogue.onClear;
+  assert.ok(clearDialogue.length >= 2, 'closing dialogue present');
+  const lamaLine = clearDialogue.find((l) => l.speaker === 'Dama del Lago');
+  assert.ok(lamaLine, 'Dama del Lago has a closing line');
+  assert.match(lamaLine.text, /suplicó/, 'mageLines[0] preserved');
+});
+
+// ─── Fire regression ─────────────────────────────────────────────────────────
+
+test('fire nv4/5/6 minibosses are still pyra, vesta, favilla (regression)', () => {
+  const fire = REGIONS.fire;
+  const mb4 = fire.levels[3].phases.find((p) => p.type === 'miniboss');
+  const mb5 = fire.levels[4].phases.find((p) => p.type === 'miniboss');
+  const mb6 = fire.levels[5].phases.find((p) => p.type === 'miniboss');
+  assert.equal(mb4.enemyDef.key, 'pyra');
+  assert.equal(mb5.enemyDef.key, 'vesta');
+  assert.equal(mb6.enemyDef.key, 'favilla');
+});
+
+test('fire nv7 is still the sisters trio (regression)', () => {
+  const lvl7 = REGIONS.fire.levels[6];
+  assert.equal(lvl7.kind, 'levelboss');
+  const phase = lvl7.phases[0];
+  assert.ok(Array.isArray(phase.bosses), 'fire nv7 still uses bosses array');
+  assert.equal(phase.bosses.length, 3);
+  assert.equal(phase.triangle, true);
+  // The new levelBoss param must NOT have clobbered fire
+  assert.equal(phase.enemyDef, undefined, 'fire nv7 has no single enemyDef — it is a trio');
+});
+
+test('fire temple boss is still Ignatius (regression)', () => {
+  const tb = REGIONS.fire.levels[7].phases[0];
+  assert.equal(tb.enemyDef.key, 'ignatius');
+  assert.ok(Array.isArray(tb.enemyDef.phases));
+});
