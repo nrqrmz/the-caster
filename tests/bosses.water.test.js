@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL, KRAKEN, DAMA_LAGO }
   from '../src/data/bosses/water.js';
+import { ENEMY_TYPES } from '../src/data/enemies/index.js';
 
 const MINIBOSSES = [SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL];
 
@@ -90,4 +91,26 @@ test('SAPO_DESOVADOR phase 2 summons 2 eggs per cycle', () => {
 
 test('TIBURON_ABISAL uses burrow movement', () => {
   assert.equal(TIBURON_ABISAL.movement.type, 'burrow');
+});
+
+test('every boss summon spawnType resolves to a registered enemy', () => {
+  // (boss, phases) pairs. DAMA_LAGO has no own phases — its forms each do.
+  const targets = [
+    { boss: SOLDADO_HIELO, phases: SOLDADO_HIELO.phases },
+    { boss: SAPO_DESOVADOR, phases: SAPO_DESOVADOR.phases },
+    { boss: TIBURON_ABISAL, phases: TIBURON_ABISAL.phases },
+    { boss: KRAKEN, phases: KRAKEN.phases },
+    ...DAMA_LAGO.forms.map((f) => ({ boss: f, phases: f.phases })),
+  ];
+  for (const { boss, phases } of targets) {
+    for (const phase of phases ?? []) {
+      for (const step of phase.sequence ?? []) {
+        if (step.do !== 'summon') continue;
+        assert.ok(
+          ENEMY_TYPES[step.spawnType],
+          `${boss.key} summons unregistered enemy type "${step.spawnType}"`,
+        );
+      }
+    }
+  }
 });

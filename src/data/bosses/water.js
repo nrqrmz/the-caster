@@ -107,7 +107,7 @@ export const KRAKEN = {
     { from: 0.3, speedMul: 1.1, enter: ['spawnWhirlpool'], sequence: [
       { do: 'lobAoe', radius: 75, dps: 26, duration: 3500, telegraph: 380, dur: 750 }, // faster tentacles
       { do: 'lobAoe', radius: 60, dps: 22, duration: 3000, telegraph: 380, dur: 750 },
-      { do: 'summon', spawnType: 'anguila', count: 2, telegraph: 300, dur: 700 },      // adds
+      { do: 'summon', spawnType: 'serpiente_marina', count: 2, telegraph: 300, dur: 700 }, // adds (ranged lake beasts)
       { do: 'nova', count: 14, speed: 220, damage: 13, telegraph: 320, dur: 600 },
       { do: 'wait', dur: 300 },
     ] },
