@@ -55,10 +55,27 @@ export const WATER_ENEMIES = {
   // === Bestias del lago (elemental — nv4–8, first batch) ===
 
   // #8 — Renacuajo: zigzag melee add; spawned by Huevo de Sapo and Náyade.
+  // _growType wires the generational chain: a renacuajo HATCHED from an egg carries
+  // brainState.lifecycle = TADPOLE (set by promoteEnemy) and matures into sapo_adulto.
+  // Plain summoned renacuajos (Náyade, wave filler) spawn WITHOUT lifecycle state, so
+  // they never tick/promote and stay tadpoles — _growType is inert for them.
   renacuajo: { key: 'renacuajo', tex: TEX.villager, color: COLORS.tadpole,
     hp: 12, speed: 105, damage: 7, radius: 8,
     movement: { type: 'zigzag' },
-    attacks: [{ type: 'melee' }] },
+    attacks: [{ type: 'melee' }],
+    _growType: 'sapo_adulto' },
+
+  // Sapo adulto: the matured tadpole (egg→renacuajo→adulto). Strafes, spits,
+  // and re-lays eggs on cooldown — the self-sustaining generational loop
+  // (bounded by CONCURRENCY_CAP). Not placed in waves directly; only reached
+  // via the lifecycle chain. Counter: kill the fragile eggs before they mature.
+  sapo_adulto: { key: 'sapo_adulto', tex: TEX.villager, color: COLORS.toadSpit,
+    hp: 34, speed: 60, damage: 10, radius: 11,
+    movement: { type: 'strafe', range: 200 },
+    attacks: [
+      { type: 'shootStraight', every: 1700, speed: 230 },
+      { type: 'summon', spawnType: 'huevo_sapo', count: 1, every: 5000 },
+    ] },
 
   // #9 — Rana Saltarina: erratic melee. Hard to track, low HP.
   rana_saltarina: { key: 'rana_saltarina', tex: TEX.villager, color: COLORS.frogJump,
@@ -143,12 +160,15 @@ export const WATER_ENEMIES = {
     modifiers: [{ type: 'auraDamage', dps: 7, radius: 52 }] },
 
   // #19 — Huevo de Sapo: static, no attack. Hatches into renacuajo after ~3500 ms
-  // via generational spawning logic (Plan 1). The hatching timer lives in GameScene /
-  // EnemyBrain; this def is the inert spawn target Náyade's summon places on the field.
+  // via generational spawning logic (Plan 1). lifecycle:'egg' makes GameScene.spawnEnemy
+  // arm the egg (brainState.lifecycle = EGG); the hatch timer lives in EnemyBrain's
+  // tickLifecycle, which promotes it to _hatchType (renacuajo) on expiry. The hatched
+  // renacuajo then carries lifecycle = TADPOLE and continues the chain to sapo_adulto.
   huevo_sapo: { key: 'huevo_sapo', tex: TEX.warrior, color: COLORS.toadEgg,
     hp: 8, speed: 0, damage: 0, radius: 9,
     movement: { type: 'static' },
-    attacks: [] },
+    attacks: [],
+    lifecycle: 'egg', _hatchType: 'renacuajo' },
 
   // #20 — Tortuga Acorazada: charge + heavy shield + resist (flat damage reduction).
   // resist: 0.35 means incoming damage is multiplied by (1 - 0.35) = 0.65 (Plan 1).

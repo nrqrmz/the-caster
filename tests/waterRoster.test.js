@@ -92,6 +92,33 @@ test('resist modifier is on exactly tortuga_acorazada', () => {
   assert.ok(resistMod.factor > 0 && resistMod.factor < 1, 'resist factor must be in (0, 1)');
 });
 
+// ── 6b. Frog lifecycle chain is fully connected ──────────────────────────────
+// egg (huevo_sapo) → renacuajo → sapo_adulto → egg (closed, self-sustaining loop
+// bounded by CONCURRENCY_CAP). Pure data integrity only — the timers/spawning are
+// Phaser-coupled (GameScene/EnemyBrain) and verified by playtest.
+test('frog lifecycle chain is fully connected', () => {
+  const egg = ENEMY_TYPES.huevo_sapo;
+  assert.equal(egg.lifecycle, 'egg', 'huevo_sapo must be tagged lifecycle: egg');
+  assert.ok(ENEMY_TYPES[egg._hatchType], `egg._hatchType '${egg._hatchType}' must resolve`);
+  assert.equal(egg._hatchType, 'renacuajo', 'egg hatches into renacuajo');
+
+  // Egg is inert until it hatches: static, no attacks.
+  assert.equal(egg.movement.type, 'static', 'huevo_sapo must be static');
+  assert.equal((egg.attacks || []).length, 0, 'huevo_sapo must have no attacks (inert)');
+
+  const tadpole = ENEMY_TYPES.renacuajo;
+  assert.ok(ENEMY_TYPES[tadpole._growType], `renacuajo._growType '${tadpole._growType}' must resolve`);
+  assert.equal(tadpole._growType, 'sapo_adulto', 'renacuajo grows into sapo_adulto');
+
+  const adult = ENEMY_TYPES.sapo_adulto;
+  assert.ok(adult, 'sapo_adulto must register in ENEMY_TYPES');
+  const summon = (adult.attacks || []).find((a) => a.type === 'summon');
+  assert.ok(summon, 'sapo_adulto must have a summon attack');
+  assert.ok(ENEMY_TYPES[summon.spawnType], `summon.spawnType '${summon.spawnType}' must resolve`);
+  // Closes the loop: adult lays the same egg the chain started from.
+  assert.equal(summon.spawnType, 'huevo_sapo', 'sapo_adulto must re-lay huevo_sapo (closed cycle)');
+});
+
 // ── 7. Regression: Fire and generic keys still present ───────────────────────
 test('Fire and generic enemy types are unaffected by Water roster addition', () => {
   const legacyKeys = ['villager', 'warrior', 'archer', 'acolito_brasa', 'lanzabrasas',

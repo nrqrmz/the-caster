@@ -233,6 +233,13 @@ export default class GameScene extends Phaser.Scene {
     else if (edge === 2) { x = Phaser.Math.Between(0, GAME_WIDTH); y = GAME_HEIGHT + 20; }
     else { x = -20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
     const e = new Enemy(this, x, y, scaleEnemyDef(def, this.mult));
+    // Arm the generational lifecycle on freshly-laid eggs so tickLifecycle (update loop)
+    // can hatch them. Without this, an egg's brainState.lifecycle is undefined and it
+    // sits inert forever. promoteEnemy carries the TADPOLE/ADULT stages forward from here.
+    if (def.lifecycle === 'egg') {
+      e.brainState.lifecycle = LIFECYCLE.EGG;
+      e.brainState.lifecycleTimer = 0;
+    }
     this.enemies.add(e);
     return e;
   }
