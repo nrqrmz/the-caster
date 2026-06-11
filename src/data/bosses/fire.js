@@ -57,11 +57,20 @@ export const FAVILLA = {
   ],
 };
 
-// Trio variant: the three sisters fought together (level-7 levelBoss). Attenuated
-// (less hp each, single phase) so three patterns at once stay readable. The lava
-// triangle forms between them (handled by GameScene + TriangleHazard).
-const trio = (def, hp) => ({ ...def, hp, phases: [def.phases[0]] });
-export const SISTERS_TRIO = [trio(PYRA, 280), trio(VESTA, 320), trio(FAVILLA, 300)];
+// Trio variant: the three sisters fought together (level-7 levelBoss). Here the
+// LAVA TRIANGLE (GameScene + TriangleHazard) is the star, so each sister is
+// attenuated to a single readable pattern with NO floor-lava (lobAoe) and NO
+// adds (summon) — those belong to the solo miniboss fights (nv4/5/6), not the
+// trio showcase. Favilla's phase-1 is all summons + lobAoe (it would be empty
+// after stripping), so she runs her phase-2 nova instead; she keeps healAllies
+// so "kill the healer first" stays the tactical hook.
+const stripFloorAndAdds = (seq) => seq.filter((s) => s.do !== 'lobAoe' && s.do !== 'summon');
+const trio = (def, hp, seq) => ({ ...def, hp, phases: [{ from: 1.0, sequence: seq }] });
+export const SISTERS_TRIO = [
+  trio(PYRA,    280, stripFloorAndAdds(PYRA.phases[0].sequence)),    // cono de proyectiles
+  trio(VESTA,   320, stripFloorAndAdds(VESTA.phases[0].sequence)),   // embiste + disparo recto
+  trio(FAVILLA, 300, stripFloorAndAdds(FAVILLA.phases[1].sequence)), // nova (sin summons); conserva healAllies
+];
 
 // Ignatius — el padre, mago de templo (nv7). Setpiece de 3 fases. Reusa el
 // secuenciador; las fases 2/3 rompen el suelo en lava (enter: spawnLavaFloor).
