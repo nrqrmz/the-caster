@@ -17,7 +17,9 @@ test('derivePalette returns 5 concrete roles', () => {
     assert.ok(p[role] >= 0 && p[role] <= 0xffffff);
   }
   assert.equal(p.base, 0x4fc3f7);
-  assert.ok(p.shade < p.base || (p.shade & 0xff) <= (p.base & 0xff));
+  const lum = (c) => ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255);
+  assert.ok(lum(p.shade) < lum(p.base), 'shade must be darker than base');
+  assert.ok(lum(p.highlight) > lum(p.base), 'highlight must be lighter than base');
 });
 
 test('derivePalette honors overrides', () => {

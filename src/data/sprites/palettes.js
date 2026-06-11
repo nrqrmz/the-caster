@@ -24,7 +24,7 @@ export function derivePalette(base, overrides = {}) {
   };
 }
 
-// Named palettes for special characters (hero, bosses) override the auto-derived one.
+// Named palettes for special characters (hero, bosses), with hand-tuned overrides.
 export const NAMED_PALETTES = {
   hero: derivePalette(0x4fc3f7, { accent: 0xffd54f }), // light blue robe, gold accent
 };
