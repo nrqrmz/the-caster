@@ -2,6 +2,7 @@ import { COLORS, TEX, spriteKey, frameKey } from '../config.js';
 import { RECIPES, paletteFor } from '../data/sprites/recipes.js';
 import { PARTS } from '../data/sprites/parts.js';
 import { forge } from '../systems/SpriteForge.js';
+import { ENEMY_TYPES } from '../data/enemies/index.js';
 
 export default class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -24,7 +25,9 @@ export default class BootScene extends Phaser.Scene {
 
   buildSprites() {
     for (const [key, recipe] of Object.entries(RECIPES)) {
-      const baseColor = recipe.baseColor ?? COLORS.caster; // hero uses a named palette anyway
+      // Per-creature color: explicit recipe.baseColor (projectiles) > the enemy def's color
+      // > caster fallback. The hero uses a named palette, so its baseColor is ignored.
+      const baseColor = recipe.baseColor ?? ENEMY_TYPES[key]?.color ?? COLORS.caster;
       const palette = paletteFor(key, baseColor);
       const out = forge(recipe, PARTS, palette);
       this.paintForged(key, out);
