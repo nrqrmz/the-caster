@@ -153,3 +153,87 @@ test('findModifier returns the entry (normalizing string form) or null', () => {
   assert.equal(findModifier(def, 'shielded'), null);
   assert.equal(findModifier({}, 'shielded'), null);
 });
+
+import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS } from '../src/data/tuning.js';
+
+// Helper: run burrow for `ms` ms in one step.
+function runBurrow(state, ms, ctx) {
+  return MOVEMENTS.burrow({ ...ctx, params: {}, state, dt: ms });
+}
+
+const burrowCtx = () => ({
+  self: { x: 0, y: 0 },
+  target: { x: 100, y: 100 },
+  speed: 80,
+  dt: 16,
+});
+
+test('burrow: starts in submerged state with zero velocity', () => {
+  const state = {};
+  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state });
+  assert.equal(v.x, 0);
+  assert.equal(v.y, 0);
+  assert.equal(state.mode, 'submerged');
+  assert.equal(v.submerged, true);
+});
+
+test('burrow: stays submerged until BURROW_SUBMERGE_MS elapses', () => {
+  const state = {};
+  // Consume all but the last ms.
+  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_SUBMERGE_MS - 1 });
+  assert.equal(state.mode, 'submerged');
+});
+
+test('burrow: transitions to reposition after submerge window', () => {
+  const state = {};
+  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_SUBMERGE_MS + 1 });
+  assert.equal(state.mode, 'reposition');
+});
+
+test('burrow: reposition snaps to near target immediately (same frame)', () => {
+  const state = { mode: 'reposition', t: 0 };
+  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 16 });
+  // After reposition the mode advances to 'telegraph'.
+  assert.equal(state.mode, 'telegraph');
+  // Velocity during reposition is zero (snap is a position write, not velocity).
+  assert.equal(v.x, 0);
+  assert.equal(v.y, 0);
+  // The intent carries a reposition target.
+  assert.ok(v.repositionTo, 'should carry repositionTo {x,y}');
+});
+
+test('burrow: telegraph mode signals surfacing for BURROW_TELEGRAPH_MS', () => {
+  const state = { mode: 'telegraph', t: 0 };
+  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_TELEGRAPH_MS - 1 });
+  assert.equal(v.surfacing, true);
+  assert.equal(state.mode, 'telegraph');
+});
+
+test('burrow: telegraph transitions to attack after window', () => {
+  const state = { mode: 'telegraph', t: 0 };
+  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_TELEGRAPH_MS + 1 });
+  assert.equal(state.mode, 'attack');
+});
+
+test('burrow: attack mode fires a dashStrike and transitions to recover', () => {
+  const state = { mode: 'attack', t: 0 };
+  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 16 });
+  assert.equal(v.dashStrike, true);
+  assert.equal(state.mode, 'recover');
+});
+
+test('burrow: recover is vulnerable and returns to submerged after BURROW_RECOVER_MS', () => {
+  const state = { mode: 'recover', t: 0 };
+  let v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_RECOVER_MS - 1 });
+  assert.equal(v.vulnerable, true);
+  assert.equal(state.mode, 'recover');
+  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 2 }); // push past threshold
+  assert.equal(state.mode, 'submerged');
+});
+
+test('every movement type (including burrow) returns finite velocity', () => {
+  for (const type of Object.keys(MOVEMENTS)) {
+    const v = MOVEMENTS[type]({ self: { x: 0, y: 0 }, target: { x: 100, y: 0 }, speed: 60, dt: 16, params: {}, state: {} });
+    assert.ok(Number.isFinite(v.x) && Number.isFinite(v.y), `${type} produced NaN`);
+  }
+});

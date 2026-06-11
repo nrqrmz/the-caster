@@ -3,6 +3,8 @@
 // Intent that GameScene executes. Movement and attack-pattern decisions live here
 // so they can be unit-tested under `node --test`.
 
+import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS } from '../data/tuning.js';
+
 function angleBetween(ax, ay, bx, by) { return Math.atan2(by - ay, bx - ax); }
 function distance(ax, ay, bx, by) { return Math.hypot(bx - ax, by - ay); }
 
@@ -86,6 +88,54 @@ export const MOVEMENTS = {
     }
     if (state.t >= recover) { state.mode = 'windup'; state.t = 0; }
     return { x: 0, y: 0 };
+  },
+
+  burrow({ self, target, speed, dt, params, state }) {
+    const submergeMs    = params?.submergeMs    ?? BURROW_SUBMERGE_MS;
+    const telegraphMs   = params?.surfaceTelegraphMs ?? BURROW_TELEGRAPH_MS;
+    const recoverMs     = params?.recoverMs     ?? BURROW_RECOVER_MS;
+    const dashSpeed     = speed * (params?.dashMul ?? 3.5);
+
+    state.mode = state.mode || 'submerged';
+    state.t    = (state.t || 0) + dt;
+
+    if (state.mode === 'submerged') {
+      if (state.t >= submergeMs) { state.mode = 'reposition'; state.t = 0; }
+      return { x: 0, y: 0, submerged: true };
+    }
+
+    if (state.mode === 'reposition') {
+      // Teleport to a spot near the target (caller handles the position write).
+      state.mode = 'telegraph';
+      state.t = 0;
+      // Offset so the enemy doesn't land exactly on the caster.
+      const a = angleBetween(target.x, target.y, self.x, self.y);
+      const dist = 80;
+      const rx = target.x + Math.cos(a) * dist;
+      const ry = target.y + Math.sin(a) * dist;
+      return { x: 0, y: 0, repositionTo: { x: rx, y: ry } };
+    }
+
+    if (state.mode === 'telegraph') {
+      if (state.t >= telegraphMs) { state.mode = 'attack'; state.t = 0; }
+      return { x: 0, y: 0, surfacing: true };
+    }
+
+    if (state.mode === 'attack') {
+      // Fire once, immediately transition to recover.
+      state.mode = 'recover';
+      state.t = 0;
+      const heading = angleBetween(self.x, self.y, target.x, target.y);
+      state.dashHeading = heading;
+      return { x: Math.cos(heading) * dashSpeed, y: Math.sin(heading) * dashSpeed, dashStrike: true };
+    }
+
+    if (state.mode === 'recover') {
+      if (state.t >= recoverMs) { state.mode = 'submerged'; state.t = 0; }
+      return { x: 0, y: 0, vulnerable: true };
+    }
+
+    return { x: 0, y: 0 }; // fallback
   },
 
   erratic({ speed, dt, state }) {

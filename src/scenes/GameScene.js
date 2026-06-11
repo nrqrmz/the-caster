@@ -519,6 +519,13 @@ export default class GameScene extends Phaser.Scene {
       for (const att of intent.fires) this.executeAttack(e, att);
       if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
       if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);
+      // Burrow surface telegraph: draw warning ring while _surfacing.
+      if (e._surfacing) {
+        this.telegraphGfx.lineStyle(3, 0x00bcd4, 0.85);
+        this.telegraphGfx.strokeCircle(e.x, e.y, (e.def.radius || 20) + 24);
+      }
+      // Hide the sprite while submerged; show it otherwise.
+      if (e._burrowed !== undefined) e.setAlpha(e._burrowed ? 0.15 : 1);
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.steerHomingShots(delta);

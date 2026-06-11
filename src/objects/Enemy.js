@@ -73,6 +73,25 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       dt: delta,
     };
     const velocity = computeMovement(movementDef, this.brainState.move, ctx);
+
+    // Burrow side-effects: write the _burrowed / _surfacing flags that GameScene reads.
+    if (velocity.submerged !== undefined) {
+      this._burrowed = !!velocity.submerged;
+      this._surfacing = false;
+    }
+    if (velocity.surfacing) {
+      this._burrowed = false;
+      this._surfacing = true;
+    }
+    if (velocity.vulnerable || velocity.dashStrike) {
+      this._burrowed = false;
+      this._surfacing = false;
+    }
+    if (velocity.repositionTo) {
+      this.x = velocity.repositionTo.x;
+      this.y = velocity.repositionTo.y;
+    }
+
     return { velocity, fires, telegraphs, enters };
   }
 }
