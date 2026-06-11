@@ -1,4 +1,9 @@
 // A reusable physics group of projectiles. fire() activates one from the pool.
+import { TEX, spriteKey } from '../config.js';
+import { hasRecipe } from '../data/sprites/recipes.js';
+
+const PROJECTILE_KEY = { [TEX.orb]: 'orb', [TEX.fireball]: 'fireball', [TEX.arrow]: 'arrow' };
+
 export class ProjectilePool {
   constructor(scene, maxSize = 200) {
     this.scene = scene;
@@ -6,11 +11,15 @@ export class ProjectilePool {
   }
 
   fire(texKey, x, y, targetX, targetY, speed, damage, radius) {
+    const sprKey = PROJECTILE_KEY[texKey];
+    const useSprite = sprKey && hasRecipe(sprKey);
+    const drawKey = useSprite ? spriteKey(sprKey) : texKey;
+
     let p = this.group.getFirstDead(false);
     if (!p) {
-      p = this.group.create(x, y, texKey);
+      p = this.group.create(x, y, drawKey);
     } else {
-      p.setTexture(texKey);
+      p.setTexture(drawKey);
       p.enableBody(true, x, y, true, true);
     }
     p.setActive(true).setVisible(true);
@@ -22,6 +31,14 @@ export class ProjectilePool {
     p.homingLife = 0;          // reset; only homing enemy shots set this after fire()
     const angle = Phaser.Math.Angle.Between(x, y, targetX, targetY);
     p.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+
+    if (useSprite) {
+      p.setRotation(0);
+      if (sprKey === 'orb' || sprKey === 'fireball') p.anims.play(`${sprKey}-idle-down`, true);
+      if (sprKey === 'fireball' || sprKey === 'arrow') p.setRotation(angle);
+    } else {
+      p.setRotation(0);
+    }
     return p;
   }
 

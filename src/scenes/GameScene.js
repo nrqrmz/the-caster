@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG, spriteKey } from '../config.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
 import {
@@ -20,6 +20,8 @@ import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFE
 import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
 import { FormSequencer } from '../systems/FormSequencer.js';
+import { hasRecipe } from '../data/sprites/recipes.js';
+import { FacingController } from '../objects/FacingController.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
@@ -152,7 +154,16 @@ export default class GameScene extends Phaser.Scene {
     boss.def = { ...boss.def, ...form };
     boss.hp = form.hp;
     boss.maxHp = form.hp;
-    if (form.color) boss.setTint(form.color);
+    // A multi-form boss is a different creature per form: swap to the form's own
+    // pixel-art sprite (+ a facing controller keyed to it) rather than tinting one sprite.
+    // Fall back to the legacy tint path when the form has no sprite recipe.
+    if (hasRecipe(boss.def.key)) {
+      boss.setTexture(spriteKey(boss.def.key));
+      boss.clearTint();
+      boss.facing = new FacingController(boss, boss.def.key);
+    } else if (form.color) {
+      boss.setTint(form.color);
+    }
     if (form.radius) boss.setDisplaySize(form.radius * 2, form.radius * 2);
     // Reset BossBrain phase state for the new form.
     boss.brainState.boss = {};
@@ -179,8 +190,12 @@ export default class GameScene extends Phaser.Scene {
       boss.setAlpha(1);
       boss._formSeq.completeTransform();
       this._applyBossForm(boss, boss._formSeq.activeFormIndex);
-      boss.clearTint();
-      if (boss._formSeq.activeForm().color) boss.setTint(boss._formSeq.activeForm().color);
+      // _applyBossForm already set the sprite/tint for the new form; only re-tint
+      // here for the legacy (non-sprite) fallback path.
+      if (!hasRecipe(boss.def.key)) {
+        boss.clearTint();
+        if (boss._formSeq.activeForm().color) boss.setTint(boss._formSeq.activeForm().color);
+      }
     });
   }
 

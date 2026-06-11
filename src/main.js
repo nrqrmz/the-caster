@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT, COLORS } from './config.js';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, DEBUG } from './config.js';
 import BootScene from './scenes/BootScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
@@ -15,6 +15,7 @@ const config = {
   type: Phaser.AUTO,
   parent: 'game',
   backgroundColor: COLORS.bg,
+  pixelArt: true, // nearest-neighbor filtering so pixel-art sprites stay crisp when scaled
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -29,6 +30,9 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+
+// Debug-only handle for inspection/automation (e.g. Playwright). Hidden in release.
+if (DEBUG) window.__game = game;
 
 // Re-fit when the viewport changes (address bar, rotation).
 function refit() {
