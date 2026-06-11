@@ -42,3 +42,11 @@ test('paletteFor derive path: unknown key returns derivePalette of baseColor', (
 test('paletteFor derive path: different base colors produce different palettes', () => {
   assert.notDeepEqual(paletteFor('__x__', 0xff0000), paletteFor('__y__', 0x00ff00));
 });
+
+test('projectile recipes exist and forge', () => {
+  for (const k of ['orb', 'fireball', 'arrow']) {
+    assert.ok(hasRecipe(k), `missing projectile recipe ${k}`);
+    const out = forge(getRecipe(k), PARTS, paletteFor(k, 0x80d8ff));
+    assert.ok(out.anims['idle-down']);
+  }
+});

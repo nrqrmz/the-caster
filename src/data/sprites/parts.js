@@ -70,4 +70,21 @@ export const PARTS = {
     up:   ['aa', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo'],
     side: ['aa', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo', 'oo'],
   },
+
+  // --- Projectile bodies (radial; only 'down' used) ---
+  orb_body: {
+    w: 6, h: 6, anchor: { x: 5, y: 5 },
+    down: ['.hbbh.', 'hbbbbh', 'bbsbbb', 'bbbsbb', 'hbbbbh', '.hbbh.'],
+    up: null, side: null,
+  },
+  flame_body: {
+    w: 8, h: 8, anchor: { x: 4, y: 4 },
+    down: ['...aa...', '..ahha..', '.ahhhha.', 'ahhbbhha', 'ahbbbbha', '.abbbba.', '..asba..', '...oo...'],
+    up: null, side: null,
+  },
+  arrow_body: {
+    w: 10, h: 4, anchor: { x: 3, y: 6 },
+    down: ['o.........', 'ahhhhhhbbo', 'ahhhhhhbbo', 'o.........'],
+    up: null, side: null,
+  },
 };

@@ -8,6 +8,9 @@ export const RECIPES = {
     archetype: 'hero', size: 16, palette: 'hero', anim: { idle: 2, walk: 2 }, fps: 5,
     parts: ['body_robe', 'head_round', 'eyes_dots', 'hat_witch', 'staff'],
   },
+  orb: { archetype: 'projectile', size: 8, baseColor: 0x80d8ff, anim: { idle: 2, walk: 1 }, fps: 8, parts: ['orb_body'] },
+  fireball: { archetype: 'projectile', size: 16, baseColor: 0xff7043, anim: { idle: 3, walk: 1 }, fps: 10, parts: ['flame_body'] },
+  arrow: { archetype: 'projectile', size: 16, baseColor: 0xfff176, anim: { idle: 1, walk: 1 }, fps: 1, parts: ['arrow_body'] },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
