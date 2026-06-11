@@ -100,3 +100,11 @@ test('every water boss + form has a recipe with baseColor and known parts', () =
     }
   }
 });
+
+// GLOBAL parity: every registered enemy type the game can spawn must have a sprite recipe.
+import { ENEMY_TYPES } from '../../src/data/enemies.js';
+
+test('GLOBAL: every registered enemy type has a sprite recipe', () => {
+  const missing = Object.keys(ENEMY_TYPES).filter((k) => !hasRecipe(k));
+  assert.deepEqual(missing, [], `enemy types without recipe: ${missing.join(', ')}`);
+});
