@@ -4,6 +4,7 @@
 import { TEX, COLORS } from '../config.js';
 import { makeLevel } from './levelBuilder.js';
 import { PYRA, VESTA, FAVILLA, SISTERS_TRIO, IGNATIUS } from './bosses/fire.js';
+import { SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL, KRAKEN, DAMA_LAGO } from './bosses/water.js';
 
 const wave = (spawnDelay, spawns) => ({ spawnDelay, spawns });
 const ramp = (base, tier) => Math.round(base * (1 + 0.4 * (tier - 1)));
@@ -176,9 +177,9 @@ export const REGIONS = {
   water: makeBranch({
     id: 'water', element: 'water', name: 'El Lago', grantsSkill: 'freeze',
     basic: waterWaves, inter: waterInterWaves,
-    // TODO(Plan 3): wire minibosses: [SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL],
-    //              levelBosses: KRAKEN_TRIO (or single levelboss),
-    //              templeBoss: DAMA_DEL_LAGO (cambiaformas)
+    minibosses: [SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL],
+    levelBoss: KRAKEN,
+    templeBoss: DAMA_LAGO,
     intro: [{ speaker: 'Narrador', text: 'Bajo el lago habita la maga que firmó el exilio de tu madre.' }],
     mageName: 'Dama del Lago',
     mageLines: [
