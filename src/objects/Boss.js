@@ -10,7 +10,9 @@ export default class Boss extends Enemy {
   drawBar() {
     this.bar.clear();
     const w = 60; const h = 6;
-    const pct = Phaser.Math.Clamp(this.hp / this.maxHp, 0, 1);
+    // Multi-form bosses read their fraction from the FormSequencer (refills per form).
+    const frac = this._formSeq ? this._formSeq.hpFraction() : this.hp / this.maxHp;
+    const pct = Phaser.Math.Clamp(frac, 0, 1);
     this.bar.fillStyle(0x000000, 0.6).fillRect(this.x - w / 2, this.y - this.def.radius - 14, w, h);
     this.bar.fillStyle(0xff5252, 1).fillRect(this.x - w / 2, this.y - this.def.radius - 14, w * pct, h);
   }

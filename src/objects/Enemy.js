@@ -16,6 +16,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.burnRemaining = 0;   // ms burning
     this.burnDps = 0;         // burn damage/sec
     this.brainState = { move: {}, attacks: (def.attacks || []).map(() => ({})), boss: {} };
+    this._formSeq = null; // set by GameScene when the boss has `forms`
   }
 
   applyBurn(dps, ms) {

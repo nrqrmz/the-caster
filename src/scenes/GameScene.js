@@ -19,6 +19,7 @@ import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
 import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE } from '../systems/EnemyBrain.js';
 import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
+import { FormSequencer } from '../systems/FormSequencer.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
@@ -136,7 +137,41 @@ export default class GameScene extends Phaser.Scene {
     this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.mult));
     this.enemies.add(this.boss);
     this.bosses = [this.boss];
+    if (def.forms && def.forms.length) {
+      this.boss._formSeq = new FormSequencer(def.forms);
+      // Bootstrap the boss def to the first form.
+      this._applyBossForm(this.boss, 0);
+    }
     return this.boss;
+  }
+
+  _applyBossForm(boss, formIndex) {
+    const form = boss._formSeq.forms[formIndex];
+    // Merge form fields onto def (movement, speed, hp, resist).
+    boss.def = { ...boss.def, ...form };
+    boss.hp = form.hp;
+    boss.maxHp = form.hp;
+    if (form.color) boss.setTint(form.color);
+    if (form.radius) boss.setDisplaySize(form.radius * 2, form.radius * 2);
+    // Reset BossBrain phase state for the new form.
+    boss.brainState.boss = {};
+  }
+
+  _beginBossTransform(boss) {
+    boss._transforming = true;
+    boss.setAlpha(0.3); // brief dim during transform telegraph
+    // Clear this form's adds.
+    const live = this.enemies.getChildren().filter((e) => e.active && e !== boss);
+    for (const e of live) e.destroy();
+    this.time.delayedCall(1000, () => { // ~1000ms telegraph/invuln window
+      if (!boss.active) return;
+      boss._transforming = false;
+      boss.setAlpha(1);
+      boss._formSeq.completeTransform();
+      this._applyBossForm(boss, boss._formSeq.activeFormIndex);
+      boss.clearTint();
+      if (boss._formSeq.activeForm().color) boss.setTint(boss._formSeq.activeForm().color);
+    });
   }
 
   spawnBosses(defs) {
@@ -242,6 +277,24 @@ export default class GameScene extends Phaser.Scene {
   hitEnemy(enemy, damage) {
     // Burrow invuln gate (set by burrow movement; always falsy on non-burrow enemies).
     if (enemy._burrowed) return;
+    // Form sequencer: route damage through FormSequencer and handle transform.
+    if (enemy._formSeq) {
+      if (enemy._transforming) return; // invuln during the transform telegraph
+      enemy._formSeq.applyDamage(damage);
+      enemy.hp = enemy._formSeq.currentHp; // keep hp in sync for BossBrain hpFrac
+      if (enemy._formSeq.fightOver) {
+        this.onEnemyDeath(enemy);
+        if (enemy === this.boss) this.boss = null;
+        this.bosses = this.bosses.filter((b) => b !== enemy);
+        enemy.destroy();
+        this.checkPhaseCleared();
+        return;
+      }
+      if (enemy._formSeq.transformPending && !enemy._transforming) {
+        this._beginBossTransform(enemy);
+      }
+      return;
+    }
     // Resist (base damage reduction, e.g. boss forms).
     const resistedDmg = enemy.def.resist ? applyResist(damage, enemy.def.resist) : damage;
     const shield = findModifier(enemy.def, 'shielded');
