@@ -47,3 +47,13 @@ test('scale produces a larger grid (size 32 = 2x)', () => {
   assert.equal(out.size, 32);
   assert.equal(out.anims['idle-down'][0].length, 32);
 });
+
+test('composeGrid throws on unknown part', () => {
+  assert.throws(() => composeGrid({ parts: ['ghost'] }, {}, 'down'), /unknown part/);
+});
+
+test('forge throws on unknown role char in a part', () => {
+  const BAD = { blob: { w: 2, h: 2, anchor: { x: 0, y: 0 }, down: ['zz', 'zz'], up: null, side: null } };
+  const PAL = { outline: 0x111111, base: 0x4444ff, shade: 0x2222aa, highlight: 0x8888ff, accent: 0xffff00 };
+  assert.throws(() => forge({ size: 16, parts: ['blob'], anim: { idle: 1, walk: 1 } }, BAD, PAL), /unknown role char/);
+});

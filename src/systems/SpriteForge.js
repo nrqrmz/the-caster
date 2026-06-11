@@ -78,7 +78,12 @@ function padFrames(frames, count, fallback) {
 }
 
 function resolve(grid, palette) {
-  return grid.map((row) => row.map((ch) => (ch === '.' ? null : palette[ROLE_MAP[ch]])));
+  return grid.map((row) => row.map((ch) => {
+    if (ch === '.') return null;
+    const role = ROLE_MAP[ch];
+    if (!role) throw new Error(`SpriteForge: unknown role char '${ch}'`);
+    return palette[role];
+  }));
 }
 
 function scaleGrid(grid, f) {
@@ -95,7 +100,7 @@ function scaleGrid(grid, f) {
 
 export function forge(recipe, parts, palette) {
   const scale = recipe.scale ?? (recipe.size ? recipe.size / DESIGN : 1);
-  const anim = recipe.anim ?? { idle: 2, walk: 2 };
+  const anim = recipe.anim ?? {};
   const anims = {};
   for (const dir of DIRS) {
     const base = composeGrid(recipe, parts, dir);
