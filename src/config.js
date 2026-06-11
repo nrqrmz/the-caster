@@ -63,3 +63,7 @@ export const TEX = {
   boss: 'tex_boss',
   temple: 'tex_temple',
 };
+
+// Per-creature sprite texture keys. Base texture = idle-down frame 0.
+export function spriteKey(key) { return `spr_${key}`; }
+export function frameKey(key, anim, i) { return `spr_${key}__${anim}__${i}`; }
