@@ -381,6 +381,120 @@ export const PARTS = {
     ],
   },
 
+  // Elegant tall humanoid sorceress body — flowing gown, regal silhouette (sisters trio).
+  // Bottom 3 rows are the leg region (walk-animated). w=10 h=12.
+  body_sister: {
+    w: 10, h: 12, anchor: { x: 3, y: 3 },
+    down: [
+      '...oooo...',
+      '..obhhbo..',
+      '..obbbbo..',
+      '..obhhbo..',
+      '.obbbbbo..',
+      '.obbbbbbo.',
+      '.obbhbbbo.',
+      'obbbbbbbo.',
+      'obbbbbbbbo',
+      '.obsssbo..',
+      '.obs.sbo..',
+      '..oooooo..',
+    ],
+    up: [
+      '...oooo...',
+      '..obbbbo..',
+      '..obbbbo..',
+      '..obbbbo..',
+      '.obbbbbo..',
+      '.obbbbbbo.',
+      '.obbbbbbo.',
+      'obbbbbbbo.',
+      'obbbbbbbbo',
+      '.obsssbo..',
+      '.obs.sbo..',
+      '..oooooo..',
+    ],
+    side: [
+      '...ooo....',
+      '..obhbo...',
+      '..obbbo...',
+      '..obhbo...',
+      '..obbbbo..',
+      '..obbbbo..',
+      '..obbhbo..',
+      '.obbbbbo..',
+      '.obbbbbbo.',
+      '.obsssbo..',
+      '.obs.sbo..',
+      '..oooooo..',
+    ],
+  },
+
+  // Small crown/tiara overlay — sits atop the head; accent chars = gold.
+  // w=6 h=3, anchor near head top.
+  crown: {
+    w: 6, h: 3, anchor: { x: 5, y: 1 },
+    down: [
+      'oaooao',
+      'aaaaaa',
+      'oooooo',
+    ],
+    up: [
+      'oaooao',
+      'aaaaaa',
+      'oooooo',
+    ],
+    side: [
+      'oaooao',
+      'aaaaaa',
+      'oooooo',
+    ],
+  },
+
+  // Large imposing fire-elemental/dragon body — broad, menacing, flame silhouette (Ignatius).
+  // w=12 h=11, anchor at top-left of design grid center.
+  body_ignatius: {
+    w: 12, h: 11, anchor: { x: 2, y: 4 },
+    down: [
+      '..oaaaaoo...',
+      '.oabbbbabo..',
+      'oabhhhhbabo.',
+      'oabbbbbbabo.',
+      'oabbbbbbbbo.',
+      'oabbbbbbbbo.',
+      'oabbsssbbbo.',
+      'oabbbbbbbbo.',
+      '.obbsssbbbo.',
+      '.oobbbbboo..',
+      '..ooooooo...',
+    ],
+    up: [
+      '..oaaaaoo...',
+      '.oabbbbabo..',
+      'oabbbbbabo..',
+      'oabbbbbbabo.',
+      'oabbbbbbbbo.',
+      'oabbbbbbbbo.',
+      'oabbsssbbbo.',
+      'oabbbbbbbbo.',
+      '.obbsssbbbo.',
+      '.oobbbbboo..',
+      '..ooooooo...',
+    ],
+    side: [
+      '..oaaaoo....',
+      '.oabbbabo...',
+      'oabbhbbabo..',
+      'oabbbbbabo..',
+      'oabbbbbbbo..',
+      'oabbbbbbbo..',
+      'oabssssbbbo.',
+      'oabbbbbbbbo.',
+      '.obbsssbbo..',
+      '.oobbbbboo..',
+      '..ooooooo...',
+    ],
+  },
+
   // --- Projectile bodies (radial; only 'down' used) ---
   orb_body: {
     w: 6, h: 6, anchor: { x: 5, y: 5 },

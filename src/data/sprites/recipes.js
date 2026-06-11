@@ -39,6 +39,12 @@ export const RECIPES = {
   avispa_brasa:    { archetype: 'floating', size: 16, parts: ['body_winged', 'eyes_dots'] },
   totem_pira:      { archetype: 'floating', size: 32, parts: ['body_totem', 'eye_single'] },
   brasa_errante:   { archetype: 'blob', size: 16, parts: ['body_blob'] },
+
+  // --- Fire bosses (single-form) ---
+  favilla:  { archetype: 'boss', size: 48, baseColor: 0xffca28, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
+  pyra:     { archetype: 'boss', size: 48, baseColor: 0xe64a19, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
+  vesta:    { archetype: 'boss', size: 48, baseColor: 0xff5722, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
+  ignatius: { archetype: 'boss', size: 48, baseColor: 0xff7043, parts: ['body_ignatius', 'horns', 'eye_single'] },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }

@@ -63,3 +63,15 @@ test('every fire enemy + generic has a recipe with known parts', () => {
     }
   }
 });
+
+test('every fire boss has a recipe with known parts', () => {
+  for (const key of ['pyra', 'vesta', 'favilla', 'ignatius']) {
+    assert.ok(hasRecipe(key), `fire boss '${key}' has no recipe`);
+    const r = getRecipe(key);
+    assert.equal(typeof r.baseColor, 'number', `boss '${key}' recipe must set baseColor`);
+    for (const ref of r.parts) {
+      const name = typeof ref === 'string' ? ref : ref.name;
+      assert.ok(PARTS[name], `recipe '${key}' references unknown part '${name}'`);
+    }
+  }
+});
