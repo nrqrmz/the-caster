@@ -33,3 +33,8 @@ export function tickCasterSlow(state, delta) {
 export function getCasterSpeedMul(state) {
   return state.slowRemaining > 0 ? state.slowFactor : 1;
 }
+
+export function applyResist(damage, resist) {
+  const r = Math.max(0, Math.min(1, resist ?? 0));
+  return damage * (1 - r);
+}

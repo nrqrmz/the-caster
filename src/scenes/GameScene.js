@@ -6,7 +6,7 @@ import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
-import { applyDamage, applyCasterSlow, tickCasterSlow } from '../systems/CombatSystem.js';
+import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
@@ -217,8 +217,12 @@ export default class GameScene extends Phaser.Scene {
   }
 
   hitEnemy(enemy, damage) {
+    // Burrow invuln gate (set by burrow movement; always falsy on non-burrow enemies).
+    if (enemy._burrowed) return;
+    // Resist (base damage reduction, e.g. boss forms).
+    const resistedDmg = enemy.def.resist ? applyResist(damage, enemy.def.resist) : damage;
     const shield = findModifier(enemy.def, 'shielded');
-    const dmg = shield ? damage * (1 - (shield.reduce ?? 0.5)) : damage;
+    const dmg = shield ? resistedDmg * (1 - (shield.reduce ?? 0.5)) : resistedDmg;
     const r = applyDamage({ hp: enemy.hp }, dmg);
     enemy.hp = r.hp;
     if (!r.dead) return;

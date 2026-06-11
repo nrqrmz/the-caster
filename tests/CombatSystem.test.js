@@ -66,3 +66,16 @@ test('getCasterSpeedMul returns slowFactor while active, 1 when idle', () => {
   const idle = { slowRemaining: 0, slowFactor: 1 };
   assert.equal(getCasterSpeedMul(idle), 1);
 });
+
+import { applyResist } from '../src/systems/CombatSystem.js';
+
+test('applyResist reduces damage by the resist fraction', () => {
+  assert.equal(applyResist(100, 0.3), 70);
+  assert.equal(applyResist(100, 0), 100);
+  assert.equal(applyResist(100, 1), 0);
+});
+
+test('applyResist clamps resist to [0,1]', () => {
+  assert.equal(applyResist(100, -0.5), 100); // negative resist = no reduction
+  assert.equal(applyResist(100, 1.5), 0);    // over 1 = full immunity
+});
