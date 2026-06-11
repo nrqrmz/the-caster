@@ -156,6 +156,15 @@ export default class GameScene extends Phaser.Scene {
     if (form.radius) boss.setDisplaySize(form.radius * 2, form.radius * 2);
     // Reset BossBrain phase state for the new form.
     boss.brainState.boss = {};
+    // Reset transient movement state AND the burrow invuln latch on every form swap.
+    // The latch (`_burrowed`) is set by burrow movement (`{ submerged: true }`) and only
+    // ever cleared by other burrow outputs. Transforming OUT of a burrow form (TIBURON)
+    // into a non-burrow form (KRAKEN = static) — which never emits a `submerged` field —
+    // would otherwise leave `_burrowed` stuck true, and hitEnemy early-returns on it,
+    // making the new form permanently invulnerable.
+    boss.brainState.move = {};
+    boss._burrowed = false;
+    boss._surfacing = false;
   }
 
   _beginBossTransform(boss) {
