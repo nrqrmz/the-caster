@@ -6,6 +6,8 @@
 //   - If the last form: sets fightOver = true.
 // completeTransform() advances to the next form with full hp.
 
+import { applyResist } from './CombatSystem.js';
+
 export class FormSequencer {
   constructor(forms) {
     if (!forms || forms.length === 0) throw new Error('FormSequencer requires at least one form');
@@ -27,8 +29,7 @@ export class FormSequencer {
   // Apply damage to the current form, accounting for its resist.
   applyDamage(rawDamage) {
     if (this.fightOver || this.transformPending) return;
-    const resist = this.activeForm().resist ?? 0;
-    const actual = rawDamage * (1 - Math.max(0, Math.min(1, resist)));
+    const actual = applyResist(rawDamage, this.activeForm().resist);
     this.currentHp = Math.max(0, this.currentHp - actual);
     if (this.currentHp <= 0) {
       if (this.isLastForm()) {

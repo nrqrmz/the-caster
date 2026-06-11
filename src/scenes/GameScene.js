@@ -61,6 +61,7 @@ export default class GameScene extends Phaser.Scene {
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
     this.telegraphGfx = this.add.graphics().setDepth(1400);
     this.triangleGfx = this.add.graphics().setDepth(6);
+    this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
     this.triangle = null; // { mode, t } while a trio fight is active
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
     this.casterBurnRemaining = 0;
@@ -613,7 +614,7 @@ export default class GameScene extends Phaser.Scene {
       if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);
       // Burrow surface telegraph: draw warning ring while _surfacing.
       if (e._surfacing) {
-        this.telegraphGfx.lineStyle(3, 0x00bcd4, 0.85);
+        this.telegraphGfx.lineStyle(3, COLORS.water, 0.85);
         this.telegraphGfx.strokeCircle(e.x, e.y, (e.def.radius || 20) + 24);
       }
       // Hide the sprite while submerged; show it otherwise.
@@ -674,7 +675,7 @@ export default class GameScene extends Phaser.Scene {
 
     if (w.mode === 'telegraph') {
       // Draw dashed warning circle.
-      this.whirlpoolGfx.lineStyle(2, 0x00bcd4, 0.5);
+      this.whirlpoolGfx.lineStyle(2, COLORS.water, 0.5);
       this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, w.radius);
       if (w.t <= 0) { w.mode = 'active'; w.t = WHIRLPOOL_ACTIVE_MS; }
       return;
@@ -684,9 +685,9 @@ export default class GameScene extends Phaser.Scene {
       // Draw animated spiral (approximate with concentric arcs).
       const phaseMul = scaleForPhase(w.phase);
       const activeRadius = w.radius * phaseMul;
-      this.whirlpoolGfx.lineStyle(3, 0x0288d1, 0.75);
+      this.whirlpoolGfx.lineStyle(3, COLORS.waterDeep, 0.75);
       this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, activeRadius);
-      this.whirlpoolGfx.lineStyle(1, 0x0288d1, 0.4);
+      this.whirlpoolGfx.lineStyle(1, COLORS.waterDeep, 0.4);
       this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, activeRadius * 0.5);
 
       // Apply force to caster.

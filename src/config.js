@@ -26,6 +26,8 @@ export const COLORS = {
   temple: 0xffd54f,     // gold
   lightning: 0xfff176,  // yellow zap
   ice: 0xb3e5fc,        // pale ice blue (distinct from the orb's cyan)
+  water: 0x00bcd4,      // burrow surface / whirlpool telegraph (cyan)
+  waterDeep: 0x0288d1,  // active whirlpool spiral (deep blue)
   poison: 0x7cb342,     // green poison zone
   healthBack: 0x33272a,
   healthFill: 0x66bb6a,

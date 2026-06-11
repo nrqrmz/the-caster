@@ -47,7 +47,7 @@ export default class UIScene extends Phaser.Scene {
 
     // Multi-form boss indicator (e.g. "2/5"): shows which shapeshifter form is active.
     this.bossFormLabel = this.add.text(GAME_WIDTH / 2, 40, '', {
-      fontFamily: 'sans-serif', fontSize: '13px', color: '#b3e5fc',
+      fontFamily: 'sans-serif', fontSize: '13px', color: '#' + COLORS.ice.toString(16).padStart(6, '0'),
     }).setOrigin(0.5).setDepth(1600);
   }
 
