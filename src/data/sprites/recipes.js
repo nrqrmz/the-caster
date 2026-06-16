@@ -4,9 +4,16 @@ import { derivePalette, NAMED_PALETTES } from './palettes.js';
 
 export const RECIPES = {
   hero: {
-    // archetype is a classifier for organizing recipes; SpriteForge does not read it.
-    archetype: 'hero', size: 32, palette: 'hero', anim: { idle: 2, walk: 2 }, fps: 5,
-    parts: ['body_robe', 'head_round', 'eyes_dots', 'hat_witch', 'staff'],
+    // The redheaded princess. Each part composes against its own palette (per-part
+    // palette overrides), so she mixes skin + red hair + green gown + gold + orb.
+    archetype: 'hero', size: 32, anim: { idle: 2, walk: 2 }, fps: 5,
+    parts: [
+      { name: 'staff_princess', palette: 'wood' },
+      { name: 'body_gown', palette: 'greengown' },
+      { name: 'princess_skin', palette: 'skin' },
+      { name: 'hair_long', palette: 'redhair' },
+      { name: 'orb_princess', palette: 'orbblue' },
+    ],
   },
   orb: { archetype: 'projectile', size: 32, baseColor: 0x80d8ff, anim: { idle: 2, walk: 1 }, fps: 8, parts: ['orb_body'] },
   fireball: { archetype: 'projectile', size: 32, baseColor: 0xff7043, anim: { idle: 3, walk: 1 }, fps: 10, parts: ['flame_body'] },
