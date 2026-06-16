@@ -83,6 +83,12 @@ const FENIX = [{ name: 'fenix_crest', palette: 'ember' }, { name: 'fenix_body' }
 const AVISPA = [{ name: 'avispa_wings', palette: 'bone' }, { name: 'avispa_body' }, { name: 'avispa_eyes', palette: 'shadow' }];
 const TOTEM_FIRE = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'glow' }];
 const TOTEM_FROST = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'orbblue' }];
+// Fish / serpent / shelled. body = type color (belly = its own highlight); teeth/fangs
+// = bone; eyes shadow|glow. Turtle/crab carry their own green/red type colors.
+const SHARK = [{ name: 'shark_body' }, { name: 'shark_teeth', palette: 'bone' }, { name: 'shark_eye', palette: 'shadow' }];
+const SERPIENTE = [{ name: 'serpent_body' }, { name: 'serpent_fangs', palette: 'bone' }, { name: 'serpent_eye', palette: 'glow' }];
+const TORTUGA = [{ name: 'turtle_body' }, { name: 'turtle_eye', palette: 'shadow' }];
+const CANGREJO = [{ name: 'crab_body' }, { name: 'crab_eye', palette: 'shadow' }];
 
 export const RECIPES = {
   hero: {
@@ -161,10 +167,10 @@ export const RECIPES = {
   vidente_marea:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF_WATER },
   guardia_hielo:     { archetype: 'humanoid', size: 64, parts: KNIGHT_WATER },
   // --- Water beasts ---
-  tiburon_joven:     { archetype: 'fish',    size: 64, parts: ['body_fish', 'fin', 'eyes_dots'] },
-  serpiente_marina:  { archetype: 'serpent', size: 64, parts: ['body_serpent', 'eyes_dots'] },
-  tortuga_acorazada: { archetype: 'shelled', size: 64, parts: ['body_shell', 'head_round', 'eyes_dots'] },
-  cangrejo_acorazado:{ archetype: 'shelled', size: 64, parts: ['body_shell', 'eyes_dots'] },
+  tiburon_joven:     { archetype: 'fish',    size: 64, parts: SHARK },
+  serpiente_marina:  { archetype: 'serpent', size: 64, parts: SERPIENTE },
+  tortuga_acorazada: { archetype: 'shelled', size: 64, parts: TORTUGA },
+  cangrejo_acorazado:{ archetype: 'shelled', size: 64, parts: CANGREJO },
   medusa:            { archetype: 'jelly',   size: 64, parts: JELLY },
   medusa_cria:       { archetype: 'jelly',   size: 32, parts: JELLY },
   pez_globo:         { archetype: 'blob',    size: 32, parts: PEZ_GLOBO },

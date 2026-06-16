@@ -97,7 +97,7 @@ export const WATER_ENEMIES = {
     modifiers: [{ type: 'explodesOnDeath', count: 8, speed: 200 }] },
 
   // #12 — Cangrejo Acorazado: very slow shielded tank. Flanks and soaks damage.
-  cangrejo_acorazado: { key: 'cangrejo_acorazado', tex: TEX.warrior, color: COLORS.frozenGray,
+  cangrejo_acorazado: { key: 'cangrejo_acorazado', tex: TEX.warrior, color: COLORS.crabRed,
     hp: 90, speed: 38, damage: 14, radius: 20,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
@@ -172,7 +172,7 @@ export const WATER_ENEMIES = {
 
   // #20 — Tortuga Acorazada: charge + heavy shield + resist (flat damage reduction).
   // resist: 0.35 means incoming damage is multiplied by (1 - 0.35) = 0.65 (Plan 1).
-  tortuga_acorazada: { key: 'tortuga_acorazada', tex: TEX.warrior, color: COLORS.iceGuard,
+  tortuga_acorazada: { key: 'tortuga_acorazada', tex: TEX.warrior, color: COLORS.turtleGreen,
     hp: 110, speed: 60, damage: 15, radius: 21,
     movement: { type: 'charge', windup: 600, dash: 450, recover: 750, dashMul: 2.8 },
     attacks: [{ type: 'melee' }],
