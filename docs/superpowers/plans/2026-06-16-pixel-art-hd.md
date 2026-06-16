@@ -534,10 +534,15 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
   = wide carapace + 2 pincers + 4 leg pairs + eyestalks, recolored RED (new
   `COLORS.crabRed`). Body = type color; teeth/fangs = `bone`; eyes `shadow`/`glow`.
   (`tiburon_joven` lived here, not in beasts.)
+- ✅ **Frog lineage** — `gen-frog.mjs`; part-lists `HUEVO`/`RENACUAJO`/`RANA`/
+  `SAPO_ESCUPIDOR`/`SAPO_ADULTO`. huevo_sapo = frogspawn clump; renacuajo = fat body +
+  finned paddle tail; rana_saltarina = small agile frog w/ FLEXED hind legs (shared
+  `hindLeg` helper); sapo_escupidor = warty toad, open spitting mouth (own `toad_body`,
+  radius 16→19, size 32→64); sapo_adulto = biggest fat tank toad, heavy brow (own
+  `bigtoad_body`, radius 17→23). Sized/differentiated by stats. Body = type color;
+  embryos/pupils/mouth = `shadow`.
 
 **Remaining archetypes (each = generator + recipes + checkpoint):**
-- **Frog lineage** (`huevo_sapo`, `renacuajo`, `rana_saltarina`, `sapo_*`):
-  egg → tadpole → squat frog, eyes + stubby legs.
 - **Bosses** (`favilla/pyra/vesta` sisters, `ignatius`, `soldado_hielo`,
   `sapo_desovador`, `tiburon_abisal`, `kraken`, `dama_*` forms, `whale`):
   size 96 — full-grid detail, regal/monstrous silhouettes.
