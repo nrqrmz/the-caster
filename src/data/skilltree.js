@@ -26,7 +26,7 @@ export const SKILL_TREE = {
   f_cd2:   { id: 'f_cd2',   label: '−800ms', cost: 3, requires: ['f_cd1'],  effect: { stat: 'fireballCooldown', add: -800 } },
   f_area1: { id: 'f_area1', label: '+20',   cost: 2, requires: [],          effect: { stat: 'fireballRadius', add: 20 } },
   f_area2: { id: 'f_area2', label: '+25',   cost: 3, requires: ['f_area1'], effect: { stat: 'fireballRadius', add: 25 } },
-  f_burn1: { id: 'f_burn1', label: 'Burn +8/s', cost: 3, requires: [],          effect: { stat: 'burnDamage', add: 8 } },
+  f_burn1: { id: 'f_burn1', label: '+8/s', cost: 3, requires: [],          effect: { stat: 'burnDamage', add: 8 } },
   f_burn2: { id: 'f_burn2', label: '+6/s',  cost: 3, requires: ['f_burn1'], effect: { stat: 'burnDamage', add: 6 } },
 
   // Aire (lightning)
