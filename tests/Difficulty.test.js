@@ -1,47 +1,105 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { difficultyMultiplier, scaleEnemyDef } from '../src/systems/Difficulty.js';
+import {
+  powerBonus, depthBonus, combineResist, difficultyContext, scaleEnemyDef,
+} from '../src/systems/Difficulty.js';
+import { ELITE_RESIST_MAX } from '../src/data/tuning.js';
 
-test('base multiplier is 1 for a fresh save', () => {
-  assert.equal(difficultyMultiplier({ purchasedNodes: [], elements: [] }), 1);
-});
+const fresh = { purchasedNodes: [], elements: [] };
 
-test('multiplier rises with spent points and mastered elements', () => {
-  const m1 = difficultyMultiplier({ purchasedNodes: ['dmg1'], elements: [] }); // cost 1
-  const m2 = difficultyMultiplier({ purchasedNodes: ['dmg1'], elements: ['fire'] });
-  assert.ok(m1 > 1);
-  assert.ok(m2 > m1);
+// spentPoints() sums node.cost per id, so repeating the cost-1 node 'dmg1' N times
+// yields N spent points. elements only needs a length, so fill with placeholders.
+function save(spent, elements = 0) {
+  return {
+    purchasedNodes: Array(spent).fill('dmg1'),
+    elements: Array(elements).fill('x'),
+  };
+}
+
+test('fresh save: no power bonus, depth bonus 0 at level 0', () => {
+  assert.equal(powerBonus(fresh), 0);
+  assert.equal(depthBonus(0), 0);
 });
 
 test('tolerates missing fields', () => {
-  assert.equal(difficultyMultiplier({}), 1);
+  assert.equal(powerBonus({}), 0);
+  assert.equal(powerBonus(undefined), 0);
 });
 
-test('scaleEnemyDef scales hp and damage, never below base, and keeps other fields', () => {
-  const def = { key: 'villager', hp: 20, damage: 8, speed: 90 };
-  const scaled = scaleEnemyDef(def, 1.5);
-  assert.equal(scaled.hp, 30);
-  assert.equal(scaled.damage, 12);
-  assert.equal(scaled.speed, 90);
-  assert.equal(scaled.key, 'villager');
-  const same = scaleEnemyDef(def, 1);
-  assert.equal(same.hp, 20);
+test('powerBonus rises with points but is bounded (sustainable)', () => {
+  const a = powerBonus(save(40));
+  const b = powerBonus(save(110));
+  const c = powerBonus(save(200));
+  assert.ok(b > a);            // monotonic in points
+  assert.ok(c > b);
+  assert.ok(c - b < 0.2);      // 110 → 200 barely moves: future-proof
+  assert.ok(b < 1.5);          // never runaway
 });
 
-import { levelMultiplier } from '../src/systems/Difficulty.js';
-
-test('levelMultiplier at level 0 equals the power multiplier (base 1.0)', () => {
-  const save = { purchasedNodes: [], elements: [] };
-  assert.equal(levelMultiplier(save, 0), 1);
+test('elements add to the power bonus', () => {
+  assert.ok(powerBonus(save(40, 2)) > powerBonus(save(40, 0)));
 });
 
-test('levelMultiplier rises with level depth for the same save', () => {
-  const save = { purchasedNodes: [], elements: [] };
-  assert.ok(levelMultiplier(save, 6) > levelMultiplier(save, 0));
+test('difficultyContext: basics scale softer than elites, both >= 1', () => {
+  const ctx = difficultyContext(save(110, 4), 7);
+  assert.ok(ctx.basicMult >= 1);
+  assert.ok(ctx.basicMult < ctx.eliteMult);
 });
 
-test('levelMultiplier rises with player power at the same depth', () => {
-  const weak = { purchasedNodes: [], elements: [] };
-  const strong = { purchasedNodes: ['dmg1'], elements: ['fire'] };
-  assert.ok(levelMultiplier(strong, 3) > levelMultiplier(weak, 3));
+test('endgame basic stays near x3 (not x15), elite near x4', () => {
+  const ctx = difficultyContext(save(110, 4), 7); // nv8 = index 7
+  assert.ok(ctx.basicMult > 2.7 && ctx.basicMult < 3.5, `basic=${ctx.basicMult}`);
+  assert.ok(ctx.eliteMult > 3.6 && ctx.eliteMult < 4.5, `elite=${ctx.eliteMult}`);
+});
+
+test('eliteResist is positive at depth and bounded by ELITE_RESIST_MAX', () => {
+  const ctx = difficultyContext(save(110, 4), 7);
+  assert.ok(ctx.eliteResist > 0);
+  assert.ok(ctx.eliteResist <= ELITE_RESIST_MAX);
+});
+
+test('combineResist never reaches 1', () => {
+  assert.equal(combineResist(0, 0.3), 0.3);
+  assert.equal(combineResist(0.5, 0.2), 0.6);
+  assert.ok(combineResist(0.9, 0.9) < 1);
+});
+
+test('scaleEnemyDef: basic uses basicMult and adds no resist', () => {
+  const ctx = { basicMult: 2, eliteMult: 4, eliteResist: 0.25 };
+  const def = { key: 'medusa', hp: 20, damage: 8, speed: 90 };
+  const s = scaleEnemyDef(def, ctx);
+  assert.equal(s.hp, 40);
+  assert.equal(s.damage, 16);
+  assert.equal(s.speed, 90);      // untouched fields preserved
+  assert.equal(s.resist, undefined);
+});
+
+test('scaleEnemyDef: elite uses eliteMult and gains combined resist', () => {
+  const ctx = { basicMult: 2, eliteMult: 4, eliteResist: 0.25 };
+  const def = { key: 'levelboss', hp: 100, damage: 20, elite: true };
+  const s = scaleEnemyDef(def, ctx);
+  assert.equal(s.hp, 400);
+  assert.equal(s.damage, 80);
+  assert.equal(s.resist, 0.25);
+});
+
+test('scaleEnemyDef: elite combines innate resist with scaling resist', () => {
+  const ctx = { basicMult: 2, eliteMult: 4, eliteResist: 0.2 };
+  const def = { key: 'tb', hp: 100, damage: 20, elite: true, resist: 0.5 };
+  const s = scaleEnemyDef(def, ctx);
+  assert.equal(s.resist, combineResist(0.5, 0.2)); // 0.6
+});
+
+test('scaleEnemyDef: tolerates a form with no damage field', () => {
+  const ctx = { basicMult: 2, eliteMult: 4, eliteResist: 0.2 };
+  const form = { key: 'dama_form2', hp: 200, elite: true };
+  const s = scaleEnemyDef(form, ctx);
+  assert.equal(s.hp, 800);
+  assert.equal(s.damage, undefined);
+});
+
+test('scaleEnemyDef: mult of 1 leaves stats unchanged (never below base)', () => {
+  const ctx = { basicMult: 1, eliteMult: 1, eliteResist: 0 };
+  const def = { key: 'villager', hp: 20, damage: 8 };
+  assert.equal(scaleEnemyDef(def, ctx).hp, 20);
 });
