@@ -101,17 +101,28 @@ obtener `bonoProfundidad`).
 - **`src/data/tuning.js`** — agregar las constantes de arriba. `BASE_CURVE` se
   queda.
 - **`src/systems/Difficulty.js`** (lógica pura, sin Phaser):
-  - Reemplazar `difficultyMultiplier` / `levelMultiplier` por
-    `difficultyContext(save, levelIndex)` → `{ basicMult, eliteMult, eliteResist }`.
-  - Helpers internos: `powerBonus(save)`, `depthBonus(levelIndex)`,
+  - Agregar `difficultyContext(save, levelIndex)` → `{ basicMult, eliteMult,
+    eliteResist }`.
+  - Helpers exportados: `powerBonus(save)`, `depthBonus(levelIndex)`,
     `combineResist(a, b) = 1 − (1 − a)(1 − b)`.
-  - `scaleEnemyDef(def, ctx)`: elige `ctx.eliteMult` si `def.elite` si no
-    `ctx.basicMult`; escala `hp` y `damage`; para elites fija
+  - Reescribir `scaleEnemyDef(def, ctx)`: elige `ctx.eliteMult` si `def.elite` si
+    no `ctx.basicMult`; escala `hp` y `damage` **solo si están presentes** (las
+    formas de boss no siempre traen `damage`); para elites fija
     `resist = combineResist(def.resist ?? 0, ctx.eliteResist)`.
-- **`src/scenes/GameScene.js`** — calcular `this.diff = difficultyContext(save,
-  this.levelIndex)` una vez (reemplaza `this.mult = levelMultiplier(...)`) y pasar
-  `this.diff` a los 5 call-sites de `scaleEnemyDef` (líneas ~140, 206, 259, 278,
-  375). No tocar el flujo de daño/`applyResist`.
+  - **Retener** `difficultyMultiplier` / `levelMultiplier` (curva vieja) **sin
+    cambios**, usados únicamente como escalar del `goldReward` y del debug — así
+    la economía queda **intacta** (fuera de alcance). Sus constantes legacy
+    (`0.04` / `0.15`) se inlinean en `difficultyMultiplier`.
+- **`src/scenes/GameScene.js`**:
+  - Calcular `this.diff = difficultyContext(save, this.levelIndex)` una vez,
+    **además** de conservar `this.mult = levelMultiplier(save, this.levelIndex)`
+    para `goldReward` (línea ~449) y el debug (línea ~667).
+  - Pasar `this.diff` a los 5 call-sites de `scaleEnemyDef` (líneas ~140, 206,
+    259, 278, 375). No tocar el flujo de daño/`applyResist`.
+  - **Bosses multi-forma** (`_applyBossForm`): cada forma sobrescribe `hp` con su
+    valor crudo, saltándose el escalado. Aplicar `scaleEnemyDef({ ...form,
+    elite: true }, this.diff)` a la forma antes de mergearla, para que cada forma
+    respete `eliteMult` + `resist`.
 
 ## Pruebas (`node --test`, módulo puro)
 
