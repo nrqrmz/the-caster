@@ -102,6 +102,9 @@ const SAPO_ADULTO = [{ name: 'bigtoad_body' }, { name: 'bigtoad_eyes', palette: 
 const PYRA = [{ name: 'pyra_body' }, { name: 'pyra_hair', palette: 'redhair' }, { name: 'pyra_skin', palette: 'skin' }, { name: 'pyra_crown', palette: 'glow' }, { name: 'pyra_orb', palette: 'glow' }];
 const VESTA = [{ name: 'vesta_body' }, { name: 'vesta_hammer', palette: 'steel' }, { name: 'vesta_shield' }, { name: 'vesta_hair', palette: 'blackhair' }, { name: 'vesta_skin', palette: 'skin' }];
 const FAVILLA = [{ name: 'favilla_body' }, { name: 'favilla_hair', palette: 'blondhair' }, { name: 'favilla_skin', palette: 'skin' }, { name: 'favilla_crown', palette: 'glow' }, { name: 'favilla_embers', palette: 'glow' }];
+// Ignatius, the Fire King — father of the sisters. armor/robe = type color; `a` = gold;
+// skin face/hands = skin; flaming beard = ember; crown/scepter-flame = glow; shaft = steel.
+const IGNATIUS = [{ name: 'ign_scepter', palette: 'steel' }, { name: 'ign_body' }, { name: 'ign_skin', palette: 'skin' }, { name: 'ign_beard', palette: 'ember' }, { name: 'ign_crown', palette: 'glow' }, { name: 'ign_flame', palette: 'glow' }];
 
 export const RECIPES = {
   hero: {
@@ -155,7 +158,7 @@ export const RECIPES = {
   favilla:  { archetype: 'boss', size: 96, baseColor: 0xffca28, accent: 0xffd54f, parts: FAVILLA },
   pyra:     { archetype: 'boss', size: 96, baseColor: 0xe64a19, accent: 0xffd54f, parts: PYRA },
   vesta:    { archetype: 'boss', size: 96, baseColor: 0xff5722, accent: 0xffd54f, parts: VESTA },
-  ignatius: { archetype: 'boss', size: 96, baseColor: 0xff7043, parts: ['body_ignatius', 'horns', 'eye_single'] },
+  ignatius: { archetype: 'boss', size: 96, baseColor: 0xff7043, accent: 0xffd54f, parts: IGNATIUS },
 
   // --- Water bosses (single-form) ---
   soldado_hielo:   { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, parts: ['body_armor', 'head_round', 'eyes_dots'] },
