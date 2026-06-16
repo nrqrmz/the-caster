@@ -512,11 +512,16 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
   chest core + bull-horns, `radius` 24→30 (miniboss-tank). New palette `bone`
   (filled ivory horns); cracks/crest/core reuse `ember`, eyes `glow`.
   NOTE: `tiburon_joven` is a fish (uses `body_fish`) — moved to the Fish checkpoint.
+- ✅ **Blobs / elementals** — `gen-blob.mjs`; part-lists `CENIZA`/`FUEGO_ELEM`/`IMP`/
+  `PEZ_GLOBO`/`BRASA`/`BURBUJA`. Per-creature (gelatinous-orb family): espiritu_ceniza
+  = ash ghost w/ smoke tendrils RISING + hollow face; elemental_fuego = terrifying
+  flame demon (jagged fire claws, V-scowl, fanged maw over white-hot core), `radius`
+  21→26 (miniboss); imp_brasa = ember imp (horns + fanged grin); pez_globo = SIDE-
+  profile pufferfish (head/eye + spikes + tail fin); brasa_errante = molten coal,
+  no face; burbuja_gelida = ice bubble w/ sheen + frosty face. Body = type color;
+  cores/cracks = `ember`/`glow`; ice sheen `orbblue`; eyes `glow`/`shadow`/`eyes_living`.
 
 **Remaining archetypes (each = generator + recipes + checkpoint):**
-- **Blobs / elementals** (`espiritu_ceniza`, `elemental_fuego`, `imp_brasa`,
-  `pez_globo`, `brasa_errante`, `burbuja_gelida`): gelatinous body, rim light,
-  inner glow core, eyes.
 - **Winged / floating** (`fenix_menor`, `avispa_brasa`, `totem_*`): membrane/
   feather wings, hovering body.
 - **Fish / serpent / shelled** (`tiburon_*`, `serpiente_marina`,
