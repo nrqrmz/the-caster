@@ -62,6 +62,12 @@ const MAGE_CASTER = (hairPal) => [
   { name: 'mage_staff', palette: 'wood' }, { name: 'mage_robe' }, MAGE_HEAD,
   { name: 'mage_hair', palette: hairPal }, MAGE_HANDS, { name: 'mage_orb', palette: 'orbblue' },
 ];
+// Fire beasts. body = type color; molten cracks/crest/core = `ember`; eyes = `glow`;
+// horns = `bone` (filled ivory cow-horns).
+const LARVA = [{ name: 'larva_body' }, { name: 'larva_glow', palette: 'ember' }, { name: 'larva_eyes', palette: 'glow' }];
+const SALAMANDRA = [{ name: 'sala_body' }, { name: 'sala_crest', palette: 'ember' }, { name: 'sala_eyes', palette: 'glow' }];
+const CAN_LAVA = [{ name: 'can_body' }, { name: 'can_glow', palette: 'ember' }, { name: 'can_horns', palette: 'bone' }, { name: 'can_eyes', palette: 'glow' }];
+const COLOSO = [{ name: 'coloso_body' }, { name: 'coloso_core', palette: 'ember' }, { name: 'coloso_horns', palette: 'bone' }, { name: 'coloso_eyes', palette: 'glow' }];
 
 export const RECIPES = {
   hero: {
@@ -98,12 +104,12 @@ export const RECIPES = {
   sacerdote_llama: { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
   portaestandarte: { archetype: 'humanoid', size: 64, parts: KNIGHT_BANNER },
   // --- Fire beasts ---
-  larva_magma:     { archetype: 'beast', size: 64, parts: ['body_beast', 'eye_single'] },
-  salamandra:      { archetype: 'beast', size: 32, parts: ['body_beast', 'crest_flame', 'eyes_dots'] },
+  larva_magma:     { archetype: 'beast', size: 64, parts: LARVA },
+  salamandra:      { archetype: 'beast', size: 32, parts: SALAMANDRA },
   espiritu_ceniza: { archetype: 'blob', size: 32, parts: ['body_blob', 'eyes_dots'] },
-  can_lava:        { archetype: 'beast', size: 64, parts: ['body_beast', 'horns', 'eyes_dots'] },
+  can_lava:        { archetype: 'beast', size: 64, parts: CAN_LAVA },
   elemental_fuego: { archetype: 'blob', size: 64, parts: ['body_blob', 'eye_single'] },
-  coloso_magma:    { archetype: 'beast', size: 64, parts: ['body_beast', 'horns', 'eye_single'] },
+  coloso_magma:    { archetype: 'beast', size: 64, parts: COLOSO },
   fenix_menor:     { archetype: 'floating', size: 64, parts: ['body_winged', 'crest_flame', 'eyes_dots'] },
   // --- Summoned / ambient ---
   imp_brasa:       { archetype: 'blob', size: 32, parts: ['body_blob', 'horns', 'eyes_dots'] },
