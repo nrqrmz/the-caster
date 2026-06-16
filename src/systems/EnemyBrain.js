@@ -251,7 +251,7 @@ export function buildSplitChildren(def) {
     const child = {
       ...def,
       hp: Math.max(1, Math.round((def.hp ?? 40) * 0.5)),
-      radius: Math.round((def.radius ?? 16) * 0.7),
+      radius: Math.max(16, Math.round((def.radius ?? 16) * 0.7)),
       _split: true, // prevents re-splitting
       _spawnType: mod.spawnType || null,
       // Strip splitsOnDeath from children so they definitely cannot split again.
