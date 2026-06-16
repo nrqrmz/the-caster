@@ -89,6 +89,13 @@ const SHARK = [{ name: 'shark_body' }, { name: 'shark_teeth', palette: 'bone' },
 const SERPIENTE = [{ name: 'serpent_body' }, { name: 'serpent_fangs', palette: 'bone' }, { name: 'serpent_eye', palette: 'glow' }];
 const TORTUGA = [{ name: 'turtle_body' }, { name: 'turtle_eye', palette: 'shadow' }];
 const CANGREJO = [{ name: 'crab_body' }, { name: 'crab_eye', palette: 'shadow' }];
+// Frog lineage. body = type color (belly/warts = its own highlight); embryos/pupils/
+// mouth = shadow. Sized by stats: frog (small) < spitter toad < adult tank toad.
+const HUEVO = [{ name: 'huevo_body' }, { name: 'huevo_spots', palette: 'shadow' }];
+const RENACUAJO = [{ name: 'tadpole_body' }, { name: 'tadpole_eyes', palette: 'shadow' }];
+const RANA = [{ name: 'frog_body' }, { name: 'frog_eyes', palette: 'shadow' }];
+const SAPO_ESCUPIDOR = [{ name: 'toad_body' }, { name: 'toad_eyes', palette: 'shadow' }];
+const SAPO_ADULTO = [{ name: 'bigtoad_body' }, { name: 'bigtoad_eyes', palette: 'shadow' }];
 
 export const RECIPES = {
   hero: {
@@ -175,11 +182,11 @@ export const RECIPES = {
   medusa_cria:       { archetype: 'jelly',   size: 32, parts: JELLY },
   pez_globo:         { archetype: 'blob',    size: 32, parts: PEZ_GLOBO },
   // --- Frog lineage ---
-  huevo_sapo:        { archetype: 'egg',     size: 32, parts: ['frog_egg'] },
-  renacuajo:         { archetype: 'blob',    size: 32, parts: ['tadpole_tail', 'eyes_dots'] },
-  rana_saltarina:    { archetype: 'frog',    size: 32, parts: ['body_frog', 'eyes_dots'] },
-  sapo_escupidor:    { archetype: 'frog',    size: 32, parts: ['body_frog', 'eyes_dots'] },
-  sapo_adulto:       { archetype: 'frog',    size: 64, parts: ['body_frog', 'eyes_dots'] },
+  huevo_sapo:        { archetype: 'egg',     size: 32, parts: HUEVO },
+  renacuajo:         { archetype: 'blob',    size: 32, parts: RENACUAJO },
+  rana_saltarina:    { archetype: 'frog',    size: 32, parts: RANA },
+  sapo_escupidor:    { archetype: 'frog',    size: 64, parts: SAPO_ESCUPIDOR },
+  sapo_adulto:       { archetype: 'frog',    size: 64, parts: SAPO_ADULTO },
   // --- Ambient ---
   burbuja_gelida:    { archetype: 'blob',     size: 32, parts: BURBUJA },
   totem_escarcha:    { archetype: 'floating', size: 64, parts: TOTEM_FROST },

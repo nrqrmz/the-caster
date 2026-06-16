@@ -70,7 +70,7 @@ export const WATER_ENEMIES = {
   // (bounded by CONCURRENCY_CAP). Not placed in waves directly; only reached
   // via the lifecycle chain. Counter: kill the fragile eggs before they mature.
   sapo_adulto: { key: 'sapo_adulto', tex: TEX.villager, color: COLORS.toadSpit,
-    hp: 34, speed: 60, damage: 10, radius: 17,
+    hp: 34, speed: 60, damage: 10, radius: 23,
     movement: { type: 'strafe', range: 200 },
     attacks: [
       { type: 'shootStraight', every: 1700, speed: 230 },
@@ -85,7 +85,7 @@ export const WATER_ENEMIES = {
 
   // #10 — Sapo Escupidor: strafe ranged. Keeps distance, spits single shots.
   sapo_escupidor: { key: 'sapo_escupidor', tex: TEX.villager, color: COLORS.toadSpit,
-    hp: 26, speed: 62, damage: 9, radius: 16,
+    hp: 26, speed: 62, damage: 9, radius: 19,
     movement: { type: 'strafe', range: 200 },
     attacks: [{ type: 'shootStraight', every: 1600, speed: 230 }] },
 
