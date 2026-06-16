@@ -26,7 +26,7 @@ export const SKILL_TREE = {
   f_cd2:   { id: 'f_cd2',   label: '−800ms', cost: 3, requires: ['f_cd1'],  effect: { stat: 'fireballCooldown', add: -800 } },
   f_area1: { id: 'f_area1', label: '+20',   cost: 2, requires: [],          effect: { stat: 'fireballRadius', add: 20 } },
   f_area2: { id: 'f_area2', label: '+25',   cost: 3, requires: ['f_area1'], effect: { stat: 'fireballRadius', add: 25 } },
-  f_burn1: { id: 'f_burn1', label: 'Burn +8/s', cost: 3, requires: [],          effect: { stat: 'burnDamage', add: 8 } },
+  f_burn1: { id: 'f_burn1', label: '+8/s', cost: 3, requires: [],          effect: { stat: 'burnDamage', add: 8 } },
   f_burn2: { id: 'f_burn2', label: '+6/s',  cost: 3, requires: ['f_burn1'], effect: { stat: 'burnDamage', add: 6 } },
 
   // Aire (lightning)
@@ -61,31 +61,31 @@ export const SKILL_TREE = {
 
 // Branches drive the tabbed UI and elemental gating. element=null → always available.
 export const SKILL_BRANCHES = [
-  { key: 'basic', label: 'Ataque básico', element: null, tracks: [
-    { label: 'Daño',     nodes: ['dmg1', 'dmg2', 'dmg3'] },
-    { label: 'Cadencia', nodes: ['rate1', 'rate2', 'rate3'] } ] },
-  { key: 'vit', label: 'Vida', element: null, tracks: [
-    { label: 'Vida máx', nodes: ['hp1', 'hp2', 'hp3'] },
-    { label: 'Regen',    nodes: ['regen1', 'regen2'] } ] },
-  { key: 'mob', label: 'Movilidad', element: null, tracks: [
-    { label: 'Velocidad', nodes: ['spd1', 'spd2'] } ] },
-  { key: 'fire', label: '🔥 Fuego', element: 'fire', tracks: [
-    { label: 'Daño',      nodes: ['f_dmg1', 'f_dmg2'] },
-    { label: '−Cooldown', nodes: ['f_cd1', 'f_cd2'] },
-    { label: 'Área',      nodes: ['f_area1', 'f_area2'] },
-    { label: 'Quemadura', nodes: ['f_burn1', 'f_burn2'] } ] },
-  { key: 'air', label: '⚡ Aire', element: 'air', tracks: [
-    { label: 'Daño',      nodes: ['l_dmg1', 'l_dmg2'] },
-    { label: '−Cooldown', nodes: ['l_cd1', 'l_cd2'] },
-    { label: 'Cadena',    nodes: ['l_chain1', 'l_chain2', 'l_chain3'] } ] },
-  { key: 'earth', label: '☠️ Tierra', element: 'earth', tracks: [
-    { label: 'Daño',          nodes: ['p_dmg1', 'p_dmg2'] },
-    { label: '−Cooldown',     nodes: ['p_cd1', 'p_cd2'] },
-    { label: 'Duración',      nodes: ['p_dur1', 'p_dur2'] },
-    { label: 'Regen de zona', nodes: ['p_heal1', 'p_heal2'] } ] },
-  { key: 'water', label: '❄️ Agua', element: 'water', tracks: [
-    { label: '−Cooldown',     nodes: ['w_cd1', 'w_cd2'] },
-    { label: 'Área',          nodes: ['w_area1', 'w_area2'] },
-    { label: 'Duración',      nodes: ['w_dur1', 'w_dur2'] },
-    { label: 'Ralentización', nodes: ['w_slow1', 'w_slow2'] } ] },
+  { key: 'basic', label: 'skill.branch.basic', element: null, tracks: [
+    { label: 'skill.track.damage',  nodes: ['dmg1', 'dmg2', 'dmg3'] },
+    { label: 'skill.track.cadence', nodes: ['rate1', 'rate2', 'rate3'] } ] },
+  { key: 'vit', label: 'skill.branch.health', element: null, tracks: [
+    { label: 'skill.track.maxhp', nodes: ['hp1', 'hp2', 'hp3'] },
+    { label: 'skill.track.regen', nodes: ['regen1', 'regen2'] } ] },
+  { key: 'mob', label: 'skill.branch.mobility', element: null, tracks: [
+    { label: 'skill.track.speed', nodes: ['spd1', 'spd2'] } ] },
+  { key: 'fire', label: 'skill.branch.fire', element: 'fire', tracks: [
+    { label: 'skill.track.damage',   nodes: ['f_dmg1', 'f_dmg2'] },
+    { label: 'skill.track.cooldown', nodes: ['f_cd1', 'f_cd2'] },
+    { label: 'skill.track.area',     nodes: ['f_area1', 'f_area2'] },
+    { label: 'skill.track.burn',     nodes: ['f_burn1', 'f_burn2'] } ] },
+  { key: 'air', label: 'skill.branch.air', element: 'air', tracks: [
+    { label: 'skill.track.damage',   nodes: ['l_dmg1', 'l_dmg2'] },
+    { label: 'skill.track.cooldown', nodes: ['l_cd1', 'l_cd2'] },
+    { label: 'skill.track.chain',    nodes: ['l_chain1', 'l_chain2', 'l_chain3'] } ] },
+  { key: 'earth', label: 'skill.branch.earth', element: 'earth', tracks: [
+    { label: 'skill.track.damage',   nodes: ['p_dmg1', 'p_dmg2'] },
+    { label: 'skill.track.cooldown', nodes: ['p_cd1', 'p_cd2'] },
+    { label: 'skill.track.duration', nodes: ['p_dur1', 'p_dur2'] },
+    { label: 'skill.track.zoneregen',nodes: ['p_heal1', 'p_heal2'] } ] },
+  { key: 'water', label: 'skill.branch.water', element: 'water', tracks: [
+    { label: 'skill.track.cooldown', nodes: ['w_cd1', 'w_cd2'] },
+    { label: 'skill.track.area',     nodes: ['w_area1', 'w_area2'] },
+    { label: 'skill.track.duration', nodes: ['w_dur1', 'w_dur2'] },
+    { label: 'skill.track.slow',     nodes: ['w_slow1', 'w_slow2'] } ] },
 ];

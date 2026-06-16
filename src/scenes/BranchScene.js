@@ -1,10 +1,10 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config.js';
+import { t } from '../i18n/index.js';
 import { REGIONS } from '../data/regions.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { getStats } from '../systems/SkillTree.js';
 import { clearedCount, isLevelUnlocked } from '../systems/Campaign.js';
 
-const KIND_LABEL = { basic: 'Básico', intermediate: 'Intermedio', pretemple: 'Pre-templo', levelboss: 'Jefe de Nivel', temple: 'Templo' };
 
 export default class BranchScene extends Phaser.Scene {
   constructor() { super('Branch'); }
@@ -24,7 +24,7 @@ export default class BranchScene extends Phaser.Scene {
     const region = REGIONS[this.regionId];
     const cleared = clearedCount(save, this.regionId);
 
-    this.add.text(GAME_WIDTH / 2, 40, region.name, {
+    this.add.text(GAME_WIDTH / 2, 40, t(region.name), {
       fontFamily: 'sans-serif', fontSize: '26px', color: '#fff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
@@ -40,10 +40,10 @@ export default class BranchScene extends Phaser.Scene {
         .setStrokeStyle(2, stroke, playable ? 1 : 0.5);
 
       const tag = level.kind === 'temple' ? '⛩️ ' : '';
-      this.add.text(50, y - 14, `${tag}Nivel ${i + 1} — ${KIND_LABEL[level.kind]}`, {
+      this.add.text(50, y - 14, `${tag}${t('branch.level', { n: i + 1, kind: t(`branch.kind.${level.kind}`) })}`, {
         fontFamily: 'sans-serif', fontSize: '16px', color: playable || done ? '#fff' : '#777',
       });
-      const status = done ? '✔ completado' : (playable ? '▶ jugar' : '🔒 bloqueado');
+      const status = done ? t('branch.done') : (playable ? t('branch.play') : t('branch.locked'));
       this.add.text(GAME_WIDTH - 50, y, status, {
         fontFamily: 'sans-serif', fontSize: '14px', color: done ? '#66bb6a' : (playable ? '#ffd54f' : '#777'),
       }).setOrigin(1, 0.5);
@@ -58,7 +58,7 @@ export default class BranchScene extends Phaser.Scene {
 
     const back = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 40, 180, 44, 0x4fc3f7, 0.2)
       .setStrokeStyle(2, 0x4fc3f7).setInteractive();
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, '← Mapa', {
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, t('branch.back'), {
       fontFamily: 'sans-serif', fontSize: '17px', color: '#fff',
     }).setOrigin(0.5);
     back.on('pointerdown', () => this.scene.start('Map'));

@@ -10,6 +10,10 @@ import MapScene from './scenes/MapScene.js';
 import ShopScene from './scenes/ShopScene.js';
 import PauseScene from './scenes/PauseScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
+import { initLanguage } from './i18n/index.js';
+
+// Resolve language before any scene renders text.
+initLanguage(typeof navigator !== 'undefined' ? navigator.language : undefined, window.localStorage);
 
 const config = {
   type: Phaser.AUTO,
