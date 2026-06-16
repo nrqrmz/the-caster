@@ -505,10 +505,15 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
   archer = robe+mitre+recurve bow (fires `TEX.arrow`); nayade/sacerdotisa = loose
   long hair to the waist + staff+orb (sacerdotisa black hair, no mitre). New palettes:
   `hair/blackhair/blondhair/pants/drownedskin/drownedhair/hollow/deadfish`.
+- ✅ **Fire beasts** — `gen-beast.mjs`; part-lists `LARVA`/`SALAMANDRA`/`CAN_LAVA`/
+  `COLOSO`. Per-creature silhouettes (not shared `body_beast`): larva = segmented
+  molten grub; salamandra = top-down lizard + dorsal flame crest; can_lava =
+  side-profile hound + filled ivory cow-horns; coloso = hunched brute + glowing
+  chest core + bull-horns, `radius` 24→30 (miniboss-tank). New palette `bone`
+  (filled ivory horns); cracks/crest/core reuse `ember`, eyes `glow`.
+  NOTE: `tiburon_joven` is a fish (uses `body_fish`) — moved to the Fish checkpoint.
 
 **Remaining archetypes (each = generator + recipes + checkpoint):**
-- **Beasts** (`larva_magma`, `can_lava`, `coloso_magma`, `salamandra`,
-  `tiburon_joven`): hunched quadruped/lizard, limb + spine shading, fangs/claws.
 - **Blobs / elementals** (`espiritu_ceniza`, `elemental_fuego`, `imp_brasa`,
   `pez_globo`, `brasa_errante`, `burbuja_gelida`): gelatinous body, rim light,
   inner glow core, eyes.
