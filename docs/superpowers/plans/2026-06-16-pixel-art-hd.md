@@ -520,10 +520,14 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
   profile pufferfish (head/eye + spikes + tail fin); brasa_errante = molten coal,
   no face; burbuja_gelida = ice bubble w/ sheen + frosty face. Body = type color;
   cores/cracks = `ember`/`glow`; ice sheen `orbblue`; eyes `glow`/`shadow`/`eyes_living`.
+- ✅ **Winged / floating** — `gen-winged.mjs`; part-lists `FENIX`/`AVISPA`/`TOTEM_FIRE`/
+  `TOTEM_FROST`. fenix_menor = phoenix (feathers fanning from shoulders + flame crest
+  & tail); avispa_brasa = wasp (membrane wings + antennae + striped abdomen + stinger);
+  totem_pira/totem_escarcha = a COLUMNAR totem pole (shared `totem_body`) with two
+  stacked sculpted faces (recessed `shadow` cavities + glowing eyes: `glow` fire /
+  `orbblue` frost). Body/wings = type color; crest/tail = `ember`; wasp wings = `bone`.
 
 **Remaining archetypes (each = generator + recipes + checkpoint):**
-- **Winged / floating** (`fenix_menor`, `avispa_brasa`, `totem_*`): membrane/
-  feather wings, hovering body.
 - **Fish / serpent / shelled** (`tiburon_*`, `serpiente_marina`,
   `tortuga_acorazada`, `cangrejo_acorazado`): streamlined/coiled/armored aquatic.
 - **Frog lineage** (`huevo_sapo`, `renacuajo`, `rana_saltarina`, `sapo_*`):
