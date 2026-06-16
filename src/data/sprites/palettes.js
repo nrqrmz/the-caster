@@ -38,4 +38,15 @@ export const NAMED_PALETTES = {
   shadow: derivePalette(0x241018, { base: 0x2a1320, outline: 0x0a0408, shade: 0x140a10, highlight: 0x3a1c2c }),
   glow: derivePalette(0xffe27a, { highlight: 0xfff7cc, base: 0xffd54f, shade: 0xffb300, outline: 0xc79a2b }),
   ember: derivePalette(0xff8a50, { highlight: 0xffe082, base: 0xff7043, shade: 0xd84315, outline: 0x7a2a10 }),
+  // Bare-headed mage/acolyte accents. The robe takes the creature's type color;
+  // these dress the visible face. A living set (skin/hair/eyes) and a drowned set.
+  hair: derivePalette(0x7a4a2a, { highlight: 0xb07a44, shade: 0x4f2f18, outline: 0x2c190c }),
+  blackhair: derivePalette(0x1b1c26, { base: 0x1b1c26, highlight: 0x3c3e52, shade: 0x101119, outline: 0x050508 }),
+  blondhair: derivePalette(0xd9b25a, { base: 0xd9b25a, highlight: 0xf2dc95, shade: 0xa8842f, outline: 0x5c4416 }),
+  pants: derivePalette(0x6e5236, { base: 0x6e5236, highlight: 0x8a6c4a, shade: 0x4a3522, outline: 0x251a10 }),
+  deadfish: derivePalette(0x9bb0b8, { base: 0x9bb0b8, highlight: 0xcfe0e4, shade: 0x6c8088, outline: 0x33444a }),
+  eyes_living: derivePalette(0x2a1a10, { base: 0x2a1a10, highlight: 0xfff3e0, shade: 0x1a0f08, outline: 0x140a05 }),
+  drownedskin: derivePalette(0xbcd0c0, { base: 0xbcd0c0, shade: 0x86a392, highlight: 0xe0eee2, outline: 0x3a4f44 }),
+  drownedhair: derivePalette(0x222d28, { base: 0x222d28, highlight: 0x415048, shade: 0x141b17, outline: 0x080c0a }),
+  hollow: derivePalette(0x0c120f, { base: 0x0c120f, highlight: 0x33473d, shade: 0x060a08, outline: 0x020403 }),
 };

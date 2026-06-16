@@ -39,6 +39,29 @@ const JELLY = [
   { name: 'jelly_tentacles' }, { name: 'jelly_bell' }, { name: 'jelly_guts' },
   { name: 'jelly_eyes', palette: 'glow' },
 ];
+// Bare-headed mage/acolyte archetype. robe/mitre/shirt/trousers take the creature's
+// type color; head + hands = skin; hair = a named hair palette. Melee carry a weapon,
+// casters a staff + glow orb, the archer a bow (its projectile is TEX.arrow).
+const MAGE_HEAD = { name: 'mage_head', palette: 'skin' };
+const MAGE_HANDS = { name: 'mage_hands', palette: 'skin' };
+const VILLAGER = (hairPal) => [
+  { name: 'villager_legs', palette: 'pants' }, { name: 'villager_shirt' },
+  MAGE_HEAD, MAGE_HANDS, { name: 'hair_short', palette: hairPal },
+];
+const MAGE_MELEE = (weapon) => [
+  { name: 'mage_robe' }, MAGE_HEAD, { name: 'mage_mitre' }, MAGE_HANDS, weapon,
+];
+const MAGE_DROWNED = [
+  { name: 'mage_robe' }, { name: 'mage_head', palette: 'drownedskin' }, { name: 'mage_mitre' },
+  { name: 'mage_hands', palette: 'drownedskin' }, { name: 'mage_fish', palette: 'deadfish' },
+];
+const MAGE_ARCHER = [
+  { name: 'mage_robe' }, MAGE_HEAD, { name: 'mage_mitre' }, MAGE_HANDS, { name: 'mage_bow', palette: 'wood' },
+];
+const MAGE_CASTER = (hairPal) => [
+  { name: 'mage_staff', palette: 'wood' }, { name: 'mage_robe' }, MAGE_HEAD,
+  { name: 'mage_hair', palette: hairPal }, MAGE_HANDS, { name: 'mage_orb', palette: 'orbblue' },
+];
 
 export const RECIPES = {
   hero: {
@@ -58,13 +81,16 @@ export const RECIPES = {
   arrow: { archetype: 'projectile', size: 32, baseColor: 0xfff176, anim: { idle: 1, walk: 1 }, fps: 1, parts: ['arrow_body'] },
 
   // --- Generic (shared) ---
-  villager:        { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
+  // villager has 3 hair skins picked at random per-instance (Enemy.def.skins).
+  villager:        { archetype: 'humanoid', size: 32, parts: VILLAGER('hair') },
+  villager_blond:  { archetype: 'humanoid', size: 32, parts: VILLAGER('blondhair') },
+  villager_black:  { archetype: 'humanoid', size: 32, parts: VILLAGER('blackhair') },
   warrior:         { archetype: 'humanoid', size: 64, parts: KNIGHT },
-  archer:          { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
+  archer:          { archetype: 'humanoid', size: 32, parts: MAGE_ARCHER },
   // --- Fire cultists (humanoid) ---
   acolito_brasa:   { archetype: 'humanoid', size: 32, parts: CULT_HOODED },
   lanzabrasas:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
-  iniciado_veloz:  { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
+  iniciado_veloz:  { archetype: 'humanoid', size: 32, parts: MAGE_MELEE({ name: 'mage_club', palette: 'wood' }) },
   piromante:       { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
   encapuchado_pira:{ archetype: 'humanoid', size: 32, parts: CULT_FACELESS },
   pirovidente:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
@@ -106,11 +132,11 @@ export const RECIPES = {
 
   // --- Water cultists (humanoid) ---
   acolito_escarcha:  { archetype: 'humanoid', size: 32, parts: CULT_HOODED_WATER },
-  ahogado:           { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
+  ahogado:           { archetype: 'humanoid', size: 32, parts: MAGE_DROWNED },
   corista_abismo:    { archetype: 'humanoid', size: 32, parts: CULT_HOODED_WATER },
   lanzahielos:       { archetype: 'humanoid', size: 32, parts: CULT_STAFF_WATER },
-  nayade:            { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
-  sacerdotisa_lago:  { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots', 'staff'] },
+  nayade:            { archetype: 'humanoid', size: 32, parts: MAGE_CASTER('hair') },
+  sacerdotisa_lago:  { archetype: 'humanoid', size: 32, parts: MAGE_CASTER('blackhair') },
   vidente_marea:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF_WATER },
   guardia_hielo:     { archetype: 'humanoid', size: 64, parts: KNIGHT_WATER },
   // --- Water beasts ---
