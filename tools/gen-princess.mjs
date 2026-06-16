@@ -1,8 +1,11 @@
 // Generates res:32 role-grid parts for the princess hero from the approved mockup
 // geometry. Each pixel → {part, role}; roles o/b/s/h/a. Layers applied in order
-// (later wins). Run: node tools/gen-princess.mjs
+// (later wins). The free (left) arm is emitted as an animated part: princess_skin
+// carries `anim.walk` = 2 frames with the arm swinging. Run: node tools/gen-princess.mjs
 const N = 32, cx = 16;
 
+// classify() builds every static pixel EXCEPT the free (left) arm, which is added
+// per-frame via leftArm() so it can swing.
 function classify(x, y) {
   let out = null;
   const set = (part, role) => { out = { part, role }; };
@@ -69,14 +72,7 @@ function classify(x, y) {
   // --- staff (wood) ---
   if (x === 25 && y >= 10 && y < 28) set('staff', 'b');
 
-  // --- (1) arms (bare skin) — drawn AFTER hair/staff so they're clearly visible ---
-  // left free arm: 2px down the left side + a hand
-  for (let yy = 14; yy <= 20; yy++) {
-    const lx = 12 - Math.round((yy - 14) * 0.15);
-    if (y === yy && (x === lx || x === lx - 1)) set('skin', x === lx - 1 ? 's' : 'b');
-  }
-  if (y === 21 && x >= 10 && x <= 12) set('skin', 'b'); // left hand
-  // right arm: shoulder -> hand gripping the staff (2px)
+  // --- right arm (skin): shoulder -> hand gripping the staff (2px) — STATIC ---
   const rightArm = [[19, 14], [20, 14], [20, 15], [21, 15], [22, 16], [23, 16], [24, 16], [24, 17], [25, 16]];
   for (const [ax, ay] of rightArm) if (x === ax && y === ay) set('skin', ay >= 16 ? 'b' : 's');
 
@@ -89,6 +85,23 @@ function classify(x, y) {
   return out;
 }
 
+// The free (left) arm at a swing offset → list of [x, y, role]. dx/dy shift the whole
+// arm + hand so it reads as a pendulum between walk frames.
+function leftArm(dx, dy) {
+  const pts = [];
+  for (let yy = 14; yy <= 20; yy++) {
+    const t = (yy - 14) / 6;                       // 0 at the shoulder -> 1 at the wrist
+    const ox = Math.round(dx * t), oy = Math.round(dy * t); // pivot: shoulder fixed, swing grows toward the hand
+    const lx = 12 - Math.round((yy - 14) * 0.15) + ox;
+    const y = yy + oy;
+    pts.push([lx, y, 'b']);
+    pts.push([lx - 1, y, 's']);
+  }
+  for (let x = 10; x <= 12; x++) pts.push([x + dx, 21 + dy, 'b']); // hand (full swing, just below the wrist)
+  return pts;
+}
+
+// static everything-but-left-arm
 const parts = { gown: [], skin: [], hair: [], staff: [], orb: [] };
 const grid = {};
 for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
@@ -98,21 +111,50 @@ for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
   parts[c.part].push([x, y]);
 }
 
-function partName(p) { return ({ gown: 'body_gown', skin: 'princess_skin', hair: 'hair_long', staff: 'staff_princess', orb: 'orb_princess' })[p]; }
+// Build the skin grid for a given left-arm offset: static skin pixels + that arm.
+function skinFrame(dx, dy) {
+  const m = { ...(grid.skin ?? {}) };
+  for (const [x, y, role] of leftArm(dx, dy)) if (x >= 0 && x < N && y >= 0 && y < N) m[`${x},${y}`] = role;
+  return m;
+}
+const skinBase = skinFrame(0, 0);                 // static / idle (arm at rest)
+const walk0 = skinFrame(1, -2);                   // arm swung forward (hand up/in)
+const walk1 = skinFrame(-1, 1);                   // arm swung back (hand down/out)
+const skinFrames = [skinBase, walk0, walk1];
+
+// One shared bbox across every skin frame so static + anim register identically.
+function bboxOf(maps) {
+  let minx = N, maxx = -1, miny = N, maxy = -1;
+  for (const m of maps) for (const k of Object.keys(m)) { const [x, y] = k.split(',').map(Number); minx = Math.min(minx, x); maxx = Math.max(maxx, x); miny = Math.min(miny, y); maxy = Math.max(maxy, y); }
+  return { minx, maxx, miny, maxy };
+}
+function gridBlock(m, bb) {
+  const rows = [];
+  for (let y = bb.miny; y <= bb.maxy; y++) { let row = ''; for (let x = bb.minx; x <= bb.maxx; x++) row += m[`${x},${y}`] ?? '.'; rows.push(row); }
+  return `[\n${rows.map(r => `      '${r}',`).join('\n')}\n    ]`;
+}
+
+function emitSkin() {
+  const bb = bboxOf(skinFrames);
+  const w = bb.maxx - bb.minx + 1, h = bb.maxy - bb.miny + 1;
+  const baseBlock = gridBlock(skinBase, bb);
+  const w0 = gridBlock(walk0, bb), w1 = gridBlock(walk1, bb);
+  const walkList = `[ ${w0}, ${w1} ]`;
+  console.log(`  princess_skin: {\n    res: 32, w: ${w}, h: ${h}, anchor: { x: ${bb.minx}, y: ${bb.miny} },\n    down: ${baseBlock},\n    up: ${baseBlock},\n    side: ${baseBlock},\n    anim: { walk: { down: ${walkList}, up: ${walkList}, side: ${walkList} } },\n  },`);
+}
+
+function partName(p) { return ({ gown: 'body_gown', hair: 'hair_long', staff: 'staff_princess', orb: 'orb_princess' })[p]; }
 function emit(part) {
   const pts = parts[part];
   if (!pts.length) { console.log(`// ${part}: EMPTY`); return; }
-  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
-  const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
-  const w = maxx - minx + 1, h = maxy - miny + 1;
-  const rows = [];
-  for (let y = miny; y <= maxy; y++) {
-    let row = '';
-    for (let x = minx; x <= maxx; x++) row += grid[part][`${x},${y}`] ?? '.';
-    rows.push(row);
-  }
-  const body = rows.map(r => `      '${r}',`).join('\n');
-  const dirBlock = `[\n${body}\n    ]`;
-  console.log(`  ${partName(part)}: {\n    res: 32, w: ${w}, h: ${h}, anchor: { x: ${minx}, y: ${miny} },\n    down: ${dirBlock},\n    up: ${dirBlock},\n    side: ${dirBlock},\n  },`);
+  const bb = bboxOf([grid[part]]);
+  const w = bb.maxx - bb.minx + 1, h = bb.maxy - bb.miny + 1;
+  const dirBlock = gridBlock(grid[part], bb);
+  console.log(`  ${partName(part)}: {\n    res: 32, w: ${w}, h: ${h}, anchor: { x: ${bb.minx}, y: ${bb.miny} },\n    down: ${dirBlock},\n    up: ${dirBlock},\n    side: ${dirBlock},\n  },`);
 }
-for (const p of ['gown', 'skin', 'hair', 'staff', 'orb']) emit(p);
+
+emit('gown');
+emitSkin();
+emit('hair');
+emit('staff');
+emit('orb');
