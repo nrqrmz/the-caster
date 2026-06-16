@@ -77,15 +77,31 @@ for (let x = 24; x <= 28; x++) { const f = (x - 24) / 4, yt = Rd((cy + 2) + (17 
 for (let x = 2; x <= 9; x++) { put('abisal_teeth', x, botY[x] - 2, 'b'); put('abisal_teeth', x, botY[x] + 1, 'b'); } for (const tx of [3, 5, 7, 9]) { put('abisal_teeth', tx, botY[tx] - 1, 'h'); put('abisal_teeth', tx, botY[tx], 'h'); }
 disk('abisal_eye', 8, 13, 1.4, 'b'); put('abisal_eye', 8, 13, 'h');
 
-// ============================ KRAKEN (big mantle + long independent tentacles) ============================
-for (const [bx, drift, ph, len] of [[7, -1, 0, 15], [10, -1, 1.4, 13], [13, 0, 2.8, 16], [16, 0, 0.6, 14], [19, 1, 2.0, 16], [22, 1, 3.4, 13], [25, 1, 1.0, 15]]) {
-  let px = bx, py = 16;
-  for (let k = 0; k < len; k++) { const w = k < len - 3 ? 1 : 0; for (let d = -w; d <= w; d++) put('kraken_body', px + d, py, Math.abs(d) === w && w > 0 ? 'o' : 'b'); if (k % 3 === 2) put('kraken_body', px, py, 's'); px += Math.round(Math.sin(k * 0.7 + ph) * 1.3) + drift; py += 1; }
+// ============================ KRAKEN (big mantle + WRITHING tentacles) ============================
+// The body is ANIMATED: tentacles draw their wobble from sin(k*0.7 + ph + ph0); advancing
+// ph0 per frame makes the wave travel down them (a whirlpool/writhe). Mantle + sheen + brow
+// knobs are static. Emitted via emitKrakenBody() with anim.idle/walk = KF phase frames.
+function blobInto(map, cx0, cy0, rx, ry) {
+  for (let y = Math.floor(cy0 - ry); y <= Math.ceil(cy0 + ry); y++) for (let x = Math.floor(cx0 - rx); x <= Math.ceil(cx0 + rx); x++) {
+    const d = ((x - cx0) / rx) ** 2 + ((y - cy0) / ry) ** 2; if (d > 1) continue;
+    let r = 'b'; if (d > 0.82) r = 'o'; else if ((y - cy0) / ry < -0.45) r = 'h'; else if ((y - cy0) / ry > 0.55) r = 's';
+    if (x >= 0 && x < N && y >= 0 && y < N) map[`${x},${y}`] = r;
+  }
 }
-blob('kraken_body', cx, 11, 10, 9);                       // big bulbous mantle
-for (let x = cx - 7; x <= cx + 7; x++) put('kraken_body', x, 4, 'h');        // mantle sheen
-for (const [hx, hy] of [[cx - 6, 18], [cx + 6, 18], [cx - 9, 14], [cx + 9, 14]]) put('kraken_body', hx, hy, 's'); // brow knobs
-disk('kraken_eye', cx, 12, 3.4, 'b'); disk('kraken_eye', cx, 12, 1.6, 'h'); for (let y = 10; y <= 14; y++) put('kraken_eye', cx, y, 'o'); // huge eye w/ slit pupil
+function krakenInto(map, ph0) {
+  const P = (x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) map[`${x},${y}`] = r; };
+  for (const [bx, drift, ph, len] of [[7, -1, 0, 15], [10, -1, 1.4, 13], [13, 0, 2.8, 16], [16, 0, 0.6, 14], [19, 1, 2.0, 16], [22, 1, 3.4, 13], [25, 1, 1.0, 15]]) {
+    let px = bx, py = 16;
+    for (let k = 0; k < len; k++) { const w = k < len - 3 ? 1 : 0; for (let d = -w; d <= w; d++) P(px + d, py, Math.abs(d) === w && w > 0 ? 'o' : 'b'); if (k % 3 === 2) P(px, py, 's'); px += Math.round(Math.sin(k * 0.7 + ph + ph0) * 1.3) + drift; py += 1; }
+  }
+  blobInto(map, cx, 11, 10, 9);                            // big bulbous mantle (static)
+  for (let x = cx - 7; x <= cx + 7; x++) P(x, 4, 'h');     // mantle sheen
+  for (const [hx, hy] of [[cx - 6, 18], [cx + 6, 18], [cx - 9, 14], [cx + 9, 14]]) P(hx, hy, 's'); // brow knobs
+}
+const KF = 4;                                              // whirlpool loop frames
+const krakenFrames = [];
+for (let i = 0; i < KF; i++) { const m = {}; krakenInto(m, (i * Math.PI * 2) / KF); krakenFrames.push(m); }
+disk('kraken_eye', cx, 12, 3.4, 'b'); disk('kraken_eye', cx, 12, 1.6, 'h'); for (let y = 10; y <= 14; y++) put('kraken_eye', cx, y, 'o'); // huge eye w/ slit pupil (static)
 
 // ============================ WHALE (higher-res monstrous whale, facing left) ============================
 for (let x = 2; x <= 28; x++) {
@@ -110,4 +126,14 @@ function emit(name) {
   const block = `[\n${rows.map(r => `      '${r}',`).join('\n')}\n    ]`;
   console.log(`  ${name}: {\n    res: 32, w: ${maxx - minx + 1}, h: ${maxy - miny + 1}, anchor: { x: ${minx}, y: ${miny} },\n    down: ${block}, up: ${block}, side: ${block},\n  },`);
 }
-for (const k of Object.keys(layers)) emit(k);
+// kraken_body is emitted from its animated frames, not the (empty) static layer.
+function emitKrakenBody() {
+  let minx = N, maxx = -1, miny = N, maxy = -1;
+  for (const m of krakenFrames) for (const k of Object.keys(m)) { const [x, y] = k.split(',').map(Number); minx = Math.min(minx, x); maxx = Math.max(maxx, x); miny = Math.min(miny, y); maxy = Math.max(maxy, y); }
+  const block = (m) => { const rows = []; for (let y = miny; y <= maxy; y++) { let row = ''; for (let x = minx; x <= maxx; x++) row += m[`${x},${y}`] ?? '.'; rows.push(row); } return `[\n${rows.map(r => `      '${r}',`).join('\n')}\n    ]`; };
+  const baseB = block(krakenFrames[0]);
+  const listB = `[ ${krakenFrames.map(block).join(', ')} ]`;
+  console.log(`  kraken_body: {\n    res: 32, w: ${maxx - minx + 1}, h: ${maxy - miny + 1}, anchor: { x: ${minx}, y: ${miny} },\n    down: ${baseB},\n    up: ${baseB},\n    side: ${baseB},\n    anim: {\n      idle: { down: ${listB}, up: ${listB}, side: ${listB} },\n      walk: { down: ${listB}, up: ${listB}, side: ${listB} },\n    },\n  },`);
+}
+for (const k of Object.keys(layers)) { if (k === 'kraken_body') continue; emit(k); }
+emitKrakenBody();

@@ -175,12 +175,12 @@ export const RECIPES = {
   soldado_hielo:   { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, parts: ICE_KNIGHT },
   sapo_desovador:  { archetype: 'boss', size: 96, baseColor: 0x7cb342, parts: SAPO_DESOV },
   tiburon_abisal:  { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL },
-  kraken:          { archetype: 'boss', size: 96, baseColor: 0xab47bc, parts: KRAKEN },
+  kraken:          { archetype: 'boss', size: 96, baseColor: 0xab47bc, anim: { idle: 4, walk: 4 }, parts: KRAKEN },
   // --- Dama del Lago + her 5 forms (each a distinct creature) ---
   dama_lago:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
   dama_maga:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
   dama_tiburon:    { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL },
-  dama_kraken:     { archetype: 'boss', size: 96, baseColor: 0xab47bc, parts: KRAKEN },
+  dama_kraken:     { archetype: 'boss', size: 96, baseColor: 0xab47bc, anim: { idle: 4, walk: 4 }, parts: KRAKEN },
   dama_ballena:    { archetype: 'boss', size: 96, baseColor: 0xd32f2f, parts: WHALE },
   dama_maga_final: { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
 
