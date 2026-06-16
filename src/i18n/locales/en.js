@@ -47,6 +47,12 @@ export default {
              speed: 'Speed', cooldown: '−Cooldown', area: 'Area', burn: 'Burn',
              chain: 'Chain', duration: 'Duration', zoneregen: 'Zone Regen', slow: 'Slow' },
   },
+  branch: {
+    level: 'Level {n} — {kind}',
+    kind: { basic: 'Basic', intermediate: 'Intermediate', pretemple: 'Pre-temple',
+            levelboss: 'Level Boss', temple: 'Temple' },
+    done: '✔ cleared', play: '▶ play', locked: '🔒 locked', back: '← Map',
+  },
   story: {
     fire: {
       intro: { 0: 'A forbidden love between a princess and a sorcerer was punished by the Council of Mages.',

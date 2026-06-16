@@ -47,6 +47,12 @@ export default {
              speed: 'Velocidad', cooldown: '−Cooldown', area: 'Área', burn: 'Quemadura',
              chain: 'Cadena', duration: 'Duración', zoneregen: 'Regen de zona', slow: 'Ralentización' },
   },
+  branch: {
+    level: 'Nivel {n} — {kind}',
+    kind: { basic: 'Básico', intermediate: 'Intermedio', pretemple: 'Pre-templo',
+            levelboss: 'Jefe de Nivel', temple: 'Templo' },
+    done: '✔ completado', play: '▶ jugar', locked: '🔒 bloqueado', back: '← Mapa',
+  },
   story: {
     fire: {
       intro: { 0: 'Un amor prohibido entre una princesa y un hechicero fue castigado por el Consejo de Magos.',
