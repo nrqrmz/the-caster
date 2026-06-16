@@ -497,10 +497,16 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
 - ✅ **Hooded cultist (water/frost)** — `CULT_HOODED_WATER/_STAFF_WATER` (cyan eyes/orb).
 - ✅ **Armored knight (sword + shield)** — `gen-warrior.mjs`; `KNIGHT/_WATER/_BANNER`.
 - ✅ **Jellyfish / medusa** — `gen-jelly.mjs`; `JELLY` (medusa + medusa_cria).
+- ✅ **Bare-headed mage/acolyte** — `gen-mage.mjs`; part-lists `VILLAGER`/
+  `MAGE_MELEE`/`MAGE_DROWNED`/`MAGE_ARCHER`/`MAGE_CASTER`. Per-role design instead
+  of one generic face: villager = shirt + trousers + short hair (NO robe/mitre),
+  with 3 random hair colors per-instance via `Enemy.def.skins` (`villager`/`_blond`/
+  `_black`); iniciado_veloz = robe+mitre+club; ahogado = drowned palette+mitre+fish;
+  archer = robe+mitre+recurve bow (fires `TEX.arrow`); nayade/sacerdotisa = loose
+  long hair to the waist + staff+orb (sacerdotisa black hair, no mitre). New palettes:
+  `hair/blackhair/blondhair/pants/drownedskin/drownedhair/hollow/deadfish`.
 
 **Remaining archetypes (each = generator + recipes + checkpoint):**
-- **Bare-headed mage/acolyte** (robe + visible head, no hood): iniciado_veloz,
-  ahogado, nayade, sacerdotisa_lago, villager, archer — a young robed mage face.
 - **Beasts** (`larva_magma`, `can_lava`, `coloso_magma`, `salamandra`,
   `tiburon_joven`): hunched quadruped/lizard, limb + spine shading, fangs/claws.
 - **Blobs / elementals** (`espiritu_ceniza`, `elemental_fuego`, `imp_brasa`,
