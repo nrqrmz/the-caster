@@ -24,15 +24,14 @@ test('every recipe references only parts that exist (integrity)', () => {
   }
 });
 
-test('paletteFor uses named palette for hero', () => {
-  const p = paletteFor('hero', 0x000000);
-  assert.equal(p.accent, NAMED_PALETTES.hero.accent);
-});
-
-test('hero forges without throwing', () => {
+test('hero forges with per-part palettes (multi-hue: red hair + green gown)', () => {
   const r = getRecipe('hero');
-  const out = forge(r, PARTS, paletteFor('hero', 0x4fc3f7));
+  const partPalette = (ref) => (ref.palette ? NAMED_PALETTES[ref.palette] : null);
+  const out = forge(r, PARTS, paletteFor('hero', 0x4fc3f7), partPalette);
   assert.ok(out.anims['idle-down']);
+  const colors = new Set(out.anims['idle-down'][0].flat().filter((c) => c != null));
+  assert.ok(colors.has(NAMED_PALETTES.redhair.base), 'red hair base color present in forged hero');
+  assert.ok(colors.has(NAMED_PALETTES.greengown.base), 'green gown base color present in forged hero');
 });
 
 test('paletteFor derive path: unknown key returns derivePalette of baseColor', () => {

@@ -3,6 +3,7 @@ import { RECIPES, paletteFor } from '../data/sprites/recipes.js';
 import { PARTS } from '../data/sprites/parts.js';
 import { forge } from '../systems/SpriteForge.js';
 import { ENEMY_TYPES } from '../data/enemies/index.js';
+import { derivePalette, NAMED_PALETTES } from '../data/sprites/palettes.js';
 
 export default class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -29,9 +30,22 @@ export default class BootScene extends Phaser.Scene {
       // > caster fallback. The hero uses a named palette, so its baseColor is ignored.
       const baseColor = recipe.baseColor ?? ENEMY_TYPES[key]?.color ?? COLORS.caster;
       const palette = paletteFor(key, baseColor);
-      const out = forge(recipe, PARTS, palette);
+      const out = forge(recipe, PARTS, palette, (ref) => this.resolvePartPalette(ref));
       this.paintForged(key, out);
     }
+  }
+
+  // A part-ref may name its own palette ({name, palette:'skin'}) or a base color
+  // ({name, color:0x2e8b57, accent?:0x..}). Returns a 5-role palette or null (use recipe palette).
+  resolvePartPalette(ref) {
+    if (typeof ref !== 'object') return null;
+    if (ref.palette) {
+      const p = NAMED_PALETTES[ref.palette];
+      if (!p) throw new Error(`BootScene: unknown part palette '${ref.palette}'`);
+      return p;
+    }
+    if (ref.color != null) return derivePalette(ref.color, ref.accent != null ? { accent: ref.accent } : {});
+    return null;
   }
 
   // Paint every frame to its own texture, register one anim per `${key}-${animName}`,

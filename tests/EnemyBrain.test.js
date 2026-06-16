@@ -308,3 +308,25 @@ test('tickLifecycle: no lifecycle field → no promotion (non-frog enemy)', () =
   const result = tickLifecycle(state, 1000);
   assert.equal(result.promote, false);
 });
+
+import { ENEMY_TYPES } from '../src/data/enemies/index.js';
+
+test('split children clamp radius to a floor of 16', () => {
+  const parent = { hp: 40, radius: 18, modifiers: [{ type: 'splitsOnDeath', count: 2, spawnType: 'x' }] };
+  const kids = buildSplitChildren(parent);
+  assert.equal(kids.length, 2);
+  for (const k of kids) assert.ok(k.radius >= 16, `radius ${k.radius} below floor`);
+  assert.equal(kids[0].radius, 16); // 18*0.7=12.6 -> 13, clamped to 16
+});
+
+test('split children keep ×0.7 when above the floor', () => {
+  const parent = { hp: 100, radius: 30, modifiers: [{ type: 'splitsOnDeath', count: 1, spawnType: 'x' }] };
+  const kids = buildSplitChildren(parent);
+  assert.equal(kids[0].radius, 21); // round(30*0.7)
+});
+
+test('no enemy def has a radius below the floor of 16', () => {
+  for (const [key, def] of Object.entries(ENEMY_TYPES)) {
+    if (typeof def.radius === 'number') assert.ok(def.radius >= 16, `${key} radius ${def.radius} < 16`);
+  }
+});
