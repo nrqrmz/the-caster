@@ -14,6 +14,14 @@ const CULT_STAFF = [
 const CULT_FACELESS = [
   { name: 'cult_robe' }, { name: 'cult_hood' }, { name: 'cult_face', palette: 'shadow' },
 ];
+// Water variant: frost-cyan eyes and orb (reuses the orbblue palette).
+const CULT_HOODED_WATER = [
+  { name: 'cult_robe' }, { name: 'cult_hood' },
+  { name: 'cult_face', palette: 'shadow' }, { name: 'cult_eyes', palette: 'orbblue' },
+];
+const CULT_STAFF_WATER = [
+  { name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'orbblue' }, ...CULT_HOODED_WATER,
+];
 
 export const RECIPES = {
   hero: {
@@ -80,13 +88,13 @@ export const RECIPES = {
   dama_maga_final: { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
 
   // --- Water cultists (humanoid) ---
-  acolito_escarcha:  { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots'] },
+  acolito_escarcha:  { archetype: 'humanoid', size: 32, parts: CULT_HOODED_WATER },
   ahogado:           { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
-  corista_abismo:    { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots'] },
-  lanzahielos:       { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots', 'staff'] },
+  corista_abismo:    { archetype: 'humanoid', size: 32, parts: CULT_HOODED_WATER },
+  lanzahielos:       { archetype: 'humanoid', size: 32, parts: CULT_STAFF_WATER },
   nayade:            { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
   sacerdotisa_lago:  { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots', 'staff'] },
-  vidente_marea:     { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots', 'staff'] },
+  vidente_marea:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF_WATER },
   guardia_hielo:     { archetype: 'humanoid', size: 64, parts: ['body_armor', 'head_round', 'eyes_dots'] },
   // --- Water beasts ---
   tiburon_joven:     { archetype: 'fish',    size: 64, parts: ['body_fish', 'fin', 'eyes_dots'] },
