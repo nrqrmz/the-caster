@@ -19,6 +19,22 @@ export default {
     earth: { name: 'El Bosque' }, castle: { name: 'El Castillo' },
   },
   hud: { levelCleared: 'Nivel superado. +{reward} punto(s) de habilidad, +{gold} oro.' },
+  map: {
+    title: 'EL MAPA',
+    elements: 'Elementos dominados: {n}/4',
+    gold: 'Oro: {gold}',
+    castleLocked: 'Requiere los 4 elementos',
+    skilltree: '🌳 Árbol ({pts})',
+    shop: '🛒 Tienda',
+  },
+  shop: {
+    title: 'Tienda',
+    gold: 'Oro: {gold}',
+    price: '{price} oro',
+    have: 'tienes: {n}',
+    back: 'Volver',
+    item: { potion: 'Poción', elixir: 'Elixir de daño', phoenix: 'Pluma de fénix' },
+  },
   story: {
     fire: {
       intro: { 0: 'Un amor prohibido entre una princesa y un hechicero fue castigado por el Consejo de Magos.',

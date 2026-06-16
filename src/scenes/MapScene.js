@@ -13,13 +13,13 @@ export default class MapScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(COLORS.bg);
     const save = new SaveSystem(window.localStorage).load();
 
-    this.add.text(GAME_WIDTH / 2, 50, 'EL MAPA', {
+    this.add.text(GAME_WIDTH / 2, 50, t('map.title'), {
       fontFamily: 'sans-serif', fontSize: '30px', color: '#4fc3f7', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.add.text(GAME_WIDTH / 2, 86, `Elementos dominados: ${(save.elements || []).length}/4`, {
+    this.add.text(GAME_WIDTH / 2, 86, t('map.elements', { n: (save.elements || []).length }), {
       fontFamily: 'sans-serif', fontSize: '16px', color: '#ffd54f',
     }).setOrigin(0.5);
-    this.add.text(GAME_WIDTH / 2, 112, `Oro: ${save.gold || 0}`, {
+    this.add.text(GAME_WIDTH / 2, 112, t('map.gold', { gold: save.gold || 0 }), {
       fontFamily: 'sans-serif', fontSize: '15px', color: '#ffd54f',
     }).setOrigin(0.5);
 
@@ -37,19 +37,19 @@ export default class MapScene extends Phaser.Scene {
     const castleOpen = isCastleUnlocked(save, REQUIRED_ELEMENTS);
     this.portal(GAME_WIDTH / 2, 540, t(REGIONS[CASTLE_ID].name), PORTAL_ICON.castle, isRegionComplete(save, REGIONS[CASTLE_ID]), castleOpen,
       () => this.scene.start('Branch', { regionId: CASTLE_ID }),
-      castleOpen ? null : 'Requiere los 4 elementos');
+      castleOpen ? null : t('map.castleLocked'));
 
     // Skill tree + shop access.
     const st = this.add.rectangle(GAME_WIDTH / 2 - 110, GAME_HEIGHT - 60, 200, 50, 0x4fc3f7, 0.2)
       .setStrokeStyle(2, 0x4fc3f7).setInteractive();
-    this.add.text(GAME_WIDTH / 2 - 110, GAME_HEIGHT - 60, `🌳 Árbol (${save.skillPoints})`, {
+    this.add.text(GAME_WIDTH / 2 - 110, GAME_HEIGHT - 60, t('map.skilltree', { pts: save.skillPoints }), {
       fontFamily: 'sans-serif', fontSize: '16px', color: '#fff',
     }).setOrigin(0.5);
     st.on('pointerdown', () => this.scene.start('SkillTree'));
 
     const sh = this.add.rectangle(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 60, 200, 50, 0xffd54f, 0.15)
       .setStrokeStyle(2, 0xffd54f).setInteractive();
-    this.add.text(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 60, '🛒 Tienda', {
+    this.add.text(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 60, t('map.shop'), {
       fontFamily: 'sans-serif', fontSize: '16px', color: '#fff',
     }).setOrigin(0.5);
     sh.on('pointerdown', () => this.scene.start('Shop'));

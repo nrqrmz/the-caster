@@ -19,6 +19,22 @@ export default {
     earth: { name: 'The Forest' }, castle: { name: 'The Castle' },
   },
   hud: { levelCleared: 'Level cleared. +{reward} skill point(s), +{gold} gold.' },
+  map: {
+    title: 'THE MAP',
+    elements: 'Elements mastered: {n}/4',
+    gold: 'Gold: {gold}',
+    castleLocked: 'Requires all 4 elements',
+    skilltree: '🌳 Tree ({pts})',
+    shop: '🛒 Shop',
+  },
+  shop: {
+    title: 'Shop',
+    gold: 'Gold: {gold}',
+    price: '{price} gold',
+    have: 'you have: {n}',
+    back: 'Back',
+    item: { potion: 'Potion', elixir: 'Damage Elixir', phoenix: 'Phoenix Feather' },
+  },
   story: {
     fire: {
       intro: { 0: 'A forbidden love between a princess and a sorcerer was punished by the Council of Mages.',
