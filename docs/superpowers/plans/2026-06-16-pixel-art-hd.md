@@ -555,8 +555,14 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
     patriarch (father of the sisters): gold crown, central fiery beard (ember), broad
     gold-trimmed fire armor, armored vambraces, flaming steel scepter, robe. Recipe
     gained `accent: 0xffd54f`.
-  - ⬜ Remaining (water bosses): `soldado_hielo`, `sapo_desovador`, `tiburon_abisal`,
-    `kraken`, `dama_*` forms, `whale`.
+  - ✅ **Water monsters** — `gen-waterboss.mjs`; part-lists `ICE_KNIGHT`/`SAPO_DESOV`/
+    `TIBURON_ABISAL`/`KRAKEN`/`WHALE`. soldado_hielo=armored ice knight; sapo_desovador=
+    giant spawner toad (flexed legs + egg sacs); tiburon_abisal=abyssal shark (gen-aqua
+    model, dorsal swept back, solid peduncle); kraken=big mantle + huge eye + long
+    independent tentacles; whale=hi-res whale (wired to `dama_ballena`; `KRAKEN` also
+    wired to `dama_kraken`).
+  - ⬜ Remaining (Dama del Lago forms): `dama_lago`, `dama_maga`, `dama_tiburon`,
+    `dama_maga_final` (+ `dama_kraken`/`dama_ballena` already covered by reused bodies).
 - ✅ **Projectiles** — `gen-proj.mjs`; re-authored `orb_body`/`flame_body`/`arrow_body`
   at res:32 (recipes unchanged): orb = glowing sphere + twinkle; fireball = teardrop
   comet (head at +x); arrow = sleek arrow (head at +x). fireball & arrow point along
