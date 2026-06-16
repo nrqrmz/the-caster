@@ -3,6 +3,7 @@ import { SKILL_TREE, SKILL_BRANCHES } from '../data/skilltree.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { canPurchase, purchase, isBranchUnlocked } from '../systems/SkillTree.js';
 import { respecCost, canRespec, respec } from '../systems/Economy.js';
+import { t } from '../i18n/index.js';
 
 export default class SkillTreeScene extends Phaser.Scene {
   constructor() { super('SkillTree'); }
@@ -12,7 +13,7 @@ export default class SkillTreeScene extends Phaser.Scene {
     this.state = this.save.load();
     this.cameras.main.setBackgroundColor(COLORS.bg);
 
-    this.add.text(GAME_WIDTH / 2, 26, 'Árbol de Habilidades', {
+    this.add.text(GAME_WIDTH / 2, 26, t('skill.title'), {
       fontFamily: 'sans-serif', fontSize: '22px', color: '#fff',
     }).setOrigin(0.5);
     this.pointsText = this.add.text(GAME_WIDTH / 2, 54, '', {
@@ -22,7 +23,7 @@ export default class SkillTreeScene extends Phaser.Scene {
     // Tabs: one "General" (all element===null branches) + one per elemental branch.
     const general = SKILL_BRANCHES.filter((b) => b.element === null);
     const elementals = SKILL_BRANCHES.filter((b) => b.element !== null);
-    this.tabs = [{ label: 'General', branches: general, unlocked: true }];
+    this.tabs = [{ label: 'skill.branch.general', branches: general, unlocked: true }];
     for (const b of elementals) {
       this.tabs.push({ label: b.label, branches: [b], unlocked: isBranchUnlocked(this.state, b) });
     }
@@ -30,10 +31,10 @@ export default class SkillTreeScene extends Phaser.Scene {
     this.activeTab = 0;
     this.tabObjs = [];
     const tabW = GAME_WIDTH / this.tabs.length;
-    this.tabs.forEach((t, i) => {
+    this.tabs.forEach((tab, i) => {
       const x = tabW * i + tabW / 2;
       const bg = this.add.rectangle(x, 90, tabW - 4, 30, 0x1b1526).setStrokeStyle(1, 0x33294a).setInteractive();
-      this.add.text(x, 90, t.label, { fontFamily: 'sans-serif', fontSize: '13px', color: t.unlocked ? '#fff' : '#777' }).setOrigin(0.5);
+      this.add.text(x, 90, t(tab.label), { fontFamily: 'sans-serif', fontSize: '13px', color: tab.unlocked ? '#fff' : '#777' }).setOrigin(0.5);
       bg.on('pointerdown', () => { this.activeTab = i; this.renderTab(); });
       this.tabObjs.push(bg);
     });
@@ -48,7 +49,7 @@ export default class SkillTreeScene extends Phaser.Scene {
     });
 
     const cont = this.add.rectangle(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 36, 200, 44, 0x4fc3f7, 0.25).setStrokeStyle(2, 0x4fc3f7).setInteractive();
-    this.add.text(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 36, 'Continuar', { fontFamily: 'sans-serif', fontSize: '18px', color: '#fff' }).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2 + 110, GAME_HEIGHT - 36, t('skill.continue'), { fontFamily: 'sans-serif', fontSize: '18px', color: '#fff' }).setOrigin(0.5);
     cont.on('pointerdown', () => this.scene.start('Map'));
 
     this.nodeLayer = this.add.container(0, 0);
@@ -57,14 +58,14 @@ export default class SkillTreeScene extends Phaser.Scene {
 
   renderTab() {
     this.nodeLayer.removeAll(true);
-    this.pointsText.setText(`Puntos: ${this.state.skillPoints}`);
-    this.respecLabel.setText(`Reiniciar (${respecCost(this.state.respecCount)} oro)`);
+    this.pointsText.setText(t('skill.points', { pts: this.state.skillPoints }));
+    this.respecLabel.setText(t('skill.respec', { cost: respecCost(this.state.respecCount) }));
     this.respecLabel.setColor(canRespec(this.state) ? '#fff' : '#777');
     this.tabObjs.forEach((bg, i) => bg.setFillStyle(i === this.activeTab ? 0x2a1c3e : 0x1b1526));
 
     const tab = this.tabs[this.activeTab];
     if (!tab.unlocked) {
-      this.nodeLayer.add(this.add.text(GAME_WIDTH / 2, 320, 'Domina este elemento\nen su templo', {
+      this.nodeLayer.add(this.add.text(GAME_WIDTH / 2, 320, t('skill.locked'), {
         fontFamily: 'sans-serif', fontSize: '18px', color: '#777', align: 'center',
       }).setOrigin(0.5));
       return;
@@ -72,13 +73,13 @@ export default class SkillTreeScene extends Phaser.Scene {
 
     let topY = 124;
     for (const branch of tab.branches) {
-      this.nodeLayer.add(this.add.text(20, topY, branch.label, {
+      this.nodeLayer.add(this.add.text(20, topY, t(branch.label), {
         fontFamily: 'sans-serif', fontSize: '15px', color: '#cdbff0',
       }));
       const colW = (GAME_WIDTH - 40) / branch.tracks.length;
       branch.tracks.forEach((track, ci) => {
         const cx = 20 + colW * ci + colW / 2;
-        this.nodeLayer.add(this.add.text(cx, topY + 22, track.label, {
+        this.nodeLayer.add(this.add.text(cx, topY + 22, t(track.label), {
           fontFamily: 'sans-serif', fontSize: '11px', color: '#9b8fb5',
         }).setOrigin(0.5));
         track.nodes.forEach((nodeId, ni) => this.makeNode(nodeId, cx, topY + 44 + ni * 40));

@@ -35,6 +35,18 @@ export default {
     back: 'Volver',
     item: { potion: 'Poción', elixir: 'Elixir de daño', phoenix: 'Pluma de fénix' },
   },
+  skill: {
+    title: 'Árbol de Habilidades',
+    points: 'Puntos: {pts}',
+    respec: 'Reiniciar ({cost} oro)',
+    continue: 'Continuar',
+    locked: 'Domina este elemento\nen su templo',
+    branch: { general: 'General', basic: 'Ataque básico', health: 'Vida', mobility: 'Movilidad',
+              fire: '🔥 Fuego', air: '⚡ Aire', earth: '☠️ Tierra', water: '❄️ Agua' },
+    track: { damage: 'Daño', cadence: 'Cadencia', maxhp: 'Vida máx', regen: 'Regen',
+             speed: 'Velocidad', cooldown: '−Cooldown', area: 'Área', burn: 'Quemadura',
+             chain: 'Cadena', duration: 'Duración', zoneregen: 'Regen de zona', slow: 'Ralentización' },
+  },
   story: {
     fire: {
       intro: { 0: 'Un amor prohibido entre una princesa y un hechicero fue castigado por el Consejo de Magos.',

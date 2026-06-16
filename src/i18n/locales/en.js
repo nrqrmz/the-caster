@@ -35,6 +35,18 @@ export default {
     back: 'Back',
     item: { potion: 'Potion', elixir: 'Damage Elixir', phoenix: 'Phoenix Feather' },
   },
+  skill: {
+    title: 'Skill Tree',
+    points: 'Points: {pts}',
+    respec: 'Reset ({cost} gold)',
+    continue: 'Continue',
+    locked: 'Master this element\nat its temple',
+    branch: { general: 'General', basic: 'Basic Attack', health: 'Health', mobility: 'Mobility',
+              fire: '🔥 Fire', air: '⚡ Air', earth: '☠️ Earth', water: '❄️ Water' },
+    track: { damage: 'Damage', cadence: 'Fire Rate', maxhp: 'Max HP', regen: 'Regen',
+             speed: 'Speed', cooldown: '−Cooldown', area: 'Area', burn: 'Burn',
+             chain: 'Chain', duration: 'Duration', zoneregen: 'Zone Regen', slow: 'Slow' },
+  },
   story: {
     fire: {
       intro: { 0: 'A forbidden love between a princess and a sorcerer was punished by the Council of Mages.',
