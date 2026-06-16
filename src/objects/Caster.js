@@ -32,6 +32,7 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
     if (this._shotTimer > 0) return;
     if (!target) return;
     this._shotTimer = this.stats.shotRate;
+    if (this.facing) this.facing.playAttack();
     onFire(target);
   }
 

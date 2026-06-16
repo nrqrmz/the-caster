@@ -14,10 +14,28 @@ export class FacingController {
     this.sprite = sprite;
     this.key = key;
     this.lastDir = lastDir;
+    this.attacking = false;
+  }
+
+  // Play the one-shot attack anim for the current facing; ignored if the creature has no
+  // attack anim. Locks idle/walk until the attack anim completes.
+  playAttack() {
+    const key = `${this.key}-attack-${this.lastDir}`;
+    const sceneAnims = this.sprite.scene && this.sprite.scene.anims;
+    if (!sceneAnims || !sceneAnims.exists(key)) return;
+    this.attacking = true;
+    this.sprite.once('animationcomplete', () => { this.attacking = false; });
+    this.sprite.anims.play(key, true);
   }
 
   // Call every frame. aim is an optional {x,y} world point to face when idle (hero auto-aim).
   update(vx, vy, aim) {
+    if (this.attacking) {
+      // keep playing the attack anim to completion; only track facing for the next swing
+      const moving = Math.abs(vx) + Math.abs(vy) > MOVE_EPS;
+      if (moving) this.lastDir = pickFacing(vx, vy, this.lastDir).dir;
+      return;
+    }
     const moving = Math.abs(vx) + Math.abs(vy) > MOVE_EPS;
     let f;
     if (moving) {

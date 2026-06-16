@@ -573,6 +573,7 @@ export default class GameScene extends Phaser.Scene {
   cast_fireball() {
     const target = this.caster.nearestEnemy(this.liveEnemies());
     if (!target) return false;
+    if (this.caster.facing) this.caster.facing.playAttack();
     const orb = this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage * this.dmgMult(), this.stats.fireballRadius);
     if (orb && this.stats.burnDamage > 0) { orb.burnDps = this.stats.burnDamage; orb.burnMs = this.stats.burnDuration; }
     return true;
