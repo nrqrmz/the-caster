@@ -526,10 +526,16 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
   totem_pira/totem_escarcha = a COLUMNAR totem pole (shared `totem_body`) with two
   stacked sculpted faces (recessed `shadow` cavities + glowing eyes: `glow` fire /
   `orbblue` frost). Body/wings = type color; crest/tail = `ember`; wasp wings = `bone`.
+- ✅ **Fish / serpent / shelled** — `gen-aqua.mjs`; part-lists `SHARK`/`SERPIENTE`/
+  `TORTUGA`/`CANGREJO`. tiburon_joven = side-profile shark (curved back / flat belly,
+  dorsal swept back, heterocercal tail shorter than the dorsal, toothy jaw);
+  serpiente_marina = S-curve serpent + fanged head; tortuga_acorazada = plated dome
+  shell + head/flippers, recolored GREEN (new `COLORS.turtleGreen`); cangrejo_acorazado
+  = wide carapace + 2 pincers + 4 leg pairs + eyestalks, recolored RED (new
+  `COLORS.crabRed`). Body = type color; teeth/fangs = `bone`; eyes `shadow`/`glow`.
+  (`tiburon_joven` lived here, not in beasts.)
 
 **Remaining archetypes (each = generator + recipes + checkpoint):**
-- **Fish / serpent / shelled** (`tiburon_*`, `serpiente_marina`,
-  `tortuga_acorazada`, `cangrejo_acorazado`): streamlined/coiled/armored aquatic.
 - **Frog lineage** (`huevo_sapo`, `renacuajo`, `rana_saltarina`, `sapo_*`):
   egg → tadpole → squat frog, eyes + stubby legs.
 - **Bosses** (`favilla/pyra/vesta` sisters, `ignatius`, `soldado_hielo`,
