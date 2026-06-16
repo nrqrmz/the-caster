@@ -551,7 +551,11 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
     red hair + fire orb; vesta=heavy banded plate + shield + steel hammer + black hair;
     favilla=slim gold robe + ornate crown + blonde hair + summoning embers. New `steel`
     palette; hair red/black/blond; flames/embers `glow`.
-  - ⬜ Remaining: `ignatius`, `soldado_hielo`, `sapo_desovador`, `tiburon_abisal`,
+  - ✅ **Ignatius** (Fire King) — `gen-ignatius.mjs`; part-list `IGNATIUS`. Crowned
+    patriarch (father of the sisters): gold crown, central fiery beard (ember), broad
+    gold-trimmed fire armor, armored vambraces, flaming steel scepter, robe. Recipe
+    gained `accent: 0xffd54f`.
+  - ⬜ Remaining (water bosses): `soldado_hielo`, `sapo_desovador`, `tiburon_abisal`,
     `kraken`, `dama_*` forms, `whale`.
 - ✅ **Projectiles** — `gen-proj.mjs`; re-authored `orb_body`/`flame_body`/`arrow_body`
   at res:32 (recipes unchanged): orb = glowing sphere + twinkle; fireball = teardrop
