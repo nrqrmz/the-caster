@@ -33,6 +33,12 @@ const KNIGHT_WATER = [
   { name: 'knight_visor', palette: 'shadow' }, { name: 'knight_eyes', palette: 'orbblue' },
 ];
 const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
+// Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
+// glowing eyes. Serves both the medusa and its smaller split child.
+const JELLY = [
+  { name: 'jelly_tentacles' }, { name: 'jelly_bell' }, { name: 'jelly_guts' },
+  { name: 'jelly_eyes', palette: 'glow' },
+];
 
 export const RECIPES = {
   hero: {
@@ -112,8 +118,8 @@ export const RECIPES = {
   serpiente_marina:  { archetype: 'serpent', size: 64, parts: ['body_serpent', 'eyes_dots'] },
   tortuga_acorazada: { archetype: 'shelled', size: 64, parts: ['body_shell', 'head_round', 'eyes_dots'] },
   cangrejo_acorazado:{ archetype: 'shelled', size: 64, parts: ['body_shell', 'eyes_dots'] },
-  medusa:            { archetype: 'jelly',   size: 64, parts: ['body_jelly', 'eyes_dots'] },
-  medusa_cria:       { archetype: 'jelly',   size: 32, parts: ['body_jelly', 'eyes_dots'] },
+  medusa:            { archetype: 'jelly',   size: 64, parts: JELLY },
+  medusa_cria:       { archetype: 'jelly',   size: 32, parts: JELLY },
   pez_globo:         { archetype: 'blob',    size: 32, parts: ['body_blob', 'eyes_dots'] },
   // --- Frog lineage ---
   huevo_sapo:        { archetype: 'egg',     size: 32, parts: ['frog_egg'] },
