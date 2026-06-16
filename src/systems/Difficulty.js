@@ -49,7 +49,7 @@ export function difficultyContext(save, levelIndex) {
 }
 
 // Returns a new def with hp/damage scaled by enemy class. Only scales fields that
-// are present (boss forms may omit `damage`). Elites also gain combined resist.
+// are present (a def may omit either hp or damage). Elites also gain combined resist.
 export function scaleEnemyDef(def, ctx) {
   const mult = def.elite ? ctx.eliteMult : ctx.basicMult;
   const scaled = { ...def };

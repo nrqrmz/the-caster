@@ -87,7 +87,7 @@ test('scaleEnemyDef: elite combines innate resist with scaling resist', () => {
   const ctx = { basicMult: 2, eliteMult: 4, eliteResist: 0.2 };
   const def = { key: 'tb', hp: 100, damage: 20, elite: true, resist: 0.5 };
   const s = scaleEnemyDef(def, ctx);
-  assert.equal(s.resist, combineResist(0.5, 0.2)); // 0.6
+  assert.equal(s.resist, 0.6); // combineResist(0.5, 0.2) = 1 - 0.5*0.8
 });
 
 test('scaleEnemyDef: tolerates a form with no damage field', () => {
