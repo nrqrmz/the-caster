@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
+import { t } from '../i18n/index.js';
 
 export default class DialogueScene extends Phaser.Scene {
   constructor() { super('Dialogue'); }
@@ -18,7 +19,7 @@ export default class DialogueScene extends Phaser.Scene {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#ffffff',
       wordWrap: { width: GAME_WIDTH - 60 }, lineSpacing: 4,
     });
-    this.hint = this.add.text(GAME_WIDTH - 30, GAME_HEIGHT - 56, '▶ tap', {
+    this.hint = this.add.text(GAME_WIDTH - 30, GAME_HEIGHT - 56, t('ui.tap'), {
       fontFamily: 'sans-serif', fontSize: '14px', color: '#aaaaaa',
     }).setOrigin(1, 0.5);
 

@@ -1,6 +1,8 @@
 // English locale. Keys mirror es.js exactly (enforced by tests/i18n.test.js).
 export default {
   ui: { tap: '▶ tap' },
+  pause: { title: 'PAUSED', resume: '▶  Resume', abandon: '⌂  Abandon level' },
+  gameover: { title: 'YOU HAVE FALLEN', retry: '↻  Retry', map: '⌂  Back to map' },
   menu: {
     title: 'THE CASTER',
     subtitle: 'elemental vengeance',

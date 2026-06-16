@@ -1,6 +1,8 @@
 // Spanish locale. Keys mirror en.js exactly (enforced by tests/i18n.test.js).
 export default {
   ui: { tap: '▶ tap' },
+  pause: { title: 'PAUSA', resume: '▶  Reanudar', abandon: '⌂  Abandonar nivel' },
+  gameover: { title: 'HAS CAÍDO', retry: '↻  Reintentar', map: '⌂  Volver al mapa' },
   menu: {
     title: 'THE CASTER',
     subtitle: 'venganza elemental',

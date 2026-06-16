@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
+import { t } from '../i18n/index.js';
 
 // Game Over overlay launched over a paused Game (+ paused UI) when the caster dies.
 // Replaces the old silent level-restart so the player always has a way out.
@@ -13,12 +14,12 @@ export default class GameOverScene extends Phaser.Scene {
 
   create() {
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7).setOrigin(0).setInteractive();
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 110, 'HAS CAÍDO', {
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 110, t('gameover.title'), {
       fontFamily: 'sans-serif', fontSize: '36px', color: '#ef5350', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.addButton(GAME_WIDTH / 2 - 90, '↻  Reintentar', 0x66bb6a, () => this.retry());
-    this.addButton(GAME_WIDTH / 2 - 20, '⌂  Volver al mapa', 0x4fc3f7, () => this.toMap());
+    this.addButton(GAME_WIDTH / 2 - 90, t('gameover.retry'), 0x66bb6a, () => this.retry());
+    this.addButton(GAME_WIDTH / 2 - 20, t('gameover.map'), 0x4fc3f7, () => this.toMap());
   }
 
   addButton(y, label, color, onTap) {

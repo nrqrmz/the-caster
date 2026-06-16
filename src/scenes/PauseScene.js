@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config.js';
+import { t } from '../i18n/index.js';
 
 // Pause overlay launched over a paused Game (+ paused UI). Either resumes both scenes
 // or abandons the level back to the region's level select.
@@ -9,12 +10,12 @@ export default class PauseScene extends Phaser.Scene {
 
   create() {
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.6).setOrigin(0).setInteractive();
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 110, 'PAUSA', {
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 110, t('pause.title'), {
       fontFamily: 'sans-serif', fontSize: '38px', color: '#fff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.addButton(GAME_WIDTH / 2 - 90, '▶  Reanudar', 0x66bb6a, () => this.resumeGame());
-    this.addButton(GAME_WIDTH / 2 - 20, '⌂  Abandonar nivel', 0xef5350, () => this.abandon());
+    this.addButton(GAME_WIDTH / 2 - 90, t('pause.resume'), 0x66bb6a, () => this.resumeGame());
+    this.addButton(GAME_WIDTH / 2 - 20, t('pause.abandon'), 0xef5350, () => this.abandon());
   }
 
   addButton(y, label, color, onTap) {
