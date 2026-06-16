@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config.js';
+import { t } from '../i18n/index.js';
 import { REGIONS } from '../data/regions.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { getStats } from '../systems/SkillTree.js';
@@ -24,7 +25,7 @@ export default class BranchScene extends Phaser.Scene {
     const region = REGIONS[this.regionId];
     const cleared = clearedCount(save, this.regionId);
 
-    this.add.text(GAME_WIDTH / 2, 40, region.name, {
+    this.add.text(GAME_WIDTH / 2, 40, t(region.name), {
       fontFamily: 'sans-serif', fontSize: '26px', color: '#fff', fontStyle: 'bold',
     }).setOrigin(0.5);
 

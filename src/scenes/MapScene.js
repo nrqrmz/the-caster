@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config.js';
+import { t } from '../i18n/index.js';
 import { REGIONS, REGION_ORDER, CASTLE_ID, REQUIRED_ELEMENTS } from '../data/regions.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { isCastleUnlocked, isRegionComplete } from '../systems/Campaign.js';
@@ -29,12 +30,12 @@ export default class MapScene extends Phaser.Scene {
       const y = 200 + row * 150;
       const region = REGIONS[id];
       const complete = isRegionComplete(save, region);
-      this.portal(x, y, region.name, PORTAL_ICON[id], complete, true, () => this.scene.start('Branch', { regionId: id }));
+      this.portal(x, y, t(region.name), PORTAL_ICON[id], complete, true, () => this.scene.start('Branch', { regionId: id }));
     });
 
     // Castle portal (gated by all 4 elements).
     const castleOpen = isCastleUnlocked(save, REQUIRED_ELEMENTS);
-    this.portal(GAME_WIDTH / 2, 540, REGIONS[CASTLE_ID].name, PORTAL_ICON.castle, isRegionComplete(save, REGIONS[CASTLE_ID]), castleOpen,
+    this.portal(GAME_WIDTH / 2, 540, t(REGIONS[CASTLE_ID].name), PORTAL_ICON.castle, isRegionComplete(save, REGIONS[CASTLE_ID]), castleOpen,
       () => this.scene.start('Branch', { regionId: CASTLE_ID }),
       castleOpen ? null : 'Requiere los 4 elementos');
 

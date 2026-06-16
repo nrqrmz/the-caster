@@ -43,7 +43,7 @@ test('castle is locked, has no element, and ends in the King reveal', () => {
   assert.equal(c.levels.length, 5);
   assert.equal(c.levels[4].kind, 'temple');
   const lastLine = c.levels[4].dialogue.onClear.at(-1).text;
-  assert.match(lastLine, /CONTINUARÁ/);
+  assert.equal(lastLine, 'story.castle.clear.4');
 });
 
 test('required elements match the elemental region ids', () => {
@@ -118,9 +118,9 @@ test('water region grants freeze skill and preserves narrative', () => {
   assert.equal(water.grantsSkill, 'freeze');
   const clearDialogue = water.levels[7].dialogue.onClear;
   assert.ok(clearDialogue.length >= 2, 'closing dialogue present');
-  const lamaLine = clearDialogue.find((l) => l.speaker === 'Dama del Lago');
-  assert.ok(lamaLine, 'Dama del Lago has a closing line');
-  assert.match(lamaLine.text, /suplicó/, 'mageLines[0] preserved');
+  const mageLine = clearDialogue.find((l) => l.speaker === 'speaker.mage.water');
+  assert.ok(mageLine, 'speaker.mage.water has a closing line');
+  assert.equal(mageLine.text, 'story.water.mage.0', 'mageLines[0] key preserved');
 });
 
 // ─── Fire regression ─────────────────────────────────────────────────────────

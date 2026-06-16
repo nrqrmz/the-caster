@@ -127,7 +127,7 @@ function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines
     makeLevel(`${id}_8`, id, 'temple', {
       templeBoss: templeBoss || tb(950, 26, MECHANICS[element]),
       minions: [{ type: 'villager', count: 4 }],
-      dialogue: { onClear: mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'The Caster' : mageName, text })) },
+      dialogue: { onClear: mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'speaker.caster' : mageName, text })) },
     }),
   ];
   return { id, element, name, grantsSkill, locked: false, levels };
@@ -138,7 +138,7 @@ function makeCastle() {
   const id = 'castle';
   const levels = [
     makeLevel(`${id}_1`, id, 'intermediate', { waves: interWaves(4), miniboss: mb(420, 22),
-      dialogue: { onEnter: [{ speaker: 'Narrador', text: 'Las puertas del castillo se abren. Los que amaban a quienes mataste te esperan.' }] } }),
+      dialogue: { onEnter: [{ speaker: 'speaker.narrator', text: 'story.castle.intro.0' }] } }),
     makeLevel(`${id}_2`, id, 'intermediate', { waves: interWaves(5), miniboss: mb(460, 24) }),
     makeLevel(`${id}_3`, id, 'pretemple', { waves: interWaves(5), miniboss: mb(480, 24), levelBoss: lb(800, 28) }),
     makeLevel(`${id}_4`, id, 'pretemple', { waves: interWaves(6), miniboss: mb(520, 26), levelBoss: lb(900, 30) }),
@@ -146,63 +146,63 @@ function makeCastle() {
       templeBoss: tb(1400, 30, [...MECHANICS.fire, ...MECHANICS.earth]),
       minions: [{ type: 'warrior', count: 4 }],
       dialogue: { onClear: [
-        { speaker: 'The Caster', text: 'Abuelo… el Rey. Por fin.' },
-        { speaker: '???', text: 'No queda nada de él que puedas matar. Hace años que el Rey está muerto.' },
-        { speaker: 'The Caster', text: '¿Quién eres? Conocías a mi padre…' },
-        { speaker: '???', text: 'Su amigo. Y quien mueve este cadáver con magia. Tu venganza apenas comienza, niña.' },
-        { speaker: 'Narrador', text: 'CONTINUARÁ…' },
+        { speaker: 'speaker.caster',  text: 'story.castle.clear.0' },
+        { speaker: 'speaker.unknown', text: 'story.castle.clear.1' },
+        { speaker: 'speaker.caster',  text: 'story.castle.clear.2' },
+        { speaker: 'speaker.unknown', text: 'story.castle.clear.3' },
+        { speaker: 'speaker.narrator', text: 'story.castle.clear.4' },
       ] },
     }),
   ];
-  return { id, element: null, name: 'El Castillo', grantsSkill: null, locked: true, levels };
+  return { id, element: null, name: 'region.castle.name', grantsSkill: null, locked: true, levels };
 }
 
 export const REGIONS = {
   fire: makeBranch({
-    id: 'fire', element: 'fire', name: 'El Volcán', grantsSkill: 'fireball',
+    id: 'fire', element: 'fire', name: 'region.fire.name', grantsSkill: 'fireball',
     basic: fireWaves, inter: fireInterWaves,
     minibosses: [PYRA, VESTA, FAVILLA],
     levelBosses: SISTERS_TRIO,
     templeBoss: IGNATIUS,
     intro: [
-      { speaker: 'Narrador', text: 'Un amor prohibido entre una princesa y un hechicero fue castigado por el Consejo de Magos.' },
-      { speaker: 'Narrador', text: 'Tu madre, exiliada. Tu padre, asesinado. Tú, la huérfana que descendió al volcán por venganza.' },
+      { speaker: 'speaker.narrator', text: 'story.fire.intro.0' },
+      { speaker: 'speaker.narrator', text: 'story.fire.intro.1' },
     ],
-    mageName: 'Mago del Fuego',
+    mageName: 'speaker.mage.fire',
     mageLines: [
-      'Yo encendí la pira de tu padre. Ardió pidiendo clemencia.',
-      'Entonces aprenderé tu fuego, y haré que cada mago del Consejo arda igual.',
+      'story.fire.mage.0',
+      'story.fire.mage.1',
     ],
   }),
   water: makeBranch({
-    id: 'water', element: 'water', name: 'El Lago', grantsSkill: 'freeze',
+    id: 'water', element: 'water', name: 'region.water.name', grantsSkill: 'freeze',
     basic: waterWaves, inter: waterInterWaves,
     minibosses: [SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL],
     levelBoss: KRAKEN,
     templeBoss: DAMA_LAGO,
-    intro: [{ speaker: 'Narrador', text: 'Bajo el lago habita la maga que firmó el exilio de tu madre.' }],
-    mageName: 'Dama del Lago',
+    intro: [{ speaker: 'speaker.narrator', text: 'story.water.intro.0' }],
+    mageName: 'speaker.mage.water',
     mageLines: [
-      'Tu madre suplicó por su vida en estas aguas. Yo no escuché.',
-      'Pues estas aguas ahora son mías.',
+      'story.water.mage.0',
+      'story.water.mage.1',
     ],
   }),
   air: makeBranch({
-    id: 'air', element: 'air', name: 'La Montaña', grantsSkill: 'lightning',
-    intro: [{ speaker: 'Narrador', text: 'En la cima, el mago que falsificó la sentencia de tu padre te observa caer y subir.' }],
-    mageName: 'Mago del Aire',
+    id: 'air', element: 'air', name: 'region.air.name', grantsSkill: 'lightning',
+    intro: [{ speaker: 'speaker.narrator', text: 'story.air.intro.0' }],
+    mageName: 'speaker.mage.air',
     mageLines: [
-      'Yo redacté la mentira que condenó a tu padre. El Consejo solo asintió.',
-      'Entonces tu rayo escribirá la verdad sobre tu tumba.',
+      'story.air.mage.0',
+      'story.air.mage.1',
     ],
   }),
   earth: makeBranch({
-    id: 'earth', element: 'earth', name: 'El Bosque', grantsSkill: 'poison',
-    intro: [{ speaker: 'Narrador', text: 'El bosque esconde al más viejo del Consejo, el que envenenó el oído del Rey.' }],
-    mageName: 'Mago de la Tierra',
+    id: 'earth', element: 'earth', name: 'region.earth.name', grantsSkill: 'poison',
+    intro: [{ speaker: 'speaker.narrator', text: 'story.earth.intro.0' }],
+    mageName: 'speaker.mage.earth',
     mageLines: [
-      'Yo le susurré al Rey que tu familia era una amenaza. Y me creyó.',
-      'El Rey ya no te servirá de nada. Lo verás tú misma.',
+      'story.earth.mage.0',
+      'story.earth.mage.1',
     ],
   }),
   castle: makeCastle(),

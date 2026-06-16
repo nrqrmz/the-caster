@@ -1,4 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG, spriteKey } from '../config.js';
+import { t, tLines } from '../i18n/index.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
 import {
@@ -86,7 +87,7 @@ export default class GameScene extends Phaser.Scene {
     const intro = this.level.dialogue && this.level.dialogue.onEnter;
     if (intro && intro.length) {
       this.scene.pause();
-      this.scene.launch('Dialogue', { lines: intro, onDone: () => { this.scene.resume(); startCombat(); } });
+      this.scene.launch('Dialogue', { lines: tLines(intro), onDone: () => { this.scene.resume(); startCombat(); } });
     } else {
       startCombat();
     }
@@ -433,7 +434,7 @@ export default class GameScene extends Phaser.Scene {
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
         if (dialogue && dialogue.length) {
           this.scene.pause();
-          this.scene.launch('Dialogue', { lines: dialogue, onDone: () => { this.scene.resume(); this.runner.onCleared(); this.beginPhase(); } });
+          this.scene.launch('Dialogue', { lines: tLines(dialogue), onDone: () => { this.scene.resume(); this.runner.onCleared(); this.beginPhase(); } });
         } else {
           this.runner.onCleared();
           this.beginPhase();
@@ -462,7 +463,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.scene.stop('UI');
     this.scene.launch('Dialogue', {
-      lines: [{ speaker: 'Narrador', text: `Nivel superado. +${reward} punto(s) de habilidad, +${gold} oro.` }],
+      lines: [{ speaker: t('speaker.narrator'), text: t('hud.levelCleared', { reward, gold }) }],
       onDone: () => {
         if (isEnding) this.scene.start('Map');
         else this.scene.start('Branch', { regionId: this.regionId });
