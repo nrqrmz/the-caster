@@ -112,6 +112,10 @@ const SAPO_DESOV = [{ name: 'desov_body' }, { name: 'desov_eggs', palette: 'bone
 const TIBURON_ABISAL = [{ name: 'abisal_body' }, { name: 'abisal_teeth', palette: 'bone' }, { name: 'abisal_eye', palette: 'glow' }];
 const KRAKEN = [{ name: 'kraken_body' }, { name: 'kraken_eye', palette: 'glow' }];
 const WHALE = [{ name: 'whale_body' }, { name: 'whale_eye', palette: 'glow' }, { name: 'whale_spout', palette: 'orbblue' }];
+// Dama del Lago — ethereal water sorceress, shared by her humanoid forms (lago/maga/
+// maga_final). gown = type color; `a` = gold; skin = skin; hair = silver; crown = glow;
+// orb = orbblue. Her shark form reuses TIBURON_ABISAL; kraken/whale forms reuse those.
+const DAMA = [{ name: 'dama_gown' }, { name: 'dama_hair', palette: 'silverhair' }, { name: 'dama_skin', palette: 'skin' }, { name: 'dama_crown', palette: 'glow' }, { name: 'dama_orb', palette: 'orbblue' }];
 
 export const RECIPES = {
   hero: {
@@ -173,12 +177,12 @@ export const RECIPES = {
   tiburon_abisal:  { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL },
   kraken:          { archetype: 'boss', size: 96, baseColor: 0xab47bc, parts: KRAKEN },
   // --- Dama del Lago + her 5 forms (each a distinct creature) ---
-  dama_lago:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
-  dama_maga:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
-  dama_tiburon:    { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: ['body_fish', 'fin', 'eyes_dots'] },
+  dama_lago:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
+  dama_maga:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
+  dama_tiburon:    { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL },
   dama_kraken:     { archetype: 'boss', size: 96, baseColor: 0xab47bc, parts: KRAKEN },
   dama_ballena:    { archetype: 'boss', size: 96, baseColor: 0xd32f2f, parts: WHALE },
-  dama_maga_final: { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
+  dama_maga_final: { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
 
   // --- Water cultists (humanoid) ---
   acolito_escarcha:  { archetype: 'humanoid', size: 32, parts: CULT_HOODED_WATER },
