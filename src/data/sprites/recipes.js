@@ -121,7 +121,7 @@ export const RECIPES = {
   hero: {
     // The redheaded princess. Each part composes against its own palette (per-part
     // palette overrides), so she mixes skin + red hair + green gown + gold + orb.
-    archetype: 'hero', size: 32, anim: { idle: 2, walk: 2 }, fps: 5,
+    archetype: 'hero', size: 32, anim: { idle: 2, walk: 2, attack: 3 }, fps: 5,
     parts: [
       { name: 'staff_princess', palette: 'wood' },
       { name: 'body_gown', palette: 'greengown' },

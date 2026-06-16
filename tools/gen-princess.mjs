@@ -120,7 +120,11 @@ function skinFrame(dx, dy) {
 const skinBase = skinFrame(0, 0);                 // static / idle (arm at rest)
 const walk0 = skinFrame(1, -2);                   // arm swung forward (hand up/in)
 const walk1 = skinFrame(-1, 1);                   // arm swung back (hand down/out)
-const skinFrames = [skinBase, walk0, walk1];
+// attack = a cast thrust: free arm winds down/back, strikes up-forward, recovers.
+const atk0 = skinFrame(-1, 2);                    // windup (arm pulled down/back)
+const atk1 = skinFrame(2, -5);                    // strike (forearm raised up-forward)
+const atk2 = skinFrame(0, -1);                    // recover (returning to rest)
+const skinFrames = [skinBase, walk0, walk1, atk0, atk1, atk2];
 
 // One shared bbox across every skin frame so static + anim register identically.
 function bboxOf(maps) {
@@ -138,9 +142,9 @@ function emitSkin() {
   const bb = bboxOf(skinFrames);
   const w = bb.maxx - bb.minx + 1, h = bb.maxy - bb.miny + 1;
   const baseBlock = gridBlock(skinBase, bb);
-  const w0 = gridBlock(walk0, bb), w1 = gridBlock(walk1, bb);
-  const walkList = `[ ${w0}, ${w1} ]`;
-  console.log(`  princess_skin: {\n    res: 32, w: ${w}, h: ${h}, anchor: { x: ${bb.minx}, y: ${bb.miny} },\n    down: ${baseBlock},\n    up: ${baseBlock},\n    side: ${baseBlock},\n    anim: { walk: { down: ${walkList}, up: ${walkList}, side: ${walkList} } },\n  },`);
+  const walkList = `[ ${gridBlock(walk0, bb)}, ${gridBlock(walk1, bb)} ]`;
+  const atkList = `[ ${gridBlock(atk0, bb)}, ${gridBlock(atk1, bb)}, ${gridBlock(atk2, bb)} ]`;
+  console.log(`  princess_skin: {\n    res: 32, w: ${w}, h: ${h}, anchor: { x: ${bb.minx}, y: ${bb.miny} },\n    down: ${baseBlock},\n    up: ${baseBlock},\n    side: ${baseBlock},\n    anim: {\n      walk: { down: ${walkList}, up: ${walkList}, side: ${walkList} },\n      attack: { down: ${atkList}, up: ${atkList}, side: ${atkList} },\n    },\n  },`);
 }
 
 function partName(p) { return ({ gown: 'body_gown', hair: 'hair_long', staff: 'staff_princess', orb: 'orb_princess' })[p]; }
