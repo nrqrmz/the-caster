@@ -20,6 +20,17 @@ test('composeColorGrid upscales a legacy res:16 part ×2 (fills a 2×2 block)', 
   assert.equal(g[2][0], null);
 });
 
+test('composeColorGrid scales a legacy part anchor by f (non-zero anchor lands at ×2)', () => {
+  const parts = { spot: { res: 16, w: 1, h: 1, anchor: { x: 3, y: 4 }, down: ['b'], up: ['b'], side: ['b'] } };
+  const g = composeColorGrid({ parts: ['spot'] }, parts, 'down', PAL);
+  // anchor (3,4) × f(2) = (6,8); cell paints a 2×2 block there.
+  assert.equal(g[8][6], PAL.base);
+  assert.equal(g[8][7], PAL.base);
+  assert.equal(g[9][6], PAL.base);
+  assert.equal(g[7][6], null); // nothing above the block
+  assert.equal(g[8][5], null); // nothing left of the block
+});
+
 test('composeColorGrid stamps a res:32 part 1:1', () => {
   const g = composeColorGrid({ parts: ['dot32'] }, PARTS, 'down', PAL);
   assert.equal(g[0][0], PAL.highlight);
