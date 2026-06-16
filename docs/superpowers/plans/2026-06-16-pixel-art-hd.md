@@ -543,9 +543,16 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
   embryos/pupils/mouth = `shadow`.
 
 **Remaining archetypes (each = generator + recipes + checkpoint):**
-- **Bosses** (`favilla/pyra/vesta` sisters, `ignatius`, `soldado_hielo`,
-  `sapo_desovador`, `tiburon_abisal`, `kraken`, `dama_*` forms, `whale`):
-  size 96 — full-grid detail, regal/monstrous silhouettes.
+- **Bosses** (size 96 — full-grid detail, regal/monstrous silhouettes). Split into
+  sub-batches:
+  - ✅ **Fire sisters** — `gen-sisters.mjs`; part-lists `PYRA`/`VESTA`/`FAVILLA`. Three
+    beautiful humanoid fire queens (princess-level detail: draped folds + GOLD trim via
+    the recipe `accent`), differentiated by role — pyra=light gold plate + flame crown +
+    red hair + fire orb; vesta=heavy banded plate + shield + steel hammer + black hair;
+    favilla=slim gold robe + ornate crown + blonde hair + summoning embers. New `steel`
+    palette; hair red/black/blond; flames/embers `glow`.
+  - ⬜ Remaining: `ignatius`, `soldado_hielo`, `sapo_desovador`, `tiburon_abisal`,
+    `kraken`, `dama_*` forms, `whale`.
 - ✅ **Projectiles** — `gen-proj.mjs`; re-authored `orb_body`/`flame_body`/`arrow_body`
   at res:32 (recipes unchanged): orb = glowing sphere + twinkle; fireball = teardrop
   comet (head at +x); arrow = sleek arrow (head at +x). fireball & arrow point along
