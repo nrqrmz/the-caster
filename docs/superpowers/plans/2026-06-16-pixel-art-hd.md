@@ -546,9 +546,10 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
 - **Bosses** (`favilla/pyra/vesta` sisters, `ignatius`, `soldado_hielo`,
   `sapo_desovador`, `tiburon_abisal`, `kraken`, `dama_*` forms, `whale`):
   size 96 — full-grid detail, regal/monstrous silhouettes.
-- **Projectiles** (`orb_body`, `flame_body`, `arrow_body`): glowing orb with a
-  twinkle, teardrop fireball with a hot `a` core, sleek arrow. Confirm on-screen
-  projectile size still reads after the Task 1 size bump.
+- ✅ **Projectiles** — `gen-proj.mjs`; re-authored `orb_body`/`flame_body`/`arrow_body`
+  at res:32 (recipes unchanged): orb = glowing sphere + twinkle; fireball = teardrop
+  comet (head at +x); arrow = sleek arrow (head at +x). fireball & arrow point along
+  +x to match the pool's `setRotation(angle)`. Reads at 1:1 native size.
 
 > Multi-session work. Each archetype lands independently; the game stays runnable
 > throughout (un-migrated parts remain auto-upscaled to 32).
