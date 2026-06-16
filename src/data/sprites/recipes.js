@@ -76,6 +76,13 @@ const IMP = [{ name: 'imp_body' }, { name: 'imp_horns' }, { name: 'imp_eyes', pa
 const PEZ_GLOBO = [{ name: 'globo_body' }, { name: 'globo_spikes' }, { name: 'globo_eyes', palette: 'eyes_living' }];
 const BRASA = [{ name: 'brasa_body' }, { name: 'brasa_glow', palette: 'ember' }];
 const BURBUJA = [{ name: 'burbuja_body' }, { name: 'burbuja_sheen', palette: 'orbblue' }, { name: 'burbuja_eyes', palette: 'shadow' }];
+// Winged / floating. body/wings = type color; phoenix crest/tail = ember, wasp wings
+// = bone membrane; totem is a columnar pole with a recessed `shadow` face + a glowing
+// eye (glow for fire, orbblue for frost) — one body serves both variants.
+const FENIX = [{ name: 'fenix_crest', palette: 'ember' }, { name: 'fenix_body' }, { name: 'fenix_eyes', palette: 'glow' }];
+const AVISPA = [{ name: 'avispa_wings', palette: 'bone' }, { name: 'avispa_body' }, { name: 'avispa_eyes', palette: 'shadow' }];
+const TOTEM_FIRE = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'glow' }];
+const TOTEM_FROST = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'orbblue' }];
 
 export const RECIPES = {
   hero: {
@@ -118,11 +125,11 @@ export const RECIPES = {
   can_lava:        { archetype: 'beast', size: 64, parts: CAN_LAVA },
   elemental_fuego: { archetype: 'blob', size: 64, parts: FUEGO_ELEM },
   coloso_magma:    { archetype: 'beast', size: 64, parts: COLOSO },
-  fenix_menor:     { archetype: 'floating', size: 64, parts: ['body_winged', 'crest_flame', 'eyes_dots'] },
+  fenix_menor:     { archetype: 'floating', size: 64, parts: FENIX },
   // --- Summoned / ambient ---
   imp_brasa:       { archetype: 'blob', size: 32, parts: IMP },
-  avispa_brasa:    { archetype: 'floating', size: 32, parts: ['body_winged', 'eyes_dots'] },
-  totem_pira:      { archetype: 'floating', size: 64, parts: ['body_totem', 'eye_single'] },
+  avispa_brasa:    { archetype: 'floating', size: 32, parts: AVISPA },
+  totem_pira:      { archetype: 'floating', size: 64, parts: TOTEM_FIRE },
   brasa_errante:   { archetype: 'blob', size: 32, parts: BRASA },
 
   // --- Fire bosses (single-form) ---
@@ -169,7 +176,7 @@ export const RECIPES = {
   sapo_adulto:       { archetype: 'frog',    size: 64, parts: ['body_frog', 'eyes_dots'] },
   // --- Ambient ---
   burbuja_gelida:    { archetype: 'blob',     size: 32, parts: BURBUJA },
-  totem_escarcha:    { archetype: 'floating', size: 64, parts: ['body_totem', 'eye_single'] },
+  totem_escarcha:    { archetype: 'floating', size: 64, parts: TOTEM_FROST },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
