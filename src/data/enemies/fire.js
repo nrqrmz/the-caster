@@ -34,7 +34,7 @@ export const FIRE_ENEMIES = {
     modifiers: [{ type: 'onHitBurn', dps: 6, ms: 2000 }] },
   can_lava: { key: 'can_lava', tex: TEX.villager, color: COLORS.magma, hp: 30, speed: 90, damage: 15, radius: 17,
     movement: { type: 'charge', windup: 500, dash: 350, recover: 600, dashMul: 3.2 }, attacks: [{ type: 'melee' }] },
-  elemental_fuego: { key: 'elemental_fuego', tex: TEX.miniboss, color: COLORS.magma, hp: 60, speed: 55, damage: 8, radius: 21,
+  elemental_fuego: { key: 'elemental_fuego', tex: TEX.miniboss, color: COLORS.magma, hp: 60, speed: 55, damage: 8, radius: 26,
     movement: { type: 'kite', range: 200 }, attacks: [{ type: 'nova', count: 10, every: 2600, speed: 200, telegraph: 400 }],
     modifiers: [{ type: 'onHitBurn', dps: 8, ms: 2200 }] },
   coloso_magma: { key: 'coloso_magma', tex: TEX.miniboss, color: COLORS.emberDeep, hp: 110, speed: 35, damage: 14, radius: 30,

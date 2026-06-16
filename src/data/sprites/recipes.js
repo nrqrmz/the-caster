@@ -68,6 +68,14 @@ const LARVA = [{ name: 'larva_body' }, { name: 'larva_glow', palette: 'ember' },
 const SALAMANDRA = [{ name: 'sala_body' }, { name: 'sala_crest', palette: 'ember' }, { name: 'sala_eyes', palette: 'glow' }];
 const CAN_LAVA = [{ name: 'can_body' }, { name: 'can_glow', palette: 'ember' }, { name: 'can_horns', palette: 'bone' }, { name: 'can_eyes', palette: 'glow' }];
 const COLOSO = [{ name: 'coloso_body' }, { name: 'coloso_core', palette: 'ember' }, { name: 'coloso_horns', palette: 'bone' }, { name: 'coloso_eyes', palette: 'glow' }];
+// Blobs / elementals. body = type color; cores/cracks = ember/glow; ice sheen =
+// orbblue; eyes glow/shadow/eyes_living. brasa & burbuja keep no eyes / a frosty face.
+const CENIZA = [{ name: 'ceniza_body' }, { name: 'ceniza_eyes', palette: 'glow' }];
+const FUEGO_ELEM = [{ name: 'fuego_core', palette: 'glow' }, { name: 'fuego_body' }, { name: 'fuego_eyes', palette: 'shadow' }];
+const IMP = [{ name: 'imp_body' }, { name: 'imp_horns' }, { name: 'imp_eyes', palette: 'glow' }];
+const PEZ_GLOBO = [{ name: 'globo_body' }, { name: 'globo_spikes' }, { name: 'globo_eyes', palette: 'eyes_living' }];
+const BRASA = [{ name: 'brasa_body' }, { name: 'brasa_glow', palette: 'ember' }];
+const BURBUJA = [{ name: 'burbuja_body' }, { name: 'burbuja_sheen', palette: 'orbblue' }, { name: 'burbuja_eyes', palette: 'shadow' }];
 
 export const RECIPES = {
   hero: {
@@ -106,16 +114,16 @@ export const RECIPES = {
   // --- Fire beasts ---
   larva_magma:     { archetype: 'beast', size: 64, parts: LARVA },
   salamandra:      { archetype: 'beast', size: 32, parts: SALAMANDRA },
-  espiritu_ceniza: { archetype: 'blob', size: 32, parts: ['body_blob', 'eyes_dots'] },
+  espiritu_ceniza: { archetype: 'blob', size: 32, parts: CENIZA },
   can_lava:        { archetype: 'beast', size: 64, parts: CAN_LAVA },
-  elemental_fuego: { archetype: 'blob', size: 64, parts: ['body_blob', 'eye_single'] },
+  elemental_fuego: { archetype: 'blob', size: 64, parts: FUEGO_ELEM },
   coloso_magma:    { archetype: 'beast', size: 64, parts: COLOSO },
   fenix_menor:     { archetype: 'floating', size: 64, parts: ['body_winged', 'crest_flame', 'eyes_dots'] },
   // --- Summoned / ambient ---
-  imp_brasa:       { archetype: 'blob', size: 32, parts: ['body_blob', 'horns', 'eyes_dots'] },
+  imp_brasa:       { archetype: 'blob', size: 32, parts: IMP },
   avispa_brasa:    { archetype: 'floating', size: 32, parts: ['body_winged', 'eyes_dots'] },
   totem_pira:      { archetype: 'floating', size: 64, parts: ['body_totem', 'eye_single'] },
-  brasa_errante:   { archetype: 'blob', size: 32, parts: ['body_blob'] },
+  brasa_errante:   { archetype: 'blob', size: 32, parts: BRASA },
 
   // --- Fire bosses (single-form) ---
   favilla:  { archetype: 'boss', size: 96, baseColor: 0xffca28, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
@@ -152,7 +160,7 @@ export const RECIPES = {
   cangrejo_acorazado:{ archetype: 'shelled', size: 64, parts: ['body_shell', 'eyes_dots'] },
   medusa:            { archetype: 'jelly',   size: 64, parts: JELLY },
   medusa_cria:       { archetype: 'jelly',   size: 32, parts: JELLY },
-  pez_globo:         { archetype: 'blob',    size: 32, parts: ['body_blob', 'eyes_dots'] },
+  pez_globo:         { archetype: 'blob',    size: 32, parts: PEZ_GLOBO },
   // --- Frog lineage ---
   huevo_sapo:        { archetype: 'egg',     size: 32, parts: ['frog_egg'] },
   renacuajo:         { archetype: 'blob',    size: 32, parts: ['tadpole_tail', 'eyes_dots'] },
@@ -160,7 +168,7 @@ export const RECIPES = {
   sapo_escupidor:    { archetype: 'frog',    size: 32, parts: ['body_frog', 'eyes_dots'] },
   sapo_adulto:       { archetype: 'frog',    size: 64, parts: ['body_frog', 'eyes_dots'] },
   // --- Ambient ---
-  burbuja_gelida:    { archetype: 'blob',     size: 32, parts: ['body_bubble'] },
+  burbuja_gelida:    { archetype: 'blob',     size: 32, parts: BURBUJA },
   totem_escarcha:    { archetype: 'floating', size: 64, parts: ['body_totem', 'eye_single'] },
 };
 
