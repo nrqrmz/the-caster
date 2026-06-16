@@ -522,6 +522,50 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
 > Multi-session work. Each archetype lands independently; the game stays runnable
 > throughout (un-migrated parts remain auto-upscaled to 32).
 
+### Reusable preview harness (how each archetype was rendered for approval)
+
+The browser caches ES modules, so previews **dynamic-import the source with a
+cache-bust** and forge directly (the running game's BootScene is irrelevant). Steps:
+
+1. Serve: `python3 -m http.server 8000`. Emit the generator output as a temp module:
+   `{ echo "export const GEN = {"; node tools/gen-<arch>.mjs; echo "};"; } > src/data/sprites/_preview_<arch>.js`
+2. In the browser (Playwright `browser_navigate` to `http://localhost:8000/index.html`,
+   then `browser_evaluate`), run this — it forges the creatures and draws them scaled,
+   then `browser_take_screenshot` to review:
+
+```js
+async () => {
+  document.getElementById('preview')?.remove();
+  const b = '?v=' + Date.now();
+  const [SF, P, PAL, GENM] = await Promise.all([
+    import('/src/systems/SpriteForge.js' + b), import('/src/data/sprites/parts.js' + b),
+    import('/src/data/sprites/palettes.js' + b), import('/src/data/sprites/_preview_<arch>.js' + b),
+  ]);
+  const allParts = { ...P.PARTS, ...GENM.GEN };
+  // map accent parts to named palettes; body parts (no entry) take the type color
+  const P2 = { /* e.g. */ knight_visor: PAL.NAMED_PALETTES.shadow, knight_eyes: PAL.NAMED_PALETTES.glow };
+  const resolver = (ref) => P2[ref.name] || null;
+  const parts = ['part_a', 'part_b'].map(n => ({ name: n })); // back-to-front draw order
+  const mk = (color) => SF.forge({ size: 32, anim: { idle: 1, walk: 1 }, parts }, allParts,
+    PAL.derivePalette(color), resolver).anims['idle-down'][0];
+  const list = [['fire', mk(0xd84315)], ['water', mk(0x4dd0e1)]];
+  const S = 11, N = 32, gap = 12, cv = document.createElement('canvas'); cv.id = 'preview';
+  cv.width = list.length * (N * S + gap); cv.height = N * S + 24;
+  cv.style = 'position:fixed;top:8px;left:8px;z-index:99999;border:2px solid #888;background:#222';
+  const ctx = cv.getContext('2d');
+  list.forEach(([name, f], i) => { const ox = i * (N * S + gap);
+    for (let y=0;y<N;y++) for (let x=0;x<N;x++){ ctx.fillStyle=((x+y)&1)?'#3a3a3a':'#2b2b2b'; ctx.fillRect(ox+x*S,y*S,S,S);}
+    for (let y=0;y<N;y++) for (let x=0;x<N;x++){ const c=f[y][x]; if(c==null)continue; ctx.fillStyle='#'+(c&0xffffff).toString(16).padStart(6,'0'); ctx.fillRect(ox+x*S,y*S,S,S);}
+    ctx.fillStyle='#fff'; ctx.font='12px sans-serif'; ctx.fillText(name, ox+2, N*S+16); });
+  document.body.appendChild(cv); return { ok: true };
+}
+```
+> For `size: 64` creatures the frame is 64×64 — draw with `N = frame.length`, not 32,
+> or you'll clip (this caused a bad knight commit; always preview the full frame).
+3. After approval: splice parts into `parts.js` (append before the final `};`, or
+   replace by a marker comment for re-do), add palettes, add a shared part-list const
+   + wire recipes, `rm` the temp `_preview_*.js`, `node --test`, commit.
+
 ---
 
 ## Task 10: Final visual sweep + parity
