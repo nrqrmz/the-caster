@@ -65,3 +65,23 @@ test('forge produces idle and walk frame sets per direction', () => {
   assert.equal(out.anims['walk-side'].length, 2);
   assert.equal(out.anims['idle-down'][0][0][0], PAL.base);
 });
+
+test('composeColorGrid selects an authored frame for a state, else falls back to static', () => {
+  const parts = {
+    a: {
+      res: 32, w: 1, h: 1, anchor: { x: 0, y: 0 }, down: ['b'], up: ['b'], side: ['b'],
+      anim: { walk: { down: [['h'], ['s']] } },
+    },
+  };
+  // no state -> static base
+  assert.equal(composeColorGrid({ parts: ['a'] }, parts, 'down', PAL)[0][0], PAL.base);
+  // authored walk frame 0 -> 'h', frame 1 -> 's'
+  assert.equal(composeColorGrid({ parts: ['a'] }, parts, 'down', PAL, () => null, 'walk', 0)[0][0], PAL.highlight);
+  assert.equal(composeColorGrid({ parts: ['a'] }, parts, 'down', PAL, () => null, 'walk', 1)[0][0], PAL.shade);
+  // frameIndex cycles via modulo
+  assert.equal(composeColorGrid({ parts: ['a'] }, parts, 'down', PAL, () => null, 'walk', 2)[0][0], PAL.highlight);
+  // a state the part doesn't author -> static base
+  assert.equal(composeColorGrid({ parts: ['a'] }, parts, 'down', PAL, () => null, 'attack', 0)[0][0], PAL.base);
+  // a dir the part doesn't author for this state -> static base
+  assert.equal(composeColorGrid({ parts: ['a'] }, parts, 'up', PAL, () => null, 'walk', 1)[0][0], PAL.base);
+});

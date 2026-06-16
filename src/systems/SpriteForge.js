@@ -13,13 +13,15 @@ function emptyGrid() {
 // Each part resolves against its own palette: partPalette(ref) wins, else `palette`.
 // A part authored at res < DESIGN is nearest-neighbor upscaled by DESIGN/res (rows +
 // anchor), so legacy 16-grid art fills the 32 grid unchanged.
-export function composeColorGrid(recipe, parts, dir, palette, partPalette = () => null) {
+export function composeColorGrid(recipe, parts, dir, palette, partPalette = () => null, state = null, frameIndex = 0) {
   const g = emptyGrid();
   for (const ref of recipe.parts) {
     const name = typeof ref === 'string' ? ref : ref.name;
     const part = parts[name];
     if (!part) throw new Error(`SpriteForge: unknown part '${name}'`);
-    const rows = part[dir];
+    // Authored per-state, per-direction frames win; else the static grid.
+    const authored = state && part.anim && part.anim[state] && part.anim[state][dir];
+    const rows = authored ? authored[frameIndex % authored.length] : part[dir];
     if (rows == null) continue;
     const f = DESIGN / (part.res ?? 16);
     const pal = (typeof ref === 'object' ? partPalette(ref) : null) || palette;
