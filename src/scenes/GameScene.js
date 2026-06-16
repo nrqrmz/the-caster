@@ -11,7 +11,7 @@ import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
 import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
-import { levelMultiplier, scaleEnemyDef } from '../systems/Difficulty.js';
+import { levelMultiplier, difficultyContext, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
@@ -40,7 +40,8 @@ export default class GameScene extends Phaser.Scene {
     this.stats = data.stats || { ...BASE_STATS };
 
     const save = new SaveSystem(window.localStorage).load();
-    this.mult = levelMultiplier(save, this.levelIndex);
+    this.mult = levelMultiplier(save, this.levelIndex); // legacy scalar: gold + debug only
+    this.diff = difficultyContext(save, this.levelIndex);
     this.inventory = { potion: 0, elixir: 0, phoenix: 0, ...(save.inventory || {}) };
   }
 
@@ -137,7 +138,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   spawnBoss(def) {
-    this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.mult));
+    this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.diff));
     this.enemies.add(this.boss);
     this.bosses = [this.boss];
     if (def.forms && def.forms.length) {
@@ -150,10 +151,13 @@ export default class GameScene extends Phaser.Scene {
 
   _applyBossForm(boss, formIndex) {
     const form = boss._formSeq.forms[formIndex];
-    // Merge form fields onto def (movement, speed, hp, resist).
-    boss.def = { ...boss.def, ...form };
-    boss.hp = form.hp;
-    boss.maxHp = form.hp;
+    // Each form is an elite creature; scale its hp/damage + combine resist the same
+    // way spawnBoss scaled the base def, otherwise raw form.hp bypasses difficulty.
+    const scaledForm = scaleEnemyDef({ elite: true, ...form }, this.diff);
+    // Merge scaled form fields onto def (movement, speed, damage, hp, resist).
+    boss.def = { ...boss.def, ...scaledForm };
+    boss.hp = scaledForm.hp;
+    boss.maxHp = scaledForm.hp;
     // A multi-form boss is a different creature per form: swap to the form's own
     // pixel-art sprite (+ a facing controller keyed to it) rather than tinting one sprite.
     // Fall back to the legacy tint path when the form has no sprite recipe.
@@ -203,7 +207,7 @@ export default class GameScene extends Phaser.Scene {
     this.boss = null; // multi-boss encounters don't use the single BossMechanics path
     this.bosses = defs.map((def, i) => {
       const x = GAME_WIDTH * (i + 1) / (defs.length + 1);
-      const b = new Boss(this, x, -40, scaleEnemyDef(def, this.mult));
+      const b = new Boss(this, x, -40, scaleEnemyDef(def, this.diff));
       this.enemies.add(b);
       return b;
     });
@@ -256,7 +260,7 @@ export default class GameScene extends Phaser.Scene {
     else if (edge === 1) { x = GAME_WIDTH + 20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
     else if (edge === 2) { x = Phaser.Math.Between(0, GAME_WIDTH); y = GAME_HEIGHT + 20; }
     else { x = -20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
-    const e = new Enemy(this, x, y, scaleEnemyDef(def, this.mult));
+    const e = new Enemy(this, x, y, scaleEnemyDef(def, this.diff));
     // Arm the generational lifecycle on freshly-laid eggs so tickLifecycle (update loop)
     // can hatch them. Without this, an egg's brainState.lifecycle is undefined and it
     // sits inert forever. promoteEnemy carries the TADPOLE/ADULT stages forward from here.
@@ -275,7 +279,7 @@ export default class GameScene extends Phaser.Scene {
                                                        : (enemy.def._growType  || 'adultFrog');
     const def = ENEMY_TYPES[typeKey];
     if (!def) { enemy.destroy(); return; }
-    const scaled = scaleEnemyDef(def, this.mult);
+    const scaled = scaleEnemyDef(def, this.diff);
     const e = new Enemy(this, enemy.x, enemy.y, scaled);
     // Carry lifecycle state through so adults can continue to adult.
     if (toLifecycle === LIFECYCLE.TADPOLE) {
@@ -372,7 +376,7 @@ export default class GameScene extends Phaser.Scene {
     for (const childDef of split) {
       // Respect CONCURRENCY_CAP: only spawn if there is room.
       if (this.enemies.countActive(true) >= CONCURRENCY_CAP) break;
-      const scaled = scaleEnemyDef(childDef, this.mult);
+      const scaled = scaleEnemyDef(childDef, this.diff);
       const e = new Enemy(this, enemy.x + Phaser.Math.Between(-20, 20), enemy.y + Phaser.Math.Between(-20, 20), scaled);
       this.enemies.add(e);
       if (childDef.radius) e.setDisplaySize(childDef.radius * 2, childDef.radius * 2);

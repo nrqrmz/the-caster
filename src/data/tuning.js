@@ -5,6 +5,19 @@
 // nv8 (index 7, temple boss) scales above nv7 (index 6, level boss).
 export const BASE_CURVE = [1.0, 1.15, 1.3, 1.5, 1.7, 1.95, 2.3, 2.6];
 
+// --- Difficulty rebalance (2026-06-16) ---
+// Player-power bonus uses diminishing returns so adding worlds/skill points later
+// cannot explode the curve. It asymptotes to POWER_CAP (points term) + a small
+// linear element term. Basics receive a fraction of this bonus, elites the full
+// amount; elites additionally gain bounded damage-reduction (resist) by depth.
+export const POWER_CAP = 1.2;            // ceiling of the points-based power bonus
+export const POWER_SCALE = 45;           // e-folding constant (~45 pts → 63% of cap)
+export const PER_ELEMENT = 0.08;         // additive bonus per mastered element
+export const BASIC_POWER_FACTOR = 0.35;  // share of the power bonus basics receive
+export const ELITE_POWER_FACTOR = 1.0;   // share of the power bonus elites receive
+export const ELITE_RESIST_MAX = 0.30;    // cap on scaling-granted damage reduction
+export const ELITE_RESIST_PER_DEPTH = 0.15; // resist per unit of depth bonus
+
 // Max enemies alive at once; waves keep queuing but the spawner throttles to this.
 export const CONCURRENCY_CAP = 16;
 
