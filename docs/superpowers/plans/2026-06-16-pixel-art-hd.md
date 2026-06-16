@@ -469,36 +469,58 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
 
 ---
 
-## Tasks 5–9: Roster redraw waves (native res:32)
+## Tasks 5+: Roster redraw — per-archetype character design
 
-Each wave re-authors a family of parts in `src/data/sprites/parts.js` to `res:32` per the Authoring protocol, optionally adds enemy palettes in `palettes.js`, and may attach per-part `palette`/`color` overrides on the relevant recipes for richer multi-hue creatures. After each wave: `node --test` (parity green) + visual smoke + commit. The game stays runnable throughout (un-migrated parts remain auto-upscaled).
+> **REVISED APPROACH (2026-06-16).** The original "redraw shared parametric parts"
+> plan was superseded after the first humanoid pass: generic shared parts read as
+> flat blobs next to the princess hero. The agreed bar is **hero-level craft for
+> every enemy**, achieved by treating each archetype as a designed character — a
+> per-creature parametric generator (like `tools/gen-cultist.mjs`) emitting
+> detailed multi-part `res:32` role grids, with **per-part palettes** so each
+> creature mixes hues: the body/hood/armor takes the creature's **type color**
+> (recipe palette, no override) while accents (shadow face, glowing eyes, staff,
+> ember, shield) use named palettes. Recipes wire these via shared part-list
+> constants (`CULT_*`, `KNIGHT*`, `JELLY`).
 
-For every wave task, the steps are:
-- [ ] **Step 1:** Re-author the listed parts at `res:32` (silhouette notes below).
-- [ ] **Step 2:** If a creature needs multiple hues, add named palettes in `palettes.js` and/or per-part `palette`/`color` overrides on its recipe in `recipes.js`.
-- [ ] **Step 3:** `node --test` → PASS (parity forges every recipe).
-- [ ] **Step 4:** Visual smoke test the affected creatures in the browser.
-- [ ] **Step 5:** Commit (`feat(sprites): redraw <wave> at native 32`).
+**Per-archetype workflow (repeat for each — DO NOT commit art without user approval):**
+- [ ] Write `tools/gen-<archetype>.mjs` — emits the archetype's `res:32` parts.
+- [ ] Preview live: emit a temp `_preview_*.js` module, dynamic-import it in the
+  browser (cache-bust `?v=Date.now()`), forge representative creatures with their
+  type colors + the per-part palette resolver, draw scaled, screenshot, **get user
+  visual approval** (iterate). Remove the temp module when done.
+- [ ] Splice parts into `parts.js`; add named palettes to `palettes.js`; add a
+  shared part-list constant + wire the recipes in `recipes.js`.
+- [ ] `node --test` (parity green) → commit (`feat(sprites): <archetype> archetype`).
 
-### Task 5 — Humanoids
-Parts: `body_robe`, `body_armor`, `head_round`, `head_hood`, `eyes_dots`, `staff`, `banner`, `crown`.
-Silhouette notes: robe = flowing cultist gown with sleeve shading; armor = plated torso with rivets/highlights; hooded head = deep cowl with shadowed face; `eyes_dots` = a pair of expressive eyes (now with room for a glint `h`); staff = wooden rod with a crystal tip; banner = cloth with a sigil; crown = jagged gold band (palette/accent gold). These cover all cultists, villagers, warriors, guards, and the sister-class bodies that reuse them.
+**Status:**
+- ✅ **Hooded cultist (fire)** — `gen-cultist.mjs`; `CULT_HOODED/_STAFF/_FACELESS`.
+- ✅ **Hooded cultist (water/frost)** — `CULT_HOODED_WATER/_STAFF_WATER` (cyan eyes/orb).
+- ✅ **Armored knight (sword + shield)** — `gen-warrior.mjs`; `KNIGHT/_WATER/_BANNER`.
+- ✅ **Jellyfish / medusa** — `gen-jelly.mjs`; `JELLY` (medusa + medusa_cria).
 
-### Task 6 — Beasts, blobs, elementals
-Parts: `body_beast`, `body_blob`, `body_winged`, `body_totem`, `horns`, `crest_flame`, `eye_single`.
-Silhouette notes: beast = quadruped/hunched body with limb shading; blob = gelatinous mound with a rim highlight and inner `s` core; winged = floating body with feathered/membrane wings; totem = stacked carved segments; horns = curved with highlight; crest_flame = layered flame tongues (use `a` accent for the hot tip); eye_single = a large cyclopean eye with a specular `h` dot.
+**Remaining archetypes (each = generator + recipes + checkpoint):**
+- **Bare-headed mage/acolyte** (robe + visible head, no hood): iniciado_veloz,
+  ahogado, nayade, sacerdotisa_lago, villager, archer — a young robed mage face.
+- **Beasts** (`larva_magma`, `can_lava`, `coloso_magma`, `salamandra`,
+  `tiburon_joven`): hunched quadruped/lizard, limb + spine shading, fangs/claws.
+- **Blobs / elementals** (`espiritu_ceniza`, `elemental_fuego`, `imp_brasa`,
+  `pez_globo`, `brasa_errante`, `burbuja_gelida`): gelatinous body, rim light,
+  inner glow core, eyes.
+- **Winged / floating** (`fenix_menor`, `avispa_brasa`, `totem_*`): membrane/
+  feather wings, hovering body.
+- **Fish / serpent / shelled** (`tiburon_*`, `serpiente_marina`,
+  `tortuga_acorazada`, `cangrejo_acorazado`): streamlined/coiled/armored aquatic.
+- **Frog lineage** (`huevo_sapo`, `renacuajo`, `rana_saltarina`, `sapo_*`):
+  egg → tadpole → squat frog, eyes + stubby legs.
+- **Bosses** (`favilla/pyra/vesta` sisters, `ignatius`, `soldado_hielo`,
+  `sapo_desovador`, `tiburon_abisal`, `kraken`, `dama_*` forms, `whale`):
+  size 96 — full-grid detail, regal/monstrous silhouettes.
+- **Projectiles** (`orb_body`, `flame_body`, `arrow_body`): glowing orb with a
+  twinkle, teardrop fireball with a hot `a` core, sleek arrow. Confirm on-screen
+  projectile size still reads after the Task 1 size bump.
 
-### Task 7 — Water creatures
-Parts: `body_jelly`, `body_fish`, `fin`, `body_serpent`, `body_shell`, `body_frog`, `frog_egg`, `tadpole_tail`, `body_bubble`.
-Silhouette notes: jelly = translucent dome with `h` highlights and trailing tentacles (this is the medusa — make it read well at the new larger radius); fish = streamlined body with gill/scale shading; fin = layered membrane; serpent = coiled segmented body; shell = domed carapace with rim segments; frog = squat body with eyes and stubby legs; egg = speckled ovum; tadpole_tail = small body + wavy tail; bubble = ring-lit sphere.
-
-### Task 8 — Bosses
-Parts: `body_sister`, `body_ignatius`, `body_kraken`, `body_whale`.
-Silhouette notes: sister = regal elemental matron (gown + crown-ready); ignatius = hulking horned magma fiend; kraken = bulbous mantle with tentacle suggestions and a great eye; whale = massive rounded leviathan with baleen/flukes. These are the largest sprites (size 96) — use the full 32 grid for detail.
-
-### Task 9 — Projectiles
-Parts: `orb_body`, `flame_body`, `arrow_body`.
-Silhouette notes: orb = glowing sphere with a twinkle `h` (palette `orbblue` on the hero orb; enemy orbs keep their tint); flame = teardrop fireball with a bright `a` core; arrow = sleek shaft + head. Confirm in the smoke test that projectile on-screen size still reads correctly after the Task 1 size bump (projectiles are sized by the pool; adjust the recipe `size` only if they look wrong).
+> Multi-session work. Each archetype lands independently; the game stays runnable
+> throughout (un-migrated parts remain auto-upscaled to 32).
 
 ---
 
