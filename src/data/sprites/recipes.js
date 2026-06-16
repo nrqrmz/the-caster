@@ -2,6 +2,19 @@
 // PURE. Per-creature sprite recipes. key -> { archetype, size, parts, anim, palette?, accent? }
 import { derivePalette, NAMED_PALETTES } from './palettes.js';
 
+// Hooded-cultist part lists. cult_robe/cult_hood take the creature's type color
+// (no palette override); the rest use named palettes. Order = back-to-front.
+const CULT_HOODED = [
+  { name: 'cult_robe' }, { name: 'cult_hood' },
+  { name: 'cult_face', palette: 'shadow' }, { name: 'cult_eyes', palette: 'glow' },
+];
+const CULT_STAFF = [
+  { name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'ember' }, ...CULT_HOODED,
+];
+const CULT_FACELESS = [
+  { name: 'cult_robe' }, { name: 'cult_hood' }, { name: 'cult_face', palette: 'shadow' },
+];
+
 export const RECIPES = {
   hero: {
     // The redheaded princess. Each part composes against its own palette (per-part
@@ -24,14 +37,14 @@ export const RECIPES = {
   warrior:         { archetype: 'humanoid', size: 64, parts: ['body_armor', 'head_round', 'eyes_dots'] },
   archer:          { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
   // --- Fire cultists (humanoid) ---
-  acolito_brasa:   { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots'] },
-  lanzabrasas:     { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots', 'staff'] },
+  acolito_brasa:   { archetype: 'humanoid', size: 32, parts: CULT_HOODED },
+  lanzabrasas:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
   iniciado_veloz:  { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
-  piromante:       { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots', 'staff'] },
-  encapuchado_pira:{ archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood'] },
-  pirovidente:     { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots', 'staff'] },
+  piromante:       { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
+  encapuchado_pira:{ archetype: 'humanoid', size: 32, parts: CULT_FACELESS },
+  pirovidente:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
   caballero_brasa: { archetype: 'humanoid', size: 64, parts: ['body_armor', 'head_round', 'eyes_dots'] },
-  sacerdote_llama: { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_hood', 'eyes_dots', 'staff'] },
+  sacerdote_llama: { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
   portaestandarte: { archetype: 'humanoid', size: 64, parts: ['body_armor', 'head_round', 'eyes_dots', 'banner'] },
   // --- Fire beasts ---
   larva_magma:     { archetype: 'beast', size: 64, parts: ['body_beast', 'eye_single'] },

@@ -33,4 +33,9 @@ export const NAMED_PALETTES = {
   gold: derivePalette(0xffd54f, { shade: 0xc79a2b, outline: 0x6b5310 }),
   orbblue: derivePalette(0x80d8ff, { highlight: 0xdff5ff, outline: 0x2a6a85 }),
   wood: derivePalette(0x6f4a2a, { outline: 0x3a2614 }),
+  // Hooded-cultist accents (shared across elements): a deep face cavity, glowing
+  // eyes, and a staff ember. Body/hood take the creature's own type color.
+  shadow: derivePalette(0x241018, { base: 0x2a1320, outline: 0x0a0408, shade: 0x140a10, highlight: 0x3a1c2c }),
+  glow: derivePalette(0xffe27a, { highlight: 0xfff7cc, base: 0xffd54f, shade: 0xffb300, outline: 0xc79a2b }),
+  ember: derivePalette(0xff8a50, { highlight: 0xffe082, base: 0xff7043, shade: 0xd84315, outline: 0x7a2a10 }),
 };
