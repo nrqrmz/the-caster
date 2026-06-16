@@ -22,6 +22,17 @@ const CULT_HOODED_WATER = [
 const CULT_STAFF_WATER = [
   { name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'orbblue' }, ...CULT_HOODED_WATER,
 ];
+// Armored knight. helm/body/sword take the type color; visor=shadow, eyes glow
+// (gold for fire/neutral, frost-cyan for water).
+const KNIGHT = [
+  { name: 'knight_sword' }, { name: 'knight_body' }, { name: 'knight_shield' }, { name: 'knight_helm' },
+  { name: 'knight_visor', palette: 'shadow' }, { name: 'knight_eyes', palette: 'glow' },
+];
+const KNIGHT_WATER = [
+  { name: 'knight_sword' }, { name: 'knight_body' }, { name: 'knight_shield' }, { name: 'knight_helm' },
+  { name: 'knight_visor', palette: 'shadow' }, { name: 'knight_eyes', palette: 'orbblue' },
+];
+const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
 
 export const RECIPES = {
   hero: {
@@ -42,7 +53,7 @@ export const RECIPES = {
 
   // --- Generic (shared) ---
   villager:        { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
-  warrior:         { archetype: 'humanoid', size: 64, parts: ['body_armor', 'head_round', 'eyes_dots'] },
+  warrior:         { archetype: 'humanoid', size: 64, parts: KNIGHT },
   archer:          { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
   // --- Fire cultists (humanoid) ---
   acolito_brasa:   { archetype: 'humanoid', size: 32, parts: CULT_HOODED },
@@ -51,9 +62,9 @@ export const RECIPES = {
   piromante:       { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
   encapuchado_pira:{ archetype: 'humanoid', size: 32, parts: CULT_FACELESS },
   pirovidente:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
-  caballero_brasa: { archetype: 'humanoid', size: 64, parts: ['body_armor', 'head_round', 'eyes_dots'] },
+  caballero_brasa: { archetype: 'humanoid', size: 64, parts: KNIGHT },
   sacerdote_llama: { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
-  portaestandarte: { archetype: 'humanoid', size: 64, parts: ['body_armor', 'head_round', 'eyes_dots', 'banner'] },
+  portaestandarte: { archetype: 'humanoid', size: 64, parts: KNIGHT_BANNER },
   // --- Fire beasts ---
   larva_magma:     { archetype: 'beast', size: 64, parts: ['body_beast', 'eye_single'] },
   salamandra:      { archetype: 'beast', size: 32, parts: ['body_beast', 'crest_flame', 'eyes_dots'] },
@@ -95,7 +106,7 @@ export const RECIPES = {
   nayade:            { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots'] },
   sacerdotisa_lago:  { archetype: 'humanoid', size: 32, parts: ['body_robe', 'head_round', 'eyes_dots', 'staff'] },
   vidente_marea:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF_WATER },
-  guardia_hielo:     { archetype: 'humanoid', size: 64, parts: ['body_armor', 'head_round', 'eyes_dots'] },
+  guardia_hielo:     { archetype: 'humanoid', size: 64, parts: KNIGHT_WATER },
   // --- Water beasts ---
   tiburon_joven:     { archetype: 'fish',    size: 64, parts: ['body_fish', 'fin', 'eyes_dots'] },
   serpiente_marina:  { archetype: 'serpent', size: 64, parts: ['body_serpent', 'eyes_dots'] },
