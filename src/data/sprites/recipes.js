@@ -96,6 +96,12 @@ const RENACUAJO = [{ name: 'tadpole_body' }, { name: 'tadpole_eyes', palette: 's
 const RANA = [{ name: 'frog_body' }, { name: 'frog_eyes', palette: 'shadow' }];
 const SAPO_ESCUPIDOR = [{ name: 'toad_body' }, { name: 'toad_eyes', palette: 'shadow' }];
 const SAPO_ADULTO = [{ name: 'bigtoad_body' }, { name: 'bigtoad_eyes', palette: 'shadow' }];
+// Fire sisters (bosses). armor/robe/shield = type color; `a` = GOLD trim (recipe
+// accent); skin face/hands = skin; hair = red/black/blond; flames/embers = glow;
+// hammer = steel.
+const PYRA = [{ name: 'pyra_body' }, { name: 'pyra_hair', palette: 'redhair' }, { name: 'pyra_skin', palette: 'skin' }, { name: 'pyra_crown', palette: 'glow' }, { name: 'pyra_orb', palette: 'glow' }];
+const VESTA = [{ name: 'vesta_body' }, { name: 'vesta_hammer', palette: 'steel' }, { name: 'vesta_shield' }, { name: 'vesta_hair', palette: 'blackhair' }, { name: 'vesta_skin', palette: 'skin' }];
+const FAVILLA = [{ name: 'favilla_body' }, { name: 'favilla_hair', palette: 'blondhair' }, { name: 'favilla_skin', palette: 'skin' }, { name: 'favilla_crown', palette: 'glow' }, { name: 'favilla_embers', palette: 'glow' }];
 
 export const RECIPES = {
   hero: {
@@ -146,9 +152,9 @@ export const RECIPES = {
   brasa_errante:   { archetype: 'blob', size: 32, parts: BRASA },
 
   // --- Fire bosses (single-form) ---
-  favilla:  { archetype: 'boss', size: 96, baseColor: 0xffca28, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
-  pyra:     { archetype: 'boss', size: 96, baseColor: 0xe64a19, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
-  vesta:    { archetype: 'boss', size: 96, baseColor: 0xff5722, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
+  favilla:  { archetype: 'boss', size: 96, baseColor: 0xffca28, accent: 0xffd54f, parts: FAVILLA },
+  pyra:     { archetype: 'boss', size: 96, baseColor: 0xe64a19, accent: 0xffd54f, parts: PYRA },
+  vesta:    { archetype: 'boss', size: 96, baseColor: 0xff5722, accent: 0xffd54f, parts: VESTA },
   ignatius: { archetype: 'boss', size: 96, baseColor: 0xff7043, parts: ['body_ignatius', 'horns', 'eye_single'] },
 
   // --- Water bosses (single-form) ---

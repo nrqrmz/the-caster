@@ -48,6 +48,8 @@ export const NAMED_PALETTES = {
   // Beast accents: ivory cow-horns, FILLED, with a near-black border (cracks reuse
   // `ember`, eyes `glow`).
   bone: derivePalette(0xede4d0, { base: 0xede4d0, highlight: 0xfffaf0, shade: 0xc9bda0, outline: 0x140f0a }),
+  // Boss-tier metal (Vesta's heavy plate trim, shield rim, hammer head).
+  steel: derivePalette(0x9aa6b2, { base: 0x9aa6b2, highlight: 0xd6dee6, shade: 0x5e6a78, outline: 0x262e38 }),
   eyes_living: derivePalette(0x2a1a10, { base: 0x2a1a10, highlight: 0xfff3e0, shade: 0x1a0f08, outline: 0x140a05 }),
   drownedskin: derivePalette(0xbcd0c0, { base: 0xbcd0c0, shade: 0x86a392, highlight: 0xe0eee2, outline: 0x3a4f44 }),
   drownedhair: derivePalette(0x222d28, { base: 0x222d28, highlight: 0x415048, shade: 0x141b17, outline: 0x080c0a }),
