@@ -561,8 +561,16 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
     model, dorsal swept back, solid peduncle); kraken=big mantle + huge eye + long
     independent tentacles; whale=hi-res whale (wired to `dama_ballena`; `KRAKEN` also
     wired to `dama_kraken`).
-  - ⬜ Remaining (Dama del Lago forms): `dama_lago`, `dama_maga`, `dama_tiburon`,
-    `dama_maga_final` (+ `dama_kraken`/`dama_ballena` already covered by reused bodies).
+  - ✅ **Dama del Lago** — `gen-dama.mjs`; part-list `DAMA`. The Lady of the Lake (ethereal
+    water sorceress: ice gown + gold trim, silver hair, tiara, water orb) shared by her
+    humanoid forms `dama_lago`/`dama_maga`/`dama_maga_final`; `dama_tiburon` reuses
+    `TIBURON_ABISAL`; `dama_kraken`/`dama_ballena` reuse `KRAKEN`/`WHALE`. New `silverhair`
+    palette.
+
+> **Sub-project complete.** Every enemy / boss / hero / projectile recipe now composes
+> from native res:32 art; no recipe references the legacy placeholder parts. (Optional
+> follow-up: delete the now-unreferenced legacy res:16 parts from `parts.js` — dead code,
+> harmless, left in place.)
 - ✅ **Projectiles** — `gen-proj.mjs`; re-authored `orb_body`/`flame_body`/`arrow_body`
   at res:32 (recipes unchanged): orb = glowing sphere + twinkle; fireball = teardrop
   comet (head at +x); arrow = sleek arrow (head at +x). fireball & arrow point along
