@@ -105,6 +105,13 @@ const FAVILLA = [{ name: 'favilla_body' }, { name: 'favilla_hair', palette: 'blo
 // Ignatius, the Fire King — father of the sisters. armor/robe = type color; `a` = gold;
 // skin face/hands = skin; flaming beard = ember; crown/scepter-flame = glow; shaft = steel.
 const IGNATIUS = [{ name: 'ign_scepter', palette: 'steel' }, { name: 'ign_body' }, { name: 'ign_skin', palette: 'skin' }, { name: 'ign_beard', palette: 'ember' }, { name: 'ign_crown', palette: 'glow' }, { name: 'ign_flame', palette: 'glow' }];
+// Water monster bosses. body = type color; teeth/eggs = bone; armor/sword = steel;
+// eyes/lure = glow; mouths = shadow; whale spout = orbblue.
+const ICE_KNIGHT = [{ name: 'ice_sword', palette: 'steel' }, { name: 'ice_body' }, { name: 'ice_eyes', palette: 'glow' }];
+const SAPO_DESOV = [{ name: 'desov_body' }, { name: 'desov_eggs', palette: 'bone' }, { name: 'desov_eyes', palette: 'shadow' }];
+const TIBURON_ABISAL = [{ name: 'abisal_body' }, { name: 'abisal_teeth', palette: 'bone' }, { name: 'abisal_eye', palette: 'glow' }];
+const KRAKEN = [{ name: 'kraken_body' }, { name: 'kraken_eye', palette: 'glow' }];
+const WHALE = [{ name: 'whale_body' }, { name: 'whale_eye', palette: 'glow' }, { name: 'whale_spout', palette: 'orbblue' }];
 
 export const RECIPES = {
   hero: {
@@ -161,16 +168,16 @@ export const RECIPES = {
   ignatius: { archetype: 'boss', size: 96, baseColor: 0xff7043, accent: 0xffd54f, parts: IGNATIUS },
 
   // --- Water bosses (single-form) ---
-  soldado_hielo:   { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, parts: ['body_armor', 'head_round', 'eyes_dots'] },
-  sapo_desovador:  { archetype: 'boss', size: 96, baseColor: 0x7cb342, parts: ['body_frog', 'eyes_dots'] },
-  tiburon_abisal:  { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: ['body_fish', 'fin', 'eyes_dots'] },
-  kraken:          { archetype: 'boss', size: 96, baseColor: 0xab47bc, parts: ['body_kraken', 'eye_single'] },
+  soldado_hielo:   { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, parts: ICE_KNIGHT },
+  sapo_desovador:  { archetype: 'boss', size: 96, baseColor: 0x7cb342, parts: SAPO_DESOV },
+  tiburon_abisal:  { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL },
+  kraken:          { archetype: 'boss', size: 96, baseColor: 0xab47bc, parts: KRAKEN },
   // --- Dama del Lago + her 5 forms (each a distinct creature) ---
   dama_lago:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
   dama_maga:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
   dama_tiburon:    { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: ['body_fish', 'fin', 'eyes_dots'] },
-  dama_kraken:     { archetype: 'boss', size: 96, baseColor: 0xab47bc, parts: ['body_kraken', 'eye_single'] },
-  dama_ballena:    { archetype: 'boss', size: 96, baseColor: 0xd32f2f, parts: ['body_whale', 'eyes_dots'] },
+  dama_kraken:     { archetype: 'boss', size: 96, baseColor: 0xab47bc, parts: KRAKEN },
+  dama_ballena:    { archetype: 'boss', size: 96, baseColor: 0xd32f2f, parts: WHALE },
   dama_maga_final: { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: ['body_sister', 'head_round', 'eyes_dots', 'crown'] },
 
   // --- Water cultists (humanoid) ---
