@@ -57,6 +57,19 @@ export const COLORS = {
   frostBubble: 0xe0f7fa,    // Burbuja Gélida — near-white ice
   frostTotem: 0xb0bec5,     // Tótem de Escarcha — cold grey-blue
   toadEgg: 0x8d6e63,        // Huevo de Sapo — muddy brown egg
+  // Air world palette (storm greys, electric yellows, blood reds, bat purples)
+  stormGrey: 0x607d8b,      // Acólito/Heraldo/Espíritu/Tronador — slate storm-cloud blue-grey
+  stormDark: 0x37474f,      // Hechicero del Viento, Guardia Nocturno — darker thundercloud
+  bloodRed: 0xb71c1c,       // Sacerdote de Sangre, Vampiro Alado — deep arterial red
+  vampPale: 0xd7a3a3,       // Siervo de la Torre, Vástago Vampírico — pale corpse-flushed skin
+  duelistSteel: 0x90a4ae,   // Duelista Nocturno — cold blued-steel grey
+  batPurple: 0x6a1b9a,      // Murciélago — deep bat purple
+  harpyPlum: 0x8e24aa,      // Arpía — brighter plum (winged)
+  wispYellow: 0xffee58,     // Fuego Fatuo — eerie electric will-o'-the-wisp yellow
+  gargoyleStone: 0x546e7a,  // Gárgola Pararrayos — wet lightning-rod stone
+  sentinelStone: 0x78909c,  // Centinela de Piedra — paler statue grey
+  whirlGrey: 0xb0bec5,      // Torbellino Errante — pale dust-devil grey
+  cultRobe: 0x4a148c,       // Cultista, Cultista Canalizador, Guardián del Rito — dark ritual purple
   healthBack: 0x33272a,
   healthFill: 0x66bb6a,
 };
