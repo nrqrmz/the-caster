@@ -50,7 +50,7 @@ export const CABALLERO_SANGRE = {
 export const BRUJA_VENDAVAL = {
   key: 'bruja_vendaval', tex: TEX.miniboss, color: COLORS.lightning,
   hp: 420, speed: 75, damage: 16, radius: 26,
-  elite: true, geometric: true,
+  elite: true,
   movement: { type: 'strafe', range: 260, strafeSpeed: 55 },
   phases: [
     { from: 1.0, sequence: [

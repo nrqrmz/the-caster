@@ -21,19 +21,19 @@ export const AIR_ENEMIES = {
     modifiers: [{ type: 'drain', heal: 5 }] },
 
   // #3 — Acólito del Trueno: base ranged. Kites and fires straight lightning bolts.
-  acolito_trueno: { key: 'acolito_trueno', geometric: true, tex: TEX.archer, color: COLORS.stormGrey,
+  acolito_trueno: { key: 'acolito_trueno', tex: TEX.archer, color: COLORS.stormGrey,
     hp: 22, speed: 70, damage: 8, radius: 16,
     movement: { type: 'kite', range: 210 },
     attacks: [{ type: 'shootStraight', every: 1600, speed: 240 }] },
 
   // #4 — Heraldo del Rayo: ranged stun. Kites and fires a bolt that briefly stuns (0.3 s).
-  heraldo_rayo: { key: 'heraldo_rayo', geometric: true, tex: TEX.archer, color: COLORS.stormGrey,
+  heraldo_rayo: { key: 'heraldo_rayo', tex: TEX.archer, color: COLORS.stormGrey,
     hp: 24, speed: 66, damage: 7, radius: 16,
     movement: { type: 'kite', range: 220 },
     attacks: [{ type: 'shootStraight', stun: true, every: 2200, speed: 230 }] },
 
   // #5 — Sacerdote de Sangre: healer, kill-priority. Strafes with the pack, never attacks.
-  sacerdote_sangre: { key: 'sacerdote_sangre', geometric: true, tex: TEX.villager, color: COLORS.bloodRed,
+  sacerdote_sangre: { key: 'sacerdote_sangre', tex: TEX.villager, color: COLORS.bloodRed,
     hp: 95, speed: 72, damage: 10, radius: 16,
     movement: { type: 'strafe', range: 190 },
     attacks: [],
@@ -47,7 +47,7 @@ export const AIR_ENEMIES = {
     modifiers: [{ type: 'drain', heal: 6 }, { type: 'shielded', reduce: 0.4 }] },
 
   // #7 — Hechicero del Viento: ranged lift. Kites and conjures a "tornadito" that lifts (0.5 s).
-  hechicero_viento: { key: 'hechicero_viento', geometric: true, tex: TEX.archer, color: COLORS.stormDark,
+  hechicero_viento: { key: 'hechicero_viento', tex: TEX.archer, color: COLORS.stormDark,
     hp: 60, speed: 65, damage: 8, radius: 16,
     movement: { type: 'kite', range: 230 },
     attacks: [{ type: 'shootStraight', lift: true, every: 2600, speed: 210 }] },
@@ -122,7 +122,7 @@ export const AIR_ENEMIES = {
     modifiers: [{ type: 'onHitPush', force: 220, ms: 250 }, { type: 'onHitStun', kind: 'lift', ms: 500 }] },
 
   // #17 — Tronador: kite spread ranged. Area-denial — 3 lightning bolts in a 36° arc.
-  tronador: { key: 'tronador', geometric: true, tex: TEX.archer, color: COLORS.stormGrey,
+  tronador: { key: 'tronador', tex: TEX.archer, color: COLORS.stormGrey,
     hp: 30, speed: 64, damage: 8, radius: 16,
     movement: { type: 'kite', range: 230 },
     attacks: [{ type: 'shootSpread', count: 3, arc: 36, every: 1900, speed: 230 }] },
