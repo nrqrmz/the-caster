@@ -179,6 +179,16 @@ const GARGOLA = [
   { name: 'gar_head' },
   { name: 'gar_eyes', palette: 'glow' },
 ];
+// Harpy (Arpía) — winged humanoid bird-woman. Wings behind body, torso + clawed legs,
+// fierce head + feather crest, glowing eyes. Layer order back-to-front: wings → body → head → eyes.
+const HARPY = [
+  { name: 'harpy_wings' },
+  { name: 'harpy_body' },
+  { name: 'harpy_head' },
+  { name: 'harpy_eyes', palette: 'glow' },
+];
+// Torbellino Errante — spinning wind vortex (ambient hazard, no face).
+const WHIRL = [{ name: 'whirl_body' }];
 
 export const RECIPES = {
   hero: {
@@ -310,6 +320,8 @@ export const RECIPES = {
   // --- Air winged (new art) ---
   murcielago:    { archetype: 'floating', size: 32, baseColor: 0x6a1b9a, parts: BAT },
   vampiro_alado: { archetype: 'floating', size: 64, baseColor: 0xb71c1c, parts: BAT },
+  arpia:             { archetype: 'floating', size: 32, baseColor: 0x8e24aa, parts: HARPY },
+  torbellino_errante:{ archetype: 'blob',     size: 32, baseColor: 0xb0bec5, parts: WHIRL },
 
   // --- Air blobs + stone sentinels ---
   fuego_fatuo:        { archetype: 'blob',     size: 32, baseColor: 0xffee58, parts: BRASA },
