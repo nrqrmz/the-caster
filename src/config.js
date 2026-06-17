@@ -65,6 +65,8 @@ export const TEX = {
   warrior: 'tex_warrior',
   archer: 'tex_archer',
   arrow: 'tex_arrow',
+  iceShard: 'tex_iceShard',
+  poisonGlob: 'tex_poisonGlob',
   miniboss: 'tex_miniboss',
   boss: 'tex_boss',
   temple: 'tex_temple',
