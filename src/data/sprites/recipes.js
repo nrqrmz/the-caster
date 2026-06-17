@@ -337,7 +337,8 @@ export const RECIPES = {
   gargola_pararrayos: { archetype: 'floating', size: 64, baseColor: 0x546e7a, parts: GARGOLA },
 
   // --- Air boss (nv6 setpiece) ---
-  elemental_tormenta: { archetype: 'boss', size: 96, baseColor: 0x37474f, anim: { idle: 4, walk: 4 }, parts: STORM_ELEM },
+  // Native 2:1: authored 64×32, forged at scale 2 → 128×64 texture (uniform pixels).
+  elemental_tormenta: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x37474f, anim: { idle: 4 }, parts: STORM_ELEM },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }

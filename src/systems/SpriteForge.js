@@ -5,8 +5,8 @@ export const DESIGN = 32;
 const ROLE_MAP = { o: 'outline', b: 'base', s: 'shade', h: 'highlight', a: 'accent' };
 const DIRS = ['down', 'up', 'side'];
 
-function emptyGrid() {
-  return Array.from({ length: DESIGN }, () => new Array(DESIGN).fill(null));
+function emptyGrid(w = DESIGN, h = DESIGN) {
+  return Array.from({ length: h }, () => new Array(w).fill(null));
 }
 
 // Compose every part into a DESIGN×DESIGN grid of color ints (or null = transparent).
@@ -14,7 +14,8 @@ function emptyGrid() {
 // A part authored at res < DESIGN is nearest-neighbor upscaled by DESIGN/res (rows +
 // anchor), so legacy 16-grid art fills the 32 grid unchanged.
 export function composeColorGrid(recipe, parts, dir, palette, partPalette = () => null, state = null, frameIndex = 0) {
-  const g = emptyGrid();
+  const gw = recipe.gridW ?? DESIGN, gh = recipe.gridH ?? DESIGN;
+  const g = emptyGrid(gw, gh);
   for (const ref of recipe.parts) {
     const name = typeof ref === 'string' ? ref : ref.name;
     const part = parts[name];
@@ -37,7 +38,7 @@ export function composeColorGrid(recipe, parts, dir, palette, partPalette = () =
         for (let dy = 0; dy < f; dy++) {
           for (let dx = 0; dx < f; dx++) {
             const y = ay + r * f + dy, x = ax + c * f + dx;
-            if (y < 0 || y >= DESIGN || x < 0 || x >= DESIGN) continue;
+            if (y < 0 || y >= gh || x < 0 || x >= gw) continue;
             g[y][x] = color;
           }
         }
@@ -48,24 +49,26 @@ export function composeColorGrid(recipe, parts, dir, palette, partPalette = () =
 }
 
 function shiftV(grid, dy) {
-  const out = emptyGrid();
-  for (let y = 0; y < DESIGN; y++) {
+  const h = grid.length, w = grid[0].length;
+  const out = emptyGrid(w, h);
+  for (let y = 0; y < h; y++) {
     const ny = y + dy;
-    if (ny < 0 || ny >= DESIGN) continue;
-    for (let x = 0; x < DESIGN; x++) out[ny][x] = grid[y][x];
+    if (ny < 0 || ny >= h) continue;
+    for (let x = 0; x < w; x++) out[ny][x] = grid[y][x];
   }
   return out;
 }
 
-// Walk step: shift the lower half (rows >= DESIGN/2) horizontally.
+// Walk step: shift the lower half (rows >= h/2) horizontally.
 function legShift(grid, dx) {
-  const split = (DESIGN / 2) | 0;
+  const h = grid.length, w = grid[0].length;
+  const split = (h / 2) | 0;
   const out = grid.map((row) => row.slice());
-  for (let y = split; y < DESIGN; y++) {
-    const row = new Array(DESIGN).fill(null);
-    for (let x = 0; x < DESIGN; x++) {
+  for (let y = split; y < h; y++) {
+    const row = new Array(w).fill(null);
+    for (let x = 0; x < w; x++) {
       const nx = x + dx;
-      if (nx < 0 || nx >= DESIGN) continue;
+      if (nx < 0 || nx >= w) continue;
       row[nx] = grid[y][x];
     }
     out[y] = row;
@@ -84,11 +87,11 @@ function padFrames(frames, count, fallback) {
 
 function scaleGrid(grid, f) {
   if (f === 1) return grid;
-  const n = grid.length;
+  const rows = grid.length, cols = grid[0].length;
   const out = [];
-  for (let y = 0; y < n * f; y++) {
+  for (let y = 0; y < rows * f; y++) {
     const row = [];
-    for (let x = 0; x < n * f; x++) row.push(grid[(y / f) | 0][(x / f) | 0]);
+    for (let x = 0; x < cols * f; x++) row.push(grid[(y / f) | 0][(x / f) | 0]);
     out.push(row);
   }
   return out;
@@ -103,6 +106,7 @@ function hasAuthored(recipe, parts, state, dir) {
 }
 
 export function forge(recipe, parts, palette, partPalette = () => null) {
+  const gw = recipe.gridW ?? DESIGN, gh = recipe.gridH ?? DESIGN;
   const scale = recipe.scale ?? (recipe.size ? recipe.size / DESIGN : 1);
   const anim = recipe.anim ?? {};
   const states = ['idle', 'walk', ...(anim.attack ? ['attack'] : [])];
@@ -125,5 +129,5 @@ export function forge(recipe, parts, palette, partPalette = () => null) {
       anims[`${state}-${dir}`] = frames.map((grid) => scaleGrid(grid, scale));
     }
   }
-  return { size: DESIGN * scale, fps: recipe.fps ?? 5, anims };
+  return { size: DESIGN * scale, width: gw * scale, height: gh * scale, fps: recipe.fps ?? 5, anims };
 }

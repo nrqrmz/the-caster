@@ -120,3 +120,23 @@ test('every recipe forges without throwing (mirrors BootScene)', () => {
     assert.ok(out.anims['idle-down'] && out.anims['idle-down'][0], `${key} produced no idle-down frame`);
   }
 });
+
+test('elemental_tormenta forges as a native 2:1 sprite (64×32 grid → 128×64) and animates 4 idle frames', () => {
+  const r = getRecipe('elemental_tormenta');
+  assert.equal(r.gridW, 64);
+  assert.equal(r.gridH, 32);
+  const out = forge(r, PARTS, paletteFor('elemental_tormenta', r.baseColor));
+  // forged texture dims: gridW*scale × gridH*scale = 128 × 64, 2:1 ratio.
+  assert.equal(out.width, 128);
+  assert.equal(out.height, 64);
+  assert.equal(out.width, 2 * out.height);
+  const idle = out.anims['idle-down'];
+  assert.equal(idle.length, 4, 'four authored idle (lightning) frames');
+  for (const f of idle) {
+    assert.equal(f.length, 64, 'frame rows = gridH*scale');
+    assert.equal(f[0].length, 128, 'frame cols = gridW*scale');
+  }
+  // animation actually changes: at least two idle frames differ (crackling lightning).
+  const flat = (f) => f.flat().map((c) => (c == null ? -1 : c)).join(',');
+  assert.notEqual(flat(idle[0]), flat(idle[1]), 'idle frames differ (lightning crackle)');
+});
