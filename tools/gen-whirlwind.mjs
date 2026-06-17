@@ -2,14 +2,15 @@
 // Serves: torbellino_errante (spinning wind vortex hazard, size 32, grey-blue 0xb0bec5).
 //
 // Parts authored:
-//   whirl_body — UNMISTAKABLE SPIRAL CYCLONE.
+//   whirl_body — PARALLEL SAME-DIRECTION BANDS.
 //                Classic cartoon tornado: a funnel silhouette (wide at top, tip at bottom)
-//                with 4 bold SWEPT CURVED BANDS winding around it. Each band is a thick
-//                diagonal arc that sweeps from one side of the funnel to the other as it
-//                descends, alternating direction (L→R, R→L, L→R, R→L).
-//                Clear gaps between bands expose the interior and make the spiral obvious.
-//                Roles: 'h' leading/highlight edge of each band, 'b' body, 's' trailing shade.
-//                Funnel outer edge: 'o'. Debris specks at top: 'h'.
+//                with 4 bold SWEPT BANDS all going in the SAME direction (left→right),
+//                so the implied rotation is consistent — NOT alternating/convergent.
+//                Each band is a thick diagonal stripe that starts near the left funnel wall
+//                and exits near the right. All bands share the same slope (parallel).
+//                Clear gaps between bands expose the interior.
+//                Roles: 'h' leading/highlight edge, 'b' body, 's' trailing shade, 'o' outer edge.
+//                Debris specks at top/sides: 'h'.
 // Run: node tools/gen-whirlwind.mjs
 
 const N = 32, cx = 16;
@@ -32,13 +33,14 @@ function line(L, x0, y0, x1, y1, r) {
   }
 }
 
-// ============================ WHIRL_BODY (spiral cyclone) ============================
+// ============================ WHIRL_BODY (parallel same-direction bands) ============================
 //
 // FUNNEL: top y=1, bottom y=29, max half-width 13, narrows to 0.
-// SPIRAL BANDS: 4 stacked, alternating sweep direction.
-// Each band occupies 5 rows. Gap of 2 rows between bands.
-// Within each band, the center x follows a diagonal arc from one side to the other.
-// Band thickness grows wider near leading edge (h) and narrows at trailing edge (s).
+// ALL BANDS sweep the SAME direction: left-wall → right-wall (L→R), parallel to each other.
+// This means all bands have the SAME slope — they all enter from the LEFT side of the funnel
+// at the top of their row range and exit on the RIGHT side at the bottom.
+// 4 stacked bands, each 5 rows tall, with 2-row gaps between them.
+// Leading edge (direction of motion = right side of band) = 'h', trailing (left) = 's'.
 
 const TOP_Y  = 1;
 const BOT_Y  = 29;
@@ -51,52 +53,45 @@ const hw = y => {
   return Math.round(TOP_HW * (1 - (y - TOP_Y) / (BOT_Y - TOP_Y)));
 };
 
-// Clamp x within funnel at y
-const clampX = (x, y) => {
-  const h = hw(y);
-  return Math.max(cx - h, Math.min(cx + h, x));
-};
-
-// Draw a single spiral band.
-// yStart, yEnd: row range
-// leftToRight: if true, band sweeps left→right (arc starts on left side at yStart, ends right at yEnd)
-// Returns the center column of the sweep: cx + sweep(t)
-// sweep(t) = lerp from -hw(yStart)*0.6 to +hw(yEnd)*0.6 (or reversed)
-function drawBand(yStart, yEnd, leftToRight) {
+// Draw a single parallel band.
+// All bands sweep L→R: at yStart, band center is near the left wall; at yEnd, near the right wall.
+// The SLOPE is fixed: offset goes from -hw(yTop)*0.65 to +hw(yBottom)*0.65 over 5 rows.
+// yTop/yBottom are the funnel-width reference points for computing the slope.
+// By using consistent yTop/yBottom deltas (same dy) for ALL bands, all bands are PARALLEL.
+function drawBand(yStart, yEnd) {
   const h0 = hw(yStart), hN = hw(yEnd);
-  const from = leftToRight ? -h0 * 0.65 : +h0 * 0.65;
-  const to   = leftToRight ? +hN * 0.65 : -hN * 0.65;
+  // ALL bands: start offset = -h * 0.65 (left side), end offset = +h * 0.65 (right side)
+  const from = -h0 * 0.65;
+  const to   = +hN * 0.65;
 
   for (let y = yStart; y <= yEnd; y++) {
     const h = hw(y);
     if (h <= 0) continue;
 
     const t = (yEnd > yStart) ? (y - yStart) / (yEnd - yStart) : 0;
-    // Center of this band row
+    // Center of this band row — sweeps L→R
     const bandCx = Math.round(cx + from + (to - from) * t);
 
-    // Band width at this row: thicker at top of band, thinner at bottom (tapers with funnel)
+    // Band width: thicker near top of band, tapers with funnel toward bottom
     const bw = Math.max(1, Math.round(h * 0.55 * (1 - t * 0.3)));
 
-    // Fill band
+    // Fill band within funnel
     const xL = Math.max(cx - h, bandCx - bw);
     const xR = Math.min(cx + h, bandCx + bw);
 
     for (let x = xL; x <= xR; x++) {
-      const relDist = (x - bandCx) / (bw || 1);  // -1..+1 within band
-      // Leading edge = direction of sweep:
-      //   leftToRight → leading edge is on the RIGHT side of band (high x)
-      //   rightToLeft → leading edge is on the LEFT side (low x)
-      const towardLeading = leftToRight ? relDist : -relDist;  // +1 = leading
+      const relDist = (x - bandCx) / (bw || 1);  // -1 (left/trailing) .. +1 (right/leading)
+      // Leading edge = RIGHT side (L→R sweep), so towardLeading = relDist
+      const towardLeading = relDist;
 
       let role;
       const isEdge = (x === cx - h || x === cx + h);
       if (isEdge) {
         role = 'o';
       } else if (towardLeading >= 0.55) {
-        role = 'h';  // leading highlight
+        role = 'h';  // leading highlight (right edge of band)
       } else if (towardLeading <= -0.55) {
-        role = 's';  // trailing shade
+        role = 's';  // trailing shade (left edge of band)
       } else {
         role = 'b';  // body
       }
@@ -105,15 +100,15 @@ function drawBand(yStart, yEnd, leftToRight) {
   }
 }
 
-// 4 Spiral bands — alternating directions creates the unmistakable spiral
-// Band A  y=1..5   L→R  (enters top-left, exits mid-right)
-// Band B  y=8..12  R→L  (enters right, sweeps left)
-// Band C  y=15..19 L→R
-// Band D  y=22..26 R→L
-drawBand( 1,  5, true);
-drawBand( 8, 12, false);
-drawBand(15, 19, true);
-drawBand(22, 26, false);
+// 4 Parallel bands — ALL sweep L→R (same direction, same slope, parallel)
+// Band A  y=1..5
+// Band B  y=8..12
+// Band C  y=15..19
+// Band D  y=22..26
+drawBand( 1,  5);
+drawBand( 8, 12);
+drawBand(15, 19);
+drawBand(22, 26);
 
 // ==== Funnel silhouette edges ====
 // Always mark the outer funnel boundary as 'o'
@@ -132,7 +127,7 @@ put('whirl_body', cx, BOT_Y, 'o');
 const debris = [
   // Top scatter
   [cx - 14,  0], [cx + 14,  0],
-  [cx - 8,  -1 + 1], // shifted to y=0 (clamped)
+  [cx - 8,  0], // y=0 (clamped from -1)
   // Mid scatter — flung outward
   [cx - 14,  6], [cx + 14,  6],
   [cx - 13,  13], [cx + 11,  13],
