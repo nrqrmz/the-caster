@@ -2,7 +2,10 @@
 import { TEX, spriteKey } from '../config.js';
 import { hasRecipe } from '../data/sprites/recipes.js';
 
-const PROJECTILE_KEY = { [TEX.orb]: 'orb', [TEX.fireball]: 'fireball', [TEX.arrow]: 'arrow' };
+const PROJECTILE_KEY = {
+  [TEX.orb]: 'orb', [TEX.fireball]: 'fireball', [TEX.arrow]: 'arrow',
+  [TEX.iceShard]: 'iceShard', [TEX.poisonGlob]: 'poisonGlob',
+};
 
 export class ProjectilePool {
   constructor(scene, maxSize = 200) {
@@ -25,8 +28,12 @@ export class ProjectilePool {
     p.setActive(true).setVisible(true);
     p.damage = damage;
     p.aoeRadius = radius || 0; // > 0 means explode-on-impact (fireball)
-    p.burnDps = 0;             // reset; only fireball sets this after fire()
+    p.burnDps = 0;             // reset; effect props se setean tras fire() según el tipo
     p.burnMs = 0;
+    p.slowFactor = 0;          // reset; solo los disparos de hielo lo setean
+    p.slowMs = 0;
+    p.poisonDps = 0;           // reset; solo los disparos de veneno lo setean
+    p.poisonMs = 0;
     p.homing = false;
     p.homingLife = 0;          // reset; only homing enemy shots set this after fire()
     const angle = Phaser.Math.Angle.Between(x, y, targetX, targetY);
@@ -35,7 +42,7 @@ export class ProjectilePool {
     if (useSprite) {
       p.setRotation(0);
       if (sprKey === 'orb' || sprKey === 'fireball') p.anims.play(`${sprKey}-idle-down`, true);
-      if (sprKey === 'fireball' || sprKey === 'arrow') p.setRotation(angle);
+      if (sprKey === 'fireball' || sprKey === 'arrow' || sprKey === 'iceShard') p.setRotation(angle);
     } else {
       p.setRotation(0);
     }

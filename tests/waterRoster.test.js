@@ -53,15 +53,17 @@ test('waterInterWaves tiers 2–4: all referenced enemy types exist in ENEMY_TYP
   }
 });
 
-// ── 3. onHitSlow — exactly 3 intended creatures ───────────────────────────────
-test('onHitSlow modifier is on exactly acolito_escarcha, guardia_hielo, burbuja_gelida', () => {
+// ── 3. onHitSlow — exactly 2 melee/aura creatures (ranged acolito migrated to ice projectile type)
+test('onHitSlow modifier is on exactly guardia_hielo and burbuja_gelida (melee/aura only)', () => {
   const hasSlowMod = (k) => (ENEMY_TYPES[k].modifiers || []).some((m) => m.type === 'onHitSlow');
   const slowCarriers = Object.keys(ENEMY_TYPES).filter(hasSlowMod);
   assert.deepEqual(
     slowCarriers.sort(),
-    ['acolito_escarcha', 'burbuja_gelida', 'guardia_hielo'],
-    'onHitSlow should appear on exactly these three Water creatures',
+    ['burbuja_gelida', 'guardia_hielo'],
+    'onHitSlow should appear on exactly these two melee/aura Water creatures (acolito_escarcha now slows via ice projectile type)',
   );
+  // acolito_escarcha must NOT have onHitSlow (its ice-type shot applies the slow instead)
+  assert.ok(!hasSlowMod('acolito_escarcha'), 'acolito_escarcha must NOT have onHitSlow modifier');
 });
 
 // ── 4. splitsOnDeath — exactly medusa ────────────────────────────────────────

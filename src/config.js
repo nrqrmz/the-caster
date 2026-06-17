@@ -2,6 +2,10 @@
 export const GAME_WIDTH = 480;
 export const GAME_HEIGHT = 854;
 
+// Colchón extra (px) además del radio del enemigo para contenerlo en pantalla:
+// nada queda pegado al borde ni escondido bajo el HUD (barra HP arriba, joystick abajo).
+export const ENEMY_MARGIN = 10;
+
 // Debug helpers (oculta el botón de borrar guardado en release con poner false).
 export const DEBUG = true;
 
@@ -61,6 +65,8 @@ export const TEX = {
   warrior: 'tex_warrior',
   archer: 'tex_archer',
   arrow: 'tex_arrow',
+  iceShard: 'tex_iceShard',
+  poisonGlob: 'tex_poisonGlob',
   miniboss: 'tex_miniboss',
   boss: 'tex_boss',
   temple: 'tex_temple',

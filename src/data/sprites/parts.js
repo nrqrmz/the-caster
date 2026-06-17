@@ -941,6 +941,44 @@ export const PARTS = {
     ], up: null, side: null,
   },
 
+  // --- Proyectiles enemigos extra ---
+  // Esquirla de hielo: diamante facetado, brilla al centro. Rota con la dirección.
+  ice_shard: {
+    res: 32, w: 11, h: 11, anchor: { x: 5, y: 5 },
+    down: [
+      '.....o.....',
+      '....oho....',
+      '...ohbho...',
+      '..ohbbbho..',
+      '.ohbbhbbho.',
+      'ohbbbhbbbho',
+      '.ohbbhbbho.',
+      '..ohbbbho..',
+      '...ohbho...',
+      '....oho....',
+      '.....o.....',
+    ], up: null, side: null,
+  },
+  // Gota de veneno: glóbulo redondo con burbujas (accent) y una gota que escurre.
+  poison_glob: {
+    res: 32, w: 11, h: 13, anchor: { x: 5, y: 5 },
+    down: [
+      '....ooo....',
+      '..oobbboo..',
+      '.obbbhbbbo.',
+      'obbbbbbbbbo',
+      'obbabbbabbo',
+      'obbbbhbbbbo',
+      'obbbbbbbbbo',
+      '.obbbabbbo.',
+      '.obbbbbbbo.',
+      '..oobbboo..',
+      '...obbbo...',
+      '....obo....',
+      '.....o.....',
+    ], up: null, side: null,
+  },
+
   // --- Princess hero (native res:32, generated from the approved mockup via
   // tools/gen-princess.mjs). Each part composes against its own palette. ---
   body_gown: {

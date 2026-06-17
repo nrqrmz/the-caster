@@ -7,7 +7,7 @@ import {
   BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS,
   EGG_HATCH_MS, TADPOLE_GROW_MS,
 } from '../data/tuning.js';
-import { GAME_WIDTH, GAME_HEIGHT } from '../config.js'; // config.js is Phaser-free (constants only)
+import { GAME_WIDTH, GAME_HEIGHT, ENEMY_MARGIN } from '../config.js'; // config.js is Phaser-free (constants only)
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -117,7 +117,7 @@ export const MOVEMENTS = {
       // Offset so the enemy doesn't land exactly on the caster.
       const a = angleBetween(target.x, target.y, self.x, self.y);
       const dist = 80;
-      const r = self.radius || 16;
+      const r = (self.radius || 16) + ENEMY_MARGIN;
       const rx = clamp(target.x + Math.cos(a) * dist, r, GAME_WIDTH - r);
       const ry = clamp(target.y + Math.sin(a) * dist, r, GAME_HEIGHT - r);
       return { x: 0, y: 0, repositionTo: { x: rx, y: ry } };

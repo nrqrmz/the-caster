@@ -133,6 +133,8 @@ export const RECIPES = {
   orb: { archetype: 'projectile', size: 32, baseColor: 0x80d8ff, anim: { idle: 2, walk: 1 }, fps: 8, parts: ['orb_body'] },
   fireball: { archetype: 'projectile', size: 32, baseColor: 0xff7043, anim: { idle: 3, walk: 1 }, fps: 10, parts: ['flame_body'] },
   arrow: { archetype: 'projectile', size: 32, baseColor: 0xfff176, anim: { idle: 1, walk: 1 }, fps: 1, parts: ['arrow_body'] },
+  iceShard:   { archetype: 'projectile', size: 32, baseColor: 0xb3e5fc, anim: { idle: 1, walk: 1 }, fps: 1, parts: ['ice_shard'] },
+  poisonGlob: { archetype: 'projectile', size: 32, baseColor: 0x7cb342, anim: { idle: 1, walk: 1 }, fps: 1, parts: ['poison_glob'] },
 
   // --- Generic (shared) ---
   // villager has 3 hair skins picked at random per-instance (Enemy.def.skins).
