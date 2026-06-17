@@ -377,12 +377,19 @@ export default class GameScene extends Phaser.Scene {
       const n = boom.count ?? 8;
       const speed = boom.speed ?? 200;
       const dmg = boom.damage ?? Math.round(enemy.def.damage * 0.8);
+      const type = resolveProjectile(boom, this.regionElement);
+      const spec = PROJECTILES[type] || PROJECTILES.arrow;
+      const eff = spec.effect;
       for (let i = 0; i < n; i++) {
         const a = (Math.PI * 2 * i) / n;
         const tx = enemy.x + Math.cos(a) * 50;
         const ty = enemy.y + Math.sin(a) * 50;
-        const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
-        if (shot) shot.setTint(COLORS.fireball);
+        const shot = this.enemyShots.fire(spec.tex, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
+        if (!shot) continue;
+        shot.setTint(spec.tint);
+        if (eff && eff.kind === 'burn') { shot.burnDps = eff.dps; shot.burnMs = eff.ms; }
+        else if (eff && eff.kind === 'slow') { shot.slowFactor = eff.factor; shot.slowMs = eff.ms; }
+        else if (eff && eff.kind === 'dot') { shot.poisonDps = eff.dps; shot.poisonMs = eff.ms; }
       }
     }
     const split = buildSplitChildren(enemy.def);
