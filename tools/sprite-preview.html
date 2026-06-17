@@ -53,9 +53,10 @@ for (const key of KEYS) {
   const baseColor = recipe.baseColor ?? 0x888888;
   const palette = paletteFor(key, baseColor);
   const g = composeColorGrid(recipe, PARTS, 'down', palette, makePartPalette(key), null, 0);
-  const cv = document.createElement('canvas'); cv.width = DESIGN*SCALE; cv.height = DESIGN*SCALE;
+  const gh = g.length, gw = g[0].length; // honor non-square recipes (e.g. 64×32 elemental/bat)
+  const cv = document.createElement('canvas'); cv.width = gw*SCALE; cv.height = gh*SCALE;
   const ctx = cv.getContext('2d');
-  for (let y=0;y<DESIGN;y++) for (let x=0;x<DESIGN;x++) {
+  for (let y=0;y<gh;y++) for (let x=0;x<gw;x++) {
     const c = g[y][x]; if (c==null) continue;
     ctx.fillStyle = '#'+(c>>>0).toString(16).padStart(6,'0').slice(-6);
     ctx.fillRect(x*SCALE,y*SCALE,SCALE,SCALE);
