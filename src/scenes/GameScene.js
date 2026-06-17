@@ -197,7 +197,7 @@ export default class GameScene extends Phaser.Scene {
     // Oversized single-def bosses (e.g. Elemental de Tormenta, radius 56) need their
     // display size set explicitly; the forms path does this in _applyBossForm, but a
     // plain (no-forms) def is not routed through there.
-    if (def.key === 'elemental_tormenta' && def.radius) this.boss.setDisplaySize(def.radius * 2, def.radius * 2);
+    if (def.key === 'elemental_tormenta' && def.radius) this.boss.setDisplaySize(128, 64);
     // Seed the runtime untargetable flag (channeling cultist leader) + start the meter.
     if (def.untargetable) this.boss._untargetable = true;
     if (def.ritual) {
