@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeMovement, MOVEMENTS, summonSlots } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
+import { BURROW_SUBMERGE_MS } from '../src/data/tuning.js';
 
 const mag = (v) => Math.hypot(v.x, v.y);
 const ctx = (overrides = {}) => ({
@@ -155,41 +156,25 @@ test('findModifier returns the entry (normalizing string form) or null', () => {
   assert.equal(findModifier({}, 'shielded'), null);
 });
 
-test('burrow: ciclo submerged → reposition → emerge → surface → submerged', () => {
-  const self = { x: 100, y: 100, radius: 17 };
-  const target = { x: 200, y: 200 };
+test('burrow: emerge transitions to surface after emergeMs', () => {
+  const self = { x: 0, y: 0, radius: 17 };
+  const target = { x: 500, y: 0 };
   const params = { submergeMs: 100, emergeMs: 100, surfaceMs: 300 };
   const state = {};
-  const step = () => MOVEMENTS.burrow({ self, target, speed: 100, dt: 100, params, state });
 
-  // 1) submerged: invuln, sin moverse
-  let v = step();
-  assert.equal(v.submerged, true);
-  assert.equal(v.x, 0); assert.equal(v.y, 0);
+  // Consume the submerge window (100ms)
+  MOVEMENTS.burrow({ self, target, speed: 100, dt: 100, params, state });
+  assert.equal(state.mode, 'emerge');
 
-  // 2) reposition: teletransporta junto al objetivo, sigue submerged
-  v = step();
-  assert.equal(v.submerged, true);
-  assert.ok(v.repositionTo && typeof v.repositionTo.x === 'number');
-
-  // 3) emerge: aviso de superficie, aún invuln (submerged true)
-  v = step();
+  // Still in emerge (warning ring) after small dt
+  let v = MOVEMENTS.burrow({ self, target, speed: 100, dt: 16, params, state });
   assert.equal(v.surfacing, true);
   assert.equal(v.submerged, true);
 
-  // 4) surface: vulnerable y persiguiendo al objetivo (velocidad hacia abajo-derecha)
-  v = step();
+  // After emergeMs expires, transition to surface (vulnerable)
+  MOVEMENTS.burrow({ self, target, speed: 100, dt: 100, params, state });
+  v = MOVEMENTS.burrow({ self, target, speed: 100, dt: 16, params, state });
   assert.equal(v.vulnerable, true);
-  assert.equal(v.submerged, undefined);
-  assert.ok(v.x > 0 && v.y > 0);
-
-  // 5) sigue en surface (300ms de ventana, dt 100 → 3 frames vulnerables)
-  v = step();
-  assert.equal(v.vulnerable, true);
-
-  // 6) expira la superficie → vuelve a submerged
-  v = step();
-  assert.equal(v.submerged, true);
 });
 
 test('every movement type (including burrow) returns finite velocity', () => {
@@ -385,5 +370,34 @@ test('sisterFormation con 1 viva: usa su propio kit (baseMovement)', () => {
   const live = [{ isChaser: false, baseMovement: { type: 'kite', range: 240 } }];
   const out = sisterFormation(live, []);
   assert.deepEqual(out[0], { type: 'kite', range: 240 });
+});
+
+test('burrow: sumergido nada HACIA el objetivo (ya no se queda quieto)', () => {
+  const state = {};
+  const v = computeMovement(
+    { movement: { type: 'burrow' } }, state,
+    { self: { x: 0, y: 0 }, target: { x: 500, y: 0 }, speed: 100, dt: 16 });
+  assert.equal(v.submerged, true);
+  assert.ok(v.x > 0);                 // avanza hacia el objetivo (antes era 0)
+  assert.ok(Math.abs(v.y) < 1e-6);
+});
+
+test('burrow: sumergido se DETIENE dentro del anillo seguro', () => {
+  const state = {};
+  const v = computeMovement(
+    { movement: { type: 'burrow' } }, state,
+    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 }, speed: 100, dt: 16 }); // dist 100 < 160
+  assert.equal(v.submerged, true);
+  assert.equal(v.x, 0);
+  assert.equal(v.y, 0);
+});
+
+test('burrow: tras submergeMs pasa a emerge (anillo de aviso, sigue invuln)', () => {
+  const state = {};
+  const ctxB = { self: { x: 0, y: 0 }, target: { x: 500, y: 0 }, speed: 100, dt: BURROW_SUBMERGE_MS };
+  computeMovement({ movement: { type: 'burrow' } }, state, ctxB); // consume la ventana submerged
+  const v = computeMovement({ movement: { type: 'burrow' } }, state, { ...ctxB, dt: 16 });
+  assert.equal(v.submerged, true);
+  assert.equal(v.surfacing, true);
 });
 

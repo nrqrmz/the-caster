@@ -5,7 +5,7 @@
 
 import {
   BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS,
-  EGG_HATCH_MS, TADPOLE_GROW_MS,
+  EGG_HATCH_MS, TADPOLE_GROW_MS, SPAWN_SAFE_DIST,
 } from '../data/tuning.js';
 import { GAME_WIDTH, GAME_HEIGHT, ENEMY_MARGIN } from '../config.js'; // config.js is Phaser-free (constants only)
 
@@ -105,20 +105,13 @@ export const MOVEMENTS = {
     state.t    = (state.t || 0) + dt;
 
     if (state.mode === 'submerged') {
-      if (state.t >= submergeMs) { state.mode = 'reposition'; state.t = 0; }
-      return { x: 0, y: 0, submerged: true };
-    }
-
-    if (state.mode === 'reposition') {
-      // Teletransporta a un punto cercano al objetivo (invuln, aún oculto).
-      state.mode = 'emerge';
-      state.t = 0;
-      const a = angleBetween(target.x, target.y, self.x, self.y);
-      const dist = 80;
-      const r = (self.radius || 16) + ENEMY_MARGIN;
-      const rx = clamp(target.x + Math.cos(a) * dist, r, GAME_WIDTH - r);
-      const ry = clamp(target.y + Math.sin(a) * dist, r, GAME_HEIGHT - r);
-      return { x: 0, y: 0, submerged: true, repositionTo: { x: rx, y: ry } };
+      // Nada hacia la princesa mostrando solo la aleta (GameScene oculta el cuerpo);
+      // se detiene al alcanzar el anillo seguro para no emerger encima de ella.
+      if (state.t >= submergeMs) { state.mode = 'emerge'; state.t = 0; return { x: 0, y: 0, submerged: true }; }
+      const d = distance(self.x, self.y, target.x, target.y);
+      if (d <= SPAWN_SAFE_DIST + 4) return { x: 0, y: 0, submerged: true };
+      const a = angleBetween(self.x, self.y, target.x, target.y);
+      return { x: Math.cos(a) * speed, y: Math.sin(a) * speed, submerged: true };
     }
 
     if (state.mode === 'emerge') {
