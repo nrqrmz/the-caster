@@ -89,7 +89,7 @@ Nuevo hazard: un **corredor de lava** que parte la pantalla en línea recta — 
 
 - **Estado:** `this.lavaRiver = { orientation, mode: 'telegraph'|'active'|'cooldown', t }`, actualizado cada frame en un nuevo `updateLavaRiver(delta)`.
 - **Render:** reusa el estilo de lava animada de `drawLavaEdges` (glow + cuerpo fundido + brasas), pero sobre una sola línea que cruza toda la pantalla según la orientación.
-- **Daño:** mientras `active`, si la princesa está a ≤ ~16 px de la línea, daño por contacto (~28 dps) + burn breve, igual que las aristas del triángulo (`onAnyEdge`).
+- **Daño:** mientras `active`, si la princesa está a ≤ ~16 px de la línea, **~18 dps + burn breve** (`onAnyEdge`). Menos letal que la arista del triángulo de las hijas (~28 dps), pero conserva el burn al cruzar.
 - **Cadencia:** se dispara solo en fases 2-3; **cooldown ~12-15 s** entre activaciones (telegraph ~1 s, activo ~2.5 s). Orientación elegida al azar cada vez. Se gestiona con su propio temporizador (no en cada ciclo de secuencia), arrancado al entrar a fase 2 vía un hook `enter: ['startLavaRiver']` que pone el hazard en modo cooldown; a partir de ahí se auto-reactiva.
 - **Limpieza:** se cancela junto al resto de hazards en `checkPhaseCleared`.
 
@@ -135,7 +135,9 @@ Cubiertos por el sistema de §1. Cambios de datos en `bosses/water.js`:
 
 ### 5b. Tentáculos del Kraken brotando del suelo
 
-El `lobAoe` del Kraken, además de pintarse como agua, debe **leerse como tentáculo**: brota verticalmente desde el suelo en la posición telegrafiada, inflige daño y se retrae. Render procedural en SP-3 (un tentáculo que crece/encoge en la duración de la zona, con el aviso telegrafiado que ya existe). Si se quiere un sprite dedicado, se genera luego con un `tools/gen-*.mjs` (no bloquea SP-3).
+El `lobAoe` del Kraken, además de pintarse como agua, debe **leerse como tentáculo**: brota verticalmente desde el suelo en la posición telegrafiada, inflige daño y se retrae.
+
+**Render con sprite HD** (decisión del usuario). Se genera un sprite de tentáculo pixel-art HD con un `tools/gen-*.mjs` (estilo consistente con los demás sprites del juego), con su clave `TEX.tentacle` y su recipe. La zona `lobAoe` de agua se dibuja con ese sprite anclado en la posición telegrafiada, **creciendo desde el suelo** al activarse y retrayéndose al expirar (animación por escala/altura sobre la duración de la zona). El daño y el telegraph (anillo de aviso) ya existentes no cambian. Esto convierte la generación del sprite del tentáculo en un ítem de trabajo propio dentro de SP-3 (gen-tool + recipe + clave `TEX` + integración en el render de zona).
 
 ### 5c. Telegraph/animación del remolino del Kraken
 
@@ -151,7 +153,8 @@ El "maremoto" es el `lobAoe` de radio grande (90/95). Con 5a queda pintado como 
 - `src/scenes/GameScene.js` — tracking de summons (`_summonTrackers`, marca de hijos, decremento en `onEnemyDeath`); `executeAttack` (summon con tope, `giantFireball`, `lobAoe` por elemento); hooks `startLavaRiver` + `updateLavaRiver`; intercambio a `soloSequence` de la última hermana; render de zona `tentacle`; mejora de `updateWhirlpool`.
 - `src/data/bosses/fire.js` — Ignatius (quitar `lobAoe` de ciclos, añadir `giantFireball` + summon + `startLavaRiver`, ajustar `spawnLavaFloor`); `SISTERS_TRIO` (hp 360/480/300, movimientos kite/chase/kite, `soloSequence` con `lobAoe`).
 - `src/data/bosses/water.js` — `soldado_hielo`, `tiburon_abisal`, formas `dama_ballena`/`dama_kraken`: steps de summon con tope; `lobAoe` con `style`/elemento agua.
-- `src/data/tuning.js` — constantes del río de lava (cooldown, telegraph, activo) y del giant fireball si se centralizan.
+- `src/data/tuning.js` — constantes del río de lava (cooldown, telegraph, activo, 18 dps + burn) y del giant fireball si se centralizan.
+- `tools/gen-*.mjs` + `src/data/sprites/recipes.js` + `src/config.js` (`TEX.tentacle`) — sprite HD del tentáculo del Kraken (generación + recipe + clave de textura).
 - `tests/` — tests de `summonSlots` (puro): respeta el cap, no repone durante el cooldown, repone tras expirar.
 
 ## Estrategia de testeo
@@ -163,8 +166,8 @@ El "maremoto" es el `lobAoe` de radio grande (90/95). Con 5a queda pintado como 
   - Soldado_hielo ≤2 guardias; tiburón abisal ≤1 tiburón joven; ballena ≤2 cangrejos + ≤2 pez globo.
   - Kraken: el remolino se reconoce como remolino; los tentáculos se ven de agua (no lava) y brotan del suelo.
 
-## Decisiones / notas abiertas (para revisión del usuario)
+## Decisiones cerradas
 
-1. **Arte de tentáculos:** SP-3 los hace **procedurales** (un tentáculo que crece/encoge). Si prefieres un sprite dedicado desde el inicio, lo generamos con un `gen-tool` y se vuelve un ítem extra. ¿Procedural está bien para empezar?
-2. **Carriles de `spawnLavaFloor`:** propongo 4 → 2. ¿OK, o prefieres 3?
-3. **Río de lava — daño:** mismo modelo que la arista del triángulo (~28 dps + burn al tocar). ¿Te parece, o quieres que sea más/menos letal que el triángulo de las hijas?
+1. **Tentáculos del Kraken:** ✅ **sprite HD** (gen-tool + recipe + `TEX.tentacle`), no procedural.
+2. **Carriles de `spawnLavaFloor`:** ✅ **2 carriles** (de 4).
+3. **Río de lava:** ✅ **18 dps + burn** (menos letal que el triángulo de las hijas, pero conserva el burn).
