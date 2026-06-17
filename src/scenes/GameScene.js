@@ -7,6 +7,7 @@ import {
   WHIRLPOOL_RADIUS, WHIRLPOOL_ACTIVE_MS, WHIRLPOOL_COOLDOWN_MS, WHIRLPOOL_TELEGRAPH_MS,
   LAVA_RIVER_COOLDOWN_MS, LAVA_RIVER_TELEGRAPH_MS, LAVA_RIVER_ACTIVE_MS, LAVA_RIVER_DPS,
   MELEE_CONTACT_CD, SPAWN_SAFE_DIST,
+  TORNADO_RADIUS, TORNADO_ACTIVE_MS, TORNADO_COOLDOWN_MS, TORNADO_TELEGRAPH_MS, TORNADO_ENEMY_PULL,
 } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
@@ -22,10 +23,11 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation, isFlying } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
+import { isInside as inTornado, forceAt as tornadoForce, inEye as inTornadoEye, scaleForPhase as tornadoPhase } from '../systems/TornadoHazard.js';
 import { lavaPulse, lavaRimAlpha, lavaSpots, lavaEmbers, lavaEdgeEmbers, lerpColor, LAVA } from '../systems/LavaField.js';
 import { FormSequencer } from '../systems/FormSequencer.js';
 import { hasRecipe } from '../data/sprites/recipes.js';
@@ -79,6 +81,8 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
     this.triangle = null; // { mode, t } while a trio fight is active
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
+    this.tornado = null; // { center, radius, phase, mode, t } while a tornado is active
+    this.tornadoGfx = null; // created lazily in updateTornado
     this.lavaRiver = null;
     this.lavaRiverGfx = null;
     this.casterBurnRemaining = 0;
@@ -492,6 +496,8 @@ export default class GameScene extends Phaser.Scene {
         if (this.triangleGfx) this.triangleGfx.clear();
         this.whirlpool = null;
         if (this.whirlpoolGfx) this.whirlpoolGfx.clear();
+        this.tornado = null;
+        if (this.tornadoGfx) this.tornadoGfx.clear();
         this.lavaRiver = null;
         if (this.lavaRiverGfx) this.lavaRiverGfx.clear();
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
@@ -805,6 +811,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateTriangle(delta);
     this.updateLavaRiver(delta);
     this.updateWhirlpool(delta);
+    this.updateTornado(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     for (const b of this.bosses) { if (b && b.active && !b._burrowed) b.drawBar(); else if (b && b._burrowed) b.bar.clear(); }
@@ -865,6 +872,16 @@ export default class GameScene extends Phaser.Scene {
         phase,
         mode: 'telegraph',
         t: WHIRLPOOL_TELEGRAPH_MS,
+      };
+    }
+    if (hook === 'spawnTornado') {
+      const phase = typeof boss._tornadoPhase === 'number' ? boss._tornadoPhase : 1;
+      this.tornado = {
+        center: { x: Phaser.Math.Between(80, GAME_WIDTH - 80), y: Phaser.Math.Between(120, GAME_HEIGHT - 160) },
+        radius: TORNADO_RADIUS,
+        phase,
+        mode: 'telegraph',
+        t: TORNADO_TELEGRAPH_MS,
       };
     }
     if (hook === 'startLavaRiver') {
@@ -932,6 +949,51 @@ export default class GameScene extends Phaser.Scene {
 
     if (w.mode === 'cooldown') {
       if (w.t <= 0) this.whirlpool = null; // boss will re-trigger via hook
+    }
+  }
+
+  updateTornado(delta) {
+    if (!this.tornado) return;
+    const w = this.tornado;
+    w.t -= delta;
+    if (!this.tornadoGfx) this.tornadoGfx = this.add.graphics().setDepth(7);
+    this.tornadoGfx.clear();
+
+    if (w.mode === 'telegraph') {
+      this.tornadoGfx.lineStyle(2, COLORS.ash, 0.5);
+      this.tornadoGfx.strokeCircle(w.center.x, w.center.y, w.radius);
+      if (w.t <= 0) { w.mode = 'active'; w.t = TORNADO_ACTIVE_MS; }
+      return;
+    }
+
+    if (w.mode === 'active') {
+      const r = w.radius * tornadoPhase(w.phase);
+      this.tornadoGfx.lineStyle(3, COLORS.ash, 0.75);
+      this.tornadoGfx.strokeCircle(w.center.x, w.center.y, r);
+      this.tornadoGfx.lineStyle(2, COLORS.lightning, 0.6);
+      this.tornadoGfx.strokeCircle(w.center.x, w.center.y, r * 0.5);
+
+      // Pull the caster toward the eye (full strength).
+      if (this.caster && this.caster.hp > 0 && inTornado(w.center, r, this.caster)) {
+        const f = tornadoForce(w.center, r, this.caster, this.stats.moveSpeed);
+        this.caster.x = Phaser.Math.Clamp(this.caster.x + f.x * (delta / 1000), 0, GAME_WIDTH);
+        this.caster.y = Phaser.Math.Clamp(this.caster.y + f.y * (delta / 1000), 0, GAME_HEIGHT);
+      }
+      // Light pull on NON-flying enemies (debris feel; flyers are immune).
+      for (const e of this.enemies.getChildren()) {
+        if (!e.active || isFlying(e.def)) continue;
+        if (!inTornado(w.center, r, e)) continue;
+        const ef = tornadoForce(w.center, r, e, e.def.speed * TORNADO_ENEMY_PULL);
+        e.x += ef.x * (delta / 1000);
+        e.y += ef.y * (delta / 1000);
+      }
+
+      if (w.t <= 0) { w.mode = 'cooldown'; w.t = TORNADO_COOLDOWN_MS; }
+      return;
+    }
+
+    if (w.mode === 'cooldown') {
+      if (w.t <= 0) this.tornado = null; // boss re-triggers via the spawnTornado hook
     }
   }
 
