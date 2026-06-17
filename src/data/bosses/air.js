@@ -81,7 +81,7 @@ export const BRUJA_VENDAVAL = {
 export const ELEMENTAL_TORMENTA = {
   key: 'elemental_tormenta', tex: TEX.miniboss, color: COLORS.ash,
   hp: 680, speed: 0, damage: 18, radius: 56, resist: 0.20,
-  elite: true, geometric: true,
+  elite: true,
   movement: { type: 'static' },
   phases: [
     { from: 1.0, sequence: [
