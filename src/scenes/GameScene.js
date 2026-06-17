@@ -12,7 +12,10 @@ import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
-import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist, tryMeleeContact } from '../systems/CombatSystem.js';
+import {
+  applyDamage, applyCasterSlow, tickCasterSlow, applyResist, tryMeleeContact,
+  applyCasterCc, tickCasterCc, applyCasterPush, tickCasterPush, applyDrain,
+} from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, difficultyContext, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
@@ -122,6 +125,15 @@ export default class GameScene extends Phaser.Scene {
       if (burn) this.applyCasterBurn(burn.dps ?? 6, burn.ms ?? 2000);
       const slow = findModifier(enemy.def, 'onHitSlow');
       if (slow) this.applyCasterSlowFx(slow.factor ?? 0.6, slow.ms ?? 1200);
+      const stun = findModifier(enemy.def, 'onHitStun');
+      if (stun) applyCasterCc(this.caster, stun.kind === 'lift' ? 'lift' : 'stun', stun.ms ?? (stun.kind === 'lift' ? 500 : 300));
+      const push = findModifier(enemy.def, 'onHitPush');
+      if (push) {
+        const a = Math.atan2(this.caster.y - enemy.y, this.caster.x - enemy.x);
+        applyCasterPush(this.caster, Math.cos(a) * (push.force ?? 220), Math.sin(a) * (push.force ?? 220), push.ms ?? 250);
+      }
+      const drain = findModifier(enemy.def, 'drain');
+      if (drain) applyDrain(enemy, drain.heal ?? 4);
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
@@ -129,6 +141,11 @@ export default class GameScene extends Phaser.Scene {
       if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
       if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
       if (shot.poisonDps > 0) this.applyCasterPoison(shot.poisonDps, shot.poisonMs);
+      if (shot.stunMs) applyCasterCc(this.caster, shot.liftKind ? 'lift' : 'stun', shot.stunMs);
+      if (shot.pushForce) {
+        const a = Math.atan2(this.caster.y - shot.y, this.caster.x - shot.x);
+        applyCasterPush(this.caster, Math.cos(a) * shot.pushForce, Math.sin(a) * shot.pushForce, shot.pushMs ?? 250);
+      }
       this.enemyShots.despawn(shot);
     });
   }
@@ -738,6 +755,8 @@ export default class GameScene extends Phaser.Scene {
     this.lavaTime += delta;      // drives the animated lava/fire VFX (zones + triangle edges)
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
     tickCasterSlow(this.caster, delta);
+    tickCasterCc(this.caster, delta);
+    tickCasterPush(this.caster, delta);
     if (this.damageBuffRemaining > 0) this.damageBuffRemaining -= delta;
     if (this.stats.healthRegen > 0 && this.caster.hp > 0) {
       this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
@@ -746,6 +765,8 @@ export default class GameScene extends Phaser.Scene {
     this.updateCasterBurn(delta);
     this.updateCasterPoison(delta);
     this.caster.moveBy(this.joystick.vector);
+    if (this.caster.liftRemaining > 0 || this.caster.stunRemaining > 0) this.caster.setTint(COLORS.lightning);
+    else if (this.caster.slowRemaining === 0) this.caster.clearTint();
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
     this.telegraphGfx.clear();

@@ -16,18 +16,30 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
     this._shotTimer = 0;
     this.slowRemaining = 0;
     this.slowFactor = 1;
+    this.stunRemaining = 0;
+    this.liftRemaining = 0;
+    this.ccImmuneRemaining = 0;
+    this.pushX = 0;
+    this.pushY = 0;
+    this.pushRemaining = 0;
     this._aimTarget = null;
     this.facing = useSprite ? new FacingController(this, 'hero') : null;
     if (useSprite) this.setDisplaySize(32, 32); // hero visual footprint ~ old radius 16
   }
 
   moveBy(vector) {
+    const locked = this.stunRemaining > 0 || this.liftRemaining > 0;
     const mul = this.slowRemaining > 0 ? this.slowFactor : 1;
-    this.setVelocity(vector.x * this.stats.moveSpeed * mul, vector.y * this.stats.moveSpeed * mul);
+    const baseX = locked ? 0 : vector.x * this.stats.moveSpeed * mul;
+    const baseY = locked ? 0 : vector.y * this.stats.moveSpeed * mul;
+    const px = this.pushRemaining > 0 ? this.pushX : 0;
+    const py = this.pushRemaining > 0 ? this.pushY : 0;
+    this.setVelocity(baseX + px, baseY + py);
   }
 
   updateAutoAim(time, delta, enemies, onFire) {
     this._shotTimer -= delta;
+    if (this.stunRemaining > 0 || this.liftRemaining > 0) return; // no firing while stunned/lifted
     const target = this.nearestEnemy(enemies);
     this._aimTarget = target ? { x: target.x, y: target.y } : null;
     if (this._shotTimer > 0) return;
