@@ -217,6 +217,12 @@ export const RECIPES = {
   // --- Ambient ---
   burbuja_gelida:    { archetype: 'blob',     size: 32, parts: BURBUJA },
   totem_escarcha:    { archetype: 'floating', size: 64, parts: TOTEM_FROST },
+
+  // --- Air cultists (La Torre Montaña) ---
+  cultista:            { archetype: 'humanoid', size: 32, baseColor: 0x4a148c, parts: CULT_HOODED },
+  guardian_rito:       { archetype: 'humanoid', size: 32, baseColor: 0x4a148c, parts: CULT_HOODED },
+  cultista_canalizador:{ archetype: 'humanoid', size: 32, baseColor: 0x37474f, parts: CULT_FACELESS },
+  lider_cultista:      { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: CULT_STAFF },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
