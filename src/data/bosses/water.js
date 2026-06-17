@@ -64,7 +64,7 @@ export const SAPO_DESOVADOR = {
 // the recovery.
 export const TIBURON_ABISAL = {
   key: 'tiburon_abisal', tex: TEX.miniboss, color: COLORS.caster,
-  hp: 520, speed: 85, damage: 30, radius: 28,
+  hp: 520, speed: 85, damage: 30, radius: 38,
   elite: true,
   movement: { type: 'burrow', submergeMs: 1600, emergeMs: 450, surfaceMs: 2500 },
   phases: [
