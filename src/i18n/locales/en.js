@@ -15,7 +15,7 @@ export default {
     caster: 'The Caster',
     unknown: '???',
     galahad: 'Sir Galahad',
-    mage: { fire: 'Fire Mage', water: 'Lady of the Lake', air: 'Air Mage', earth: 'Earth Mage' },
+    mage: { fire: 'Fire Mage', water: 'Madame Le Fay', air: 'Air Mage', earth: 'Earth Mage' },
   },
   region: {
     fire: { name: 'The Volcano' }, water: { name: 'The Lake' }, air: { name: 'The Mountain' },
