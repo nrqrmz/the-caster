@@ -6,7 +6,7 @@ import { COLORS, TEX } from '../../config.js';
 
 // Pyra — daño: ráfagas en cono + el suelo se llena de lava. Kite a media distancia.
 export const PYRA = {
-  key: 'pyra', tex: TEX.boss, color: COLORS.emberDeep, hp: 420, speed: 55, damage: 14, radius: 24,
+  key: 'pyra', tex: TEX.boss, color: COLORS.emberDeep, hp: 500, speed: 55, damage: 20, radius: 24,
   elite: true, movement: { type: 'kite', range: 240 },
   phases: [
     { from: 1.0, sequence: [
@@ -24,7 +24,7 @@ export const PYRA = {
 
 // Vesta — tanque/melee: embiste (charge), su contacto quema (onHitBurn), escudo.
 export const VESTA = {
-  key: 'vesta', tex: TEX.boss, color: COLORS.magma, hp: 520, speed: 80, damage: 18, radius: 26,
+  key: 'vesta', tex: TEX.boss, color: COLORS.magma, hp: 680, speed: 80, damage: 36, radius: 26,
   elite: true, movement: { type: 'charge', windup: 600, dash: 420, recover: 700, dashMul: 3 },
   modifiers: [{ type: 'onHitBurn', dps: 10, ms: 2500 }, { type: 'shielded', reduce: 0.3 }],
   phases: [
@@ -41,8 +41,8 @@ export const VESTA = {
 
 // Favilla — summoner/healer: invoca adds y cura (healAllies); huye, protegida.
 export const FAVILLA = {
-  key: 'favilla', tex: TEX.boss, color: COLORS.totemFire, hp: 480, speed: 70, damage: 10, radius: 24,
-  elite: true, movement: { type: 'flee' },
+  key: 'favilla', tex: TEX.boss, color: COLORS.totemFire, hp: 500, speed: 70, damage: 10, radius: 24,
+  elite: true, movement: { type: 'erratic' },
   modifiers: [{ type: 'healAllies', hps: 14, radius: 160 }],
   phases: [
     { from: 1.0, sequence: [
