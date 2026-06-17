@@ -117,6 +117,10 @@ const WHALE = [{ name: 'whale_body' }, { name: 'whale_eye', palette: 'glow' }, {
 // orb = orbblue. Her shark form reuses TIBURON_ABISAL; kraken/whale forms reuse those.
 const DAMA = [{ name: 'dama_gown' }, { name: 'dama_hair', palette: 'silverhair' }, { name: 'dama_skin', palette: 'skin' }, { name: 'dama_crown', palette: 'glow' }, { name: 'dama_orb', palette: 'orbblue' }];
 
+// Tentáculo de agua: sprite de zona lobAoe (brota del suelo con scaleY 0→1→0).
+// baseColor = COLORS.water (0x00bcd4); derivePalette genera la paleta cyan/teal.
+const TENTACLE = [{ name: 'tentacle_body' }];
+
 export const RECIPES = {
   hero: {
     // The redheaded princess. Each part composes against its own palette (per-part
@@ -130,6 +134,7 @@ export const RECIPES = {
       { name: 'orb_princess', palette: 'orbblue' },
     ],
   },
+  tentacle: { archetype: 'zone', size: 32, baseColor: 0x00bcd4, anim: { idle: 1, walk: 1 }, fps: 1, parts: TENTACLE },
   orb: { archetype: 'projectile', size: 32, baseColor: 0x80d8ff, anim: { idle: 2, walk: 1 }, fps: 8, parts: ['orb_body'] },
   fireball: { archetype: 'projectile', size: 32, baseColor: 0xff7043, anim: { idle: 3, walk: 1 }, fps: 10, parts: ['flame_body'] },
   arrow: { archetype: 'projectile', size: 32, baseColor: 0xfff176, anim: { idle: 1, walk: 1 }, fps: 1, parts: ['arrow_body'] },

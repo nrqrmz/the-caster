@@ -750,13 +750,33 @@ export default class GameScene extends Phaser.Scene {
 
   // Generic ground zone. opts: { x, y, radius, duration, color?, fire?, casterDps?, casterHeal?, enemyDps? }
   // Fire-colored zones (or opts.fire) render as animated lava on the shared lavaGfx; others keep a flat disk.
+  // Water-style zones (style:'water') render as a tentacle sprite that grows from the floor and retracts.
   spawnZone(opts) {
     const color = opts.color != null ? opts.color : COLORS.poison;
     const style = opts.style || (color === COLORS.fireball || color === COLORS.magma ? 'fire' : 'flat');
     const fire = style === 'fire' || opts.fire === true;
-    const gfx = fire ? null : this.add.circle(opts.x, opts.y, opts.radius, color, 0.30).setDepth(5);
+    // Water lobAoe zones: replace the flat disk with a tentacle sprite.
+    let gfx = null;
+    let tentacle = null;
+    if (style === 'water') {
+      const r = opts.radius ?? 60;
+      // Scale the 32-px texture to radius × 2 (width) and radius × 3 (full height).
+      const tsx = (r * 2) / 32;
+      const tsy = (r * 3) / 32;
+      tentacle = this.add.sprite(opts.x, opts.y, spriteKey('tentacle'))
+        .setOrigin(0.5, 1)   // anchor at bottom-center so it grows upward
+        .setAlpha(0.85)
+        .setDepth(5);
+      tentacle.scaleX = tsx;
+      tentacle.scaleY = 0;   // start collapsed; updateZones animates scaleY 0→tsy→0
+      tentacle._tsyFull = tsy; // target full scaleY stored on the sprite for updateZones
+    } else if (!fire) {
+      gfx = this.add.circle(opts.x, opts.y, opts.radius, color, 0.30).setDepth(5);
+    }
     this.zones.push({
-      x: opts.x, y: opts.y, radius: opts.radius, remaining: opts.duration, gfx, fire, style,
+      x: opts.x, y: opts.y, radius: opts.radius,
+      remaining: opts.duration, duration0: opts.duration,
+      gfx, fire, style, tentacle,
       casterDps: opts.casterDps || 0,
       casterHeal: opts.casterHeal || 0,
       enemyDps: opts.enemyDps || 0,
@@ -902,10 +922,19 @@ export default class GameScene extends Phaser.Scene {
         }
       }
       if (z.fire) this.drawLavaZone(z);
+      // Tentáculo de agua: animar scaleY según la fracción de vida de la zona.
+      // Brota (0→fullScale) en el primer 30%; se retrae en el último 30%.
+      if (z.tentacle) {
+        const lifeFrac = 1 - z.remaining / z.duration0; // 0→1 durante la vida
+        const grow    = Math.min(1, lifeFrac / 0.3);
+        const retract = Math.min(1, Math.max(0, (lifeFrac - 0.7) / 0.3));
+        z.tentacle.scaleY = (z.tentacle._tsyFull ?? 1) * Math.max(0, grow - retract);
+      }
     }
     this.zones = this.zones.filter((z) => {
       if (z.remaining > 0) return true;
       if (z.gfx) z.gfx.destroy(); // fire zones have no flat disk (drawn on the shared lavaGfx)
+      if (z.tentacle) z.tentacle.destroy();
       return false;
     });
   }
