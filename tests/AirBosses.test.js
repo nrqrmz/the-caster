@@ -1,0 +1,141 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, GALAHAD,
+} from '../src/data/bosses/air.js';
+
+const MINIBOSSES = [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA];
+const ALL = [...MINIBOSSES, LIDER_CULTISTA, GALAHAD];
+
+test('all five Air bosses are exported and flagged elite', () => {
+  for (const b of ALL) {
+    assert.ok(b && typeof b === 'object', 'boss def exists');
+    assert.equal(b.elite, true, `${b.key} must be elite`);
+  }
+});
+
+test('Air boss keys match the spec', () => {
+  assert.deepEqual(ALL.map((b) => b.key), [
+    'caballero_sangre', 'bruja_vendaval', 'elemental_tormenta', 'lider_cultista', 'galahad',
+  ]);
+});
+
+test('minibosses have well-formed phases (>=1, each with a sequence array)', () => {
+  for (const b of MINIBOSSES) {
+    assert.ok(Array.isArray(b.phases) && b.phases.length >= 1, `${b.key} has phases`);
+    for (const p of b.phases) {
+      assert.ok(Array.isArray(p.sequence) && p.sequence.length >= 1, `${b.key} phase has a sequence`);
+      assert.equal(typeof p.from, 'number', `${b.key} phase has a numeric 'from'`);
+    }
+  }
+});
+
+test('Caballero de Sangre matches spec stats (hp440/spd110/dmg20/r24) + drain modifier', () => {
+  assert.deepEqual(
+    [CABALLERO_SANGRE.hp, CABALLERO_SANGRE.speed, CABALLERO_SANGRE.damage, CABALLERO_SANGRE.radius],
+    [440, 110, 20, 24],
+  );
+  const drain = CABALLERO_SANGRE.modifiers.find((m) => m.type === 'drain');
+  assert.ok(drain && drain.heal === 10, 'drain heal 10');
+});
+
+test('Caballero juke decision: charge in P1, evade in P2', () => {
+  assert.equal(CABALLERO_SANGRE.movement.type, 'charge');
+  assert.equal(CABALLERO_SANGRE.phases[1].movement.type, 'evade');
+});
+
+test('Caballero P2 summons murcielago (count 2, cap 4, respawn 12000)', () => {
+  const s = CABALLERO_SANGRE.phases[1].sequence.find((x) => x.do === 'summon');
+  assert.ok(s, 'P2 has a summon');
+  assert.equal(s.spawnType, 'murcielago');
+  assert.equal(s.count, 2);
+  assert.equal(s.cap, 4);
+  assert.equal(s.respawnMs, 12000);
+});
+
+test('Bruja del Vendaval matches spec stats + lift/stun steps', () => {
+  assert.deepEqual(
+    [BRUJA_VENDAVAL.hp, BRUJA_VENDAVAL.speed, BRUJA_VENDAVAL.damage, BRUJA_VENDAVAL.radius],
+    [420, 75, 16, 26],
+  );
+  const hasLift = BRUJA_VENDAVAL.phases.some((p) => p.sequence.some((s) => s.lift === true));
+  const hasStun = BRUJA_VENDAVAL.phases.some((p) => p.sequence.some((s) => s.stun === true));
+  assert.ok(hasLift, 'Bruja has a lift step');
+  assert.ok(hasStun, 'Bruja has a stun step');
+});
+
+test('Elemental de Tormenta: static, big (r56), resist .20, 3 phases', () => {
+  assert.equal(ELEMENTAL_TORMENTA.movement.type, 'static');
+  assert.equal(ELEMENTAL_TORMENTA.radius, 56);
+  assert.equal(ELEMENTAL_TORMENTA.resist, 0.20);
+  assert.equal(ELEMENTAL_TORMENTA.hp, 680);
+  assert.equal(ELEMENTAL_TORMENTA.phases.length, 3);
+});
+
+test('Elemental phase thresholds 1.0/0.6/0.3; P2 and P3 enter spawnTornado', () => {
+  assert.deepEqual(ELEMENTAL_TORMENTA.phases.map((p) => p.from), [1.0, 0.6, 0.3]);
+  assert.ok(ELEMENTAL_TORMENTA.phases[1].enter?.includes('spawnTornado'));
+  assert.ok(ELEMENTAL_TORMENTA.phases[2].enter?.includes('spawnTornado'));
+});
+
+test('Líder Cultista has ritual + untargetable flags and two phases', () => {
+  assert.equal(LIDER_CULTISTA.ritual, true);
+  assert.equal(LIDER_CULTISTA.untargetable, true);
+  assert.equal(LIDER_CULTISTA.movement.type, 'static');
+  assert.equal(LIDER_CULTISTA.phases.length, 2);
+});
+
+test('Líder phase 0 channels (summons), phase 1 fights (no summon, from 0.0)', () => {
+  const p0 = LIDER_CULTISTA.phases[0];
+  const p1 = LIDER_CULTISTA.phases[1];
+  assert.ok(p0.sequence.some((s) => s.do === 'summon'), 'phase 0 summons');
+  assert.ok(!p1.sequence.some((s) => s.do === 'summon'), 'phase 1 does not summon');
+  assert.equal(p0.from, 1.0);
+  assert.equal(p1.from, 0.0, 'phase 1 is reached only via forcedPhase, never hp');
+});
+
+test('Galahad has 5 forms, all elite, with deathFeint flag', () => {
+  assert.equal(GALAHAD.deathFeint, true);
+  assert.ok(Array.isArray(GALAHAD.forms));
+  assert.equal(GALAHAD.forms.length, 5);
+  for (const f of GALAHAD.forms) assert.equal(f.elite, true, `${f.key} form elite`);
+});
+
+test('Galahad form keys in order', () => {
+  assert.deepEqual(GALAHAD.forms.map((f) => f.key), [
+    'galahad_humano', 'galahad_rage', 'galahad_rage2', 'galahad_murcielago', 'galahad_final',
+  ]);
+});
+
+test('Galahad forms have ascending resist across the first four forms', () => {
+  const r = GALAHAD.forms.slice(0, 4).map((f) => f.resist ?? 0);
+  assert.deepEqual(r, [0, 0.10, 0.20, 0.30]);
+  for (let i = 1; i < r.length; i++) assert.ok(r[i] > r[i - 1], `resist ascends at ${i}`);
+});
+
+test('Galahad form hp matches spec §4.5 (340/460/560/700/90)', () => {
+  assert.deepEqual(GALAHAD.forms.map((f) => f.hp), [340, 460, 560, 700, 90]);
+});
+
+test('Galahad Humano uses evade; Murcielago is flying with a push gust nova', () => {
+  assert.equal(GALAHAD.forms[0].movement.type, 'evade');
+  assert.equal(GALAHAD.forms[3].flying, true);
+  const gust = GALAHAD.forms[3].phases[0].sequence.find((s) => s.do === 'nova' && s.push);
+  assert.ok(gust, 'murcielago has a push nova');
+  assert.ok(gust.push.force > 0, 'push has a force');
+});
+
+test('Galahad Rage ×2 doubles Rage cadence/speed (spd 150, halved windup)', () => {
+  const rage = GALAHAD.forms[1];
+  const rage2 = GALAHAD.forms[2];
+  assert.equal(rage.speed, 110);
+  assert.equal(rage2.speed, 150);
+  assert.ok(rage2.movement.windup < rage.movement.windup, 'rage2 windup is shorter (faster cadence)');
+});
+
+test('last Galahad form is galahad_final with low hp + minimal kit', () => {
+  const last = GALAHAD.forms.at(-1);
+  assert.equal(last.key, 'galahad_final');
+  assert.ok(last.hp <= 100, `final hp low, got ${last.hp}`);
+  assert.equal(last.phases.length, 1, 'final has one phase (minimal kit)');
+});
