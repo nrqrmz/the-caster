@@ -45,8 +45,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     if (this.def.elite) return; // elites resist CC (freeze/slow ignored)
     this.freezeRemaining = Math.max(this.freezeRemaining, ms);
   }
-  applySlow(factor, ms) {
-    if (this.def.elite) return;
+  applySlow(factor, ms, force = false) {
+    if (this.def.elite && !force) return; // elites resist generic CC; `force` lets freeze apply a reduced slow
     // Fresh slow uses the new factor; stacking onto an active slow keeps the stronger (lower) one.
     this.slowFactor = this.slowRemaining > 0 ? Math.min(this.slowFactor, factor) : factor;
     this.slowRemaining = Math.max(this.slowRemaining, ms);

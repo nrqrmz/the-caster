@@ -822,10 +822,21 @@ export default class GameScene extends Phaser.Scene {
     const live = this.liveEnemies();
     const center = this.caster.nearestEnemy(live);
     if (!center) return false;
+    const baseDmg = this.stats.freezeDamage ?? 0;
     for (const e of live) {
       if (Phaser.Math.Distance.Between(center.x, center.y, e.x, e.y) > this.stats.freezeRadius) continue;
-      if (freezeEffect(e.def) === 'slow') e.applySlow(this.stats.freezeSlowPct, this.stats.freezeDuration);
-      else e.applyFreeze(this.stats.freezeDuration);
+      if (e.def.iceImmune) continue; // Madame Le Fay — immune to ice (no slow, no damage)
+      // Non-elite: freeze solid (max slow). Elite/boss: a reduced slow (forced past CC immunity).
+      let intensity;
+      if (freezeEffect(e.def) === 'slow') {
+        e.applySlow(this.stats.freezeSlowPct, this.stats.freezeDuration, true);
+        intensity = 1 - this.stats.freezeSlowPct; // scales with the slow strength (slow tree)
+      } else {
+        e.applyFreeze(this.stats.freezeDuration);
+        intensity = 1; // frozen solid = full bonus
+      }
+      // Bonus frost damage, scaled by how much the target is slowed (per-enemy + slow-tree synergy).
+      if (baseDmg > 0) this.hitEnemy(e, baseDmg * intensity);
     }
     this.flashCircle(center.x, center.y, this.stats.freezeRadius, COLORS.ice);
     return true;

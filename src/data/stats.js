@@ -32,6 +32,7 @@ export const BASE_STATS = {
   freezeRadius: 90,
   freezeDuration: 2500,
   freezeSlowPct: 0.5,
+  freezeDamage: 50,     // bonus frost damage at full intensity; scales per-enemy by how much it's slowed
 };
 
 // Hard floors so reductions can't break the game.

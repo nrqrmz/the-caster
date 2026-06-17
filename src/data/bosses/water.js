@@ -142,7 +142,7 @@ export const KRAKEN = {
 const DAMA_MAGA = {
   key: 'dama_maga', tex: TEX.boss, color: COLORS.ice,
   hp: 340, speed: 70, damage: 14, radius: 26, resist: 0,
-  elite: true,
+  elite: true, iceImmune: true, // Madame Le Fay — immune to ice (her own element)
   movement: { type: 'kite', range: 240 },
   phases: [
     { from: 1.0, sequence: [
@@ -162,7 +162,7 @@ const DAMA_MAGA = {
 const DAMA_TIBURON = {
   key: 'dama_tiburon', tex: TEX.boss, color: COLORS.caster,
   hp: 460, speed: 90, damage: 20, radius: 28, resist: 0.10,
-  elite: true,
+  elite: true, iceImmune: true,
   movement: { type: 'burrow', submergeMs: 1400, emergeMs: 450, surfaceMs: 2200 },
   phases: [
     { from: 1.0, sequence: [
@@ -181,7 +181,7 @@ const DAMA_TIBURON = {
 const DAMA_KRAKEN = {
   key: 'dama_kraken', tex: TEX.boss, color: COLORS.miniboss,
   hp: 580, speed: 30, damage: 18, radius: 38, resist: 0.20,
-  elite: true,
+  elite: true, iceImmune: true,
   movement: { type: 'static' },
   phases: [
     { from: 1.0, enter: ['spawnWhirlpool'], sequence: [
@@ -203,7 +203,7 @@ const DAMA_KRAKEN = {
 const DAMA_BALLENA = {
   key: 'dama_ballena', tex: TEX.boss, color: COLORS.boss,
   hp: 720, speed: 22, damage: 24, radius: 50, resist: 0.30,
-  elite: true,
+  elite: true, iceImmune: true,
   movement: { type: 'chase' }, // slow chase — the wall
   phases: [
     { from: 1.0, sequence: [
@@ -228,7 +228,7 @@ const DAMA_BALLENA = {
 const DAMA_MAGA_FINAL = {
   key: 'dama_maga_final', tex: TEX.boss, color: COLORS.ice,
   hp: 320, speed: 55, damage: 10, radius: 24, resist: 0,
-  elite: true,
+  elite: true, iceImmune: true,
   movement: { type: 'kite', range: 240 },
   phases: [
     { from: 1.0, sequence: [
@@ -244,7 +244,7 @@ const DAMA_MAGA_FINAL = {
 export const DAMA_LAGO = {
   key: 'dama_lago', tex: TEX.boss, color: COLORS.ice,
   hp: 340, speed: 70, damage: 14, radius: 26,
-  elite: true,
+  elite: true, iceImmune: true, // Madame Le Fay — immune to ice (her own element)
   scaleForms: true, // forms' hp/damage scale with difficulty (temple-boss tier), like every other boss
   movement: { type: 'kite', range: 240 },
   forms: [DAMA_MAGA, DAMA_TIBURON, DAMA_KRAKEN, DAMA_BALLENA, DAMA_MAGA_FINAL],
