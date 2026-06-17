@@ -148,6 +148,15 @@ export const MOVEMENTS = {
     }
     return { x: Math.cos(state.heading) * speed, y: Math.sin(state.heading) * speed };
   },
+
+  holdAt({ self, speed, params }) {
+    const p = params?.point;
+    if (!p) return { x: 0, y: 0 };
+    const d = distance(self.x, self.y, p.x, p.y);
+    if (d < 8) return { x: 0, y: 0 }; // llegó al anchor: se queda quieto
+    const a = angleBetween(self.x, self.y, p.x, p.y);
+    return { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+  },
 };
 
 export function computeMovement(def, state, ctx) {
@@ -310,4 +319,23 @@ export function pushOutsideRing(point, center, minDist) {
   if (d === 0) return { x: center.x + minDist, y: center.y };
   const k = minDist / d;
   return { x: center.x + dx * k, y: center.y + dy * k };
+}
+
+// PURE. Movimiento de cada hermana viva según cuántas quedan (setpiece nv7 fuego).
+// 3+: Vesta (cazadora) persigue; las flanqueadoras sostienen anchors → triángulo amplio.
+// 2:  ambas kitean con rangos distintos para mantenerse separadas → la línea de río se ve.
+// 1:  cada una usa su propio kit (baseMovement); el río degrada solo.
+export function sisterFormation(live, anchors) {
+  const n = live.length;
+  if (n >= 3) {
+    let ai = 0;
+    return live.map((s) => (s.isChaser
+      ? { type: 'chase' }
+      : { type: 'holdAt', point: anchors[ai++] }));
+  }
+  if (n === 2) {
+    const ranges = [200, 290];
+    return live.map((_, i) => ({ type: 'kite', range: ranges[i] }));
+  }
+  return live.map((s) => s.baseMovement);
 }

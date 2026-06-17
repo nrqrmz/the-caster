@@ -344,3 +344,46 @@ test('pushOutsideRing usa ángulo 0 cuando el punto coincide con el centro', () 
   assert.equal(p.y, 100);
 });
 
+import { sisterFormation } from '../src/systems/EnemyBrain.js';
+
+test('holdAt avanza hacia el punto y se detiene al llegar', () => {
+  const far = computeMovement(
+    { movement: { type: 'holdAt', point: { x: 100, y: 0 } } }, {},
+    { self: { x: 0, y: 0 }, target: { x: 999, y: 999 }, speed: 60, dt: 16 });
+  assert.ok(far.x > 0 && Math.abs(far.y) < 1e-6);            // va hacia el punto, ignora al target
+  const near = computeMovement(
+    { movement: { type: 'holdAt', point: { x: 3, y: 0 } } }, {},
+    { self: { x: 0, y: 0 }, target: { x: 999, y: 0 }, speed: 60, dt: 16 });
+  assert.equal(near.x, 0); assert.equal(near.y, 0);          // dentro de 8px: se queda quieto
+});
+
+test('sisterFormation con 3 vivas: cazadora persigue, flancos a los anchors', () => {
+  const anchors = [{ x: 90, y: 240 }, { x: 390, y: 240 }];
+  const live = [
+    { isChaser: false, baseMovement: { type: 'kite', range: 240 } },
+    { isChaser: true,  baseMovement: { type: 'chase' } },
+    { isChaser: false, baseMovement: { type: 'kite', range: 240 } },
+  ];
+  const out = sisterFormation(live, anchors);
+  assert.deepEqual(out[0], { type: 'holdAt', point: { x: 90, y: 240 } });
+  assert.deepEqual(out[1], { type: 'chase' });
+  assert.deepEqual(out[2], { type: 'holdAt', point: { x: 390, y: 240 } });
+});
+
+test('sisterFormation con 2 vivas: ambas kite con rangos distintos (separadas)', () => {
+  const live = [
+    { isChaser: true, baseMovement: { type: 'chase' } },
+    { isChaser: false, baseMovement: { type: 'kite', range: 240 } },
+  ];
+  const out = sisterFormation(live, []);
+  assert.equal(out[0].type, 'kite');
+  assert.equal(out[1].type, 'kite');
+  assert.notEqual(out[0].range, out[1].range); // rangos distintos → no se enciman
+});
+
+test('sisterFormation con 1 viva: usa su propio kit (baseMovement)', () => {
+  const live = [{ isChaser: false, baseMovement: { type: 'kite', range: 240 } }];
+  const out = sisterFormation(live, []);
+  assert.deepEqual(out[0], { type: 'kite', range: 240 });
+});
+
