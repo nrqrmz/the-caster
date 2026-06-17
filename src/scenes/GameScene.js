@@ -24,6 +24,7 @@ import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/Whirlpoo
 import { lavaPulse, lavaRimAlpha, lavaSpots, lavaEmbers, lavaEdgeEmbers, lerpColor, LAVA } from '../systems/LavaField.js';
 import { FormSequencer } from '../systems/FormSequencer.js';
 import { hasRecipe } from '../data/sprites/recipes.js';
+import { PROJECTILES, resolveProjectile } from '../data/projectiles.js';
 import { FacingController } from '../objects/FacingController.js';
 import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
@@ -39,6 +40,7 @@ export default class GameScene extends Phaser.Scene {
     this.regionId = data.regionId || 'fire';
     this.levelIndex = data.levelIndex || 0;
     this.region = REGIONS[this.regionId];
+    this.regionElement = this.region.element; // 'fire'|'water'|… o null (castillo)
     this.level = this.region.levels[this.levelIndex];
     this.stats = data.stats || { ...BASE_STATS };
 
@@ -74,6 +76,8 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
     this.casterBurnRemaining = 0;
     this.casterBurnDps = 0;
+    this.casterPoisonRemaining = 0;
+    this.casterPoisonDps = 0;
     this.scene.launch('UI', { gameScene: this });
 
     this.runner = new WaveRunner(this.level);
@@ -118,6 +122,7 @@ export default class GameScene extends Phaser.Scene {
       this.damageCaster(shot.damage);
       if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
       if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
+      if (shot.poisonDps > 0) this.applyCasterPoison(shot.poisonDps, shot.poisonMs);
       this.enemyShots.despawn(shot);
     });
   }
@@ -520,7 +525,13 @@ export default class GameScene extends Phaser.Scene {
       if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
       return;
     }
-    const burn = findModifier(enemy.def, 'onHitBurn');
+    const type = resolveProjectile(att, this.regionElement);
+    const spec = PROJECTILES[type] || PROJECTILES.arrow;
+    const eff = spec.effect;
+    // Un modifier onHit* presente afina los parámetros del efecto de su tipo
+    // (p. ej. elemental_fuego quema más fuerte) sin duplicar la aplicación.
+    const burnMod = eff && eff.kind === 'burn' ? findModifier(enemy.def, 'onHitBurn') : null;
+    const slowMod = eff && eff.kind === 'slow' ? findModifier(enemy.def, 'onHitSlow') : null;
     const projs = buildProjectiles(att, {
       self: { x: enemy.x, y: enemy.y },
       target: { x: this.caster.x, y: this.caster.y },
@@ -529,11 +540,13 @@ export default class GameScene extends Phaser.Scene {
     for (const p of projs) {
       const tx = enemy.x + Math.cos(p.angle) * 50;
       const ty = enemy.y + Math.sin(p.angle) * 50;
-      const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
+      const shot = this.enemyShots.fire(spec.tex, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
       if (!shot) continue;
-      shot.setTint(COLORS.fireball); // enemy shots read clearly distinct from the player's cyan orbs
+      shot.setTint(spec.tint); // disparos enemigos distinguibles del orbe cian del jugador
       if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; shot.homingLife = HOMING_TTL_MS; }
-      if (burn) { shot.burnDps = burn.dps ?? 6; shot.burnMs = burn.ms ?? 2000; }
+      if (eff && eff.kind === 'burn') { shot.burnDps = burnMod?.dps ?? eff.dps; shot.burnMs = burnMod?.ms ?? eff.ms; }
+      else if (eff && eff.kind === 'slow') { shot.slowFactor = slowMod?.factor ?? eff.factor; shot.slowMs = slowMod?.ms ?? eff.ms; }
+      else if (eff && eff.kind === 'dot') { shot.poisonDps = eff.dps; shot.poisonMs = eff.ms; }
     }
   }
 
@@ -646,6 +659,7 @@ export default class GameScene extends Phaser.Scene {
     }
     this.updateBurns(delta);
     this.updateCasterBurn(delta);
+    this.updateCasterPoison(delta);
     this.caster.moveBy(this.joystick.vector);
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
@@ -887,6 +901,19 @@ export default class GameScene extends Phaser.Scene {
     if (this.casterBurnRemaining <= 0) { this.casterBurnDps = 0; return; }
     this.casterBurnRemaining -= delta;
     this.damageCaster(this.casterBurnDps * (delta / 1000));
+  }
+
+  applyCasterPoison(dps, ms) {
+    this.casterPoisonDps = Math.max(this.casterPoisonDps, dps);
+    this.casterPoisonRemaining = Math.max(this.casterPoisonRemaining, ms);
+    this.caster.setTint(COLORS.poison);
+    this.time.delayedCall(200, () => this.caster.clearTint());
+  }
+
+  updateCasterPoison(delta) {
+    if (this.casterPoisonRemaining <= 0) { this.casterPoisonDps = 0; return; }
+    this.casterPoisonRemaining -= delta;
+    this.damageCaster(this.casterPoisonDps * (delta / 1000));
   }
 
   updateBurns(delta) {
