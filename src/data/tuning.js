@@ -49,8 +49,9 @@ export const WHIRLPOOL_COOLDOWN_MS = 5000;    // gap before the boss can trigger
 
 // Burrow movement.
 export const BURROW_SUBMERGE_MS = 1500;       // invuln + hidden window
-export const BURROW_TELEGRAPH_MS = 400;       // surface-warning ring duration
-export const BURROW_RECOVER_MS = 600;         // vulnerable window after the dash
+export const BURROW_TELEGRAPH_MS = 450;       // surface-warning ring duration (antes 400)
+export const BURROW_SURFACE_MS = 2500;        // ventana de superficie/persecución vulnerable
+export const BURROW_RECOVER_MS = 600;         // (legacy; ya no usado por el nuevo flujo)
 
 // Frog lifecycle (generational summon).
 export const EGG_HATCH_MS = 2500;             // egg → tadpole (antes 3500)
