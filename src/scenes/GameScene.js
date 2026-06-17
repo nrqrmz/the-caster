@@ -207,7 +207,15 @@ export default class GameScene extends Phaser.Scene {
       this.boss._ritualTaunt = 0;
     }
     if (def.forms && def.forms.length) {
-      this.boss._formSeq = new FormSequencer(def.forms);
+      // `scaleForms` (opt-in) pre-scales every form's hp/damage/resist by difficulty BEFORE
+      // the sequencer, so the depleted pool (FormSequencer.currentHp) is the scaled value —
+      // otherwise forms fight at raw hp and bypass difficulty (bug). Without the flag the
+      // legacy raw path is kept (_applyBossForm scales boss.maxHp only).
+      const forms = def.scaleForms
+        ? def.forms.map((f) => scaleEnemyDef({ elite: true, ...f }, this.diff))
+        : def.forms;
+      this.boss._formsPreScaled = !!def.scaleForms;
+      this.boss._formSeq = new FormSequencer(forms);
       // Bootstrap the boss def to the first form.
       this._applyBossForm(this.boss, 0);
     }
@@ -218,7 +226,8 @@ export default class GameScene extends Phaser.Scene {
     const form = boss._formSeq.forms[formIndex];
     // Each form is an elite creature; scale its hp/damage + combine resist the same
     // way spawnBoss scaled the base def, otherwise raw form.hp bypasses difficulty.
-    const scaledForm = scaleEnemyDef({ elite: true, ...form }, this.diff);
+    // When forms were pre-scaled (scaleForms), they're already scaled — don't double it.
+    const scaledForm = boss._formsPreScaled ? form : scaleEnemyDef({ elite: true, ...form }, this.diff);
     // Merge scaled form fields onto def (movement, speed, damage, hp, resist).
     boss.def = { ...boss.def, ...scaledForm };
     boss.hp = scaledForm.hp;

@@ -245,6 +245,7 @@ export const DAMA_LAGO = {
   key: 'dama_lago', tex: TEX.boss, color: COLORS.ice,
   hp: 340, speed: 70, damage: 14, radius: 26,
   elite: true,
+  scaleForms: true, // forms' hp/damage scale with difficulty (temple-boss tier), like every other boss
   movement: { type: 'kite', range: 240 },
   forms: [DAMA_MAGA, DAMA_TIBURON, DAMA_KRAKEN, DAMA_BALLENA, DAMA_MAGA_FINAL],
 };
