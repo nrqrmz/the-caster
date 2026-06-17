@@ -6,12 +6,13 @@ import {
   CONCURRENCY_CAP, ENEMY_SHOT_POOL, HOMING_TTL_MS,
   WHIRLPOOL_RADIUS, WHIRLPOOL_ACTIVE_MS, WHIRLPOOL_COOLDOWN_MS, WHIRLPOOL_TELEGRAPH_MS,
   LAVA_RIVER_COOLDOWN_MS, LAVA_RIVER_TELEGRAPH_MS, LAVA_RIVER_ACTIVE_MS, LAVA_RIVER_DPS,
+  MELEE_CONTACT_CD,
 } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
-import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist } from '../systems/CombatSystem.js';
+import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist, tryMeleeContact } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, difficultyContext, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
@@ -114,7 +115,9 @@ export default class GameScene extends Phaser.Scene {
     });
     this.physics.add.overlap(this.caster, this.enemies, (caster, enemy) => {
       if (!enemy.active) return;
-      this.damageCaster(enemy.def.damage * 0.02 * 16);
+      // Golpe de contacto discreto con i-frames por enemigo (antes drenaba cada frame).
+      if (!tryMeleeContact(enemy, this.time.now, MELEE_CONTACT_CD)) return;
+      this.damageCaster(enemy.def.damage);
       const burn = findModifier(enemy.def, 'onHitBurn');
       if (burn) this.applyCasterBurn(burn.dps ?? 6, burn.ms ?? 2000);
       const slow = findModifier(enemy.def, 'onHitSlow');
