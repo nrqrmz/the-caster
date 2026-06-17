@@ -101,3 +101,73 @@ test('tryMeleeContact vuelve a permitir tras el cooldown', () => {
   assert.equal(tryMeleeContact(e, 1600, 600), true); // exactamente al expirar
   assert.equal(e.contactReadyAt, 2200);
 });
+
+import {
+  applyCasterCc, tickCasterCc, isControlLocked,
+  applyCasterPush, tickCasterPush, getCasterPush, applyDrain,
+} from '../src/systems/CombatSystem.js';
+import { CASTER_STUN_MS, CASTER_LIFT_MS, CC_IMMUNE_MS } from '../src/data/tuning.js';
+
+function freshCc() {
+  return { stunRemaining: 0, liftRemaining: 0, ccImmuneRemaining: 0 };
+}
+
+test('applyCasterCc sets stun and returns true on a fresh state', () => {
+  const s = freshCc();
+  assert.equal(applyCasterCc(s, 'stun', CASTER_STUN_MS), true);
+  assert.equal(s.stunRemaining, CASTER_STUN_MS);
+  assert.equal(isControlLocked(s), true);
+});
+
+test('applyCasterCc sets lift independently of stun', () => {
+  const s = freshCc();
+  applyCasterCc(s, 'lift', CASTER_LIFT_MS);
+  assert.equal(s.liftRemaining, CASTER_LIFT_MS);
+  assert.equal(isControlLocked(s), true);
+});
+
+test('applyCasterCc is ignored (returns false) while ccImmune is active', () => {
+  const s = { stunRemaining: 0, liftRemaining: 0, ccImmuneRemaining: 200 };
+  assert.equal(applyCasterCc(s, 'stun', CASTER_STUN_MS), false);
+  assert.equal(s.stunRemaining, 0);
+  assert.equal(isControlLocked(s), false);
+});
+
+test('tickCasterCc decrements stun and arms ccImmune when it expires', () => {
+  const s = freshCc();
+  applyCasterCc(s, 'stun', 100);
+  tickCasterCc(s, 60);
+  assert.equal(s.stunRemaining, 40);
+  assert.equal(s.ccImmuneRemaining, 0); // not expired yet
+  tickCasterCc(s, 60); // expires this frame
+  assert.equal(s.stunRemaining, 0);
+  assert.equal(s.ccImmuneRemaining, CC_IMMUNE_MS);
+  assert.equal(isControlLocked(s), false);
+});
+
+test('a second stun is blocked during the immunity window, then allowed after it decays', () => {
+  const s = freshCc();
+  applyCasterCc(s, 'stun', 50);
+  tickCasterCc(s, 60); // stun expires → ccImmune armed
+  assert.equal(applyCasterCc(s, 'stun', 300), false); // blocked
+  tickCasterCc(s, CC_IMMUNE_MS); // immunity decays to 0
+  assert.equal(s.ccImmuneRemaining, 0);
+  assert.equal(applyCasterCc(s, 'stun', 300), true); // allowed again
+});
+
+test('applyCasterPush sets a decaying impulse; getCasterPush returns it then zero', () => {
+  const s = { pushX: 0, pushY: 0, pushRemaining: 0 };
+  applyCasterPush(s, 200, 0, 250);
+  assert.deepEqual(getCasterPush(s), { x: 200, y: 0 });
+  tickCasterPush(s, 250); // fully decays
+  assert.equal(s.pushRemaining, 0);
+  assert.deepEqual(getCasterPush(s), { x: 0, y: 0 });
+});
+
+test('applyDrain heals an entity, clamped to maxHp', () => {
+  const e = { hp: 30, maxHp: 50 };
+  applyDrain(e, 8);
+  assert.equal(e.hp, 38);
+  applyDrain(e, 999);
+  assert.equal(e.hp, 50); // clamped
+});
