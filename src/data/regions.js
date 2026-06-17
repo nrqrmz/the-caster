@@ -5,6 +5,7 @@ import { TEX, COLORS } from '../config.js';
 import { makeLevel } from './levelBuilder.js';
 import { PYRA, VESTA, FAVILLA, SISTERS_TRIO, IGNATIUS } from './bosses/fire.js';
 import { SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL, KRAKEN, DAMA_LAGO } from './bosses/water.js';
+import { CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, GALAHAD } from './bosses/air.js';
 
 const wave = (spawnDelay, spawns) => ({ spawnDelay, spawns });
 const ramp = (base, tier) => Math.round(base * (1 + 0.4 * (tier - 1)));
@@ -164,7 +165,7 @@ const MECHANICS = {
 };
 
 // Build a standard elemental branch: 8 levels, one boss per level.
-function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, levelBoss = null, templeBoss = null }) {
+function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, levelBoss = null, templeBoss = null, onClear = null }) {
   // nv7 is a dedicated levelboss level (boss only): the trio (multi-boss + lava
   // triangle) when provided, else a single default level-boss blob.
   const levelBossSpec = levelBosses
@@ -183,7 +184,7 @@ function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines
     makeLevel(`${id}_8`, id, 'temple', {
       templeBoss: templeBoss || tb(950, 26, MECHANICS[element]),
       minions: [{ type: 'villager', count: 4 }],
-      dialogue: { onClear: mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'speaker.caster' : mageName, text })) },
+      dialogue: { onClear: onClear || mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'speaker.caster' : mageName, text })) },
     }),
   ];
   return { id, element, name, grantsSkill, locked: false, levels };
@@ -246,13 +247,19 @@ export const REGIONS = {
   air: makeBranch({
     id: 'air', element: 'air', name: 'region.air.name', grantsSkill: 'lightning',
     basic: airWaves, inter: airInterWaves,
-    // TODO(Plan 3): wire minibosses: [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA],
-    //              levelBoss: LIDER_CULTISTA (ritual, meter-driven), templeBoss: GALAHAD (forms).
+    minibosses: [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA],
+    levelBoss: LIDER_CULTISTA,
+    templeBoss: GALAHAD,
     intro: [{ speaker: 'speaker.narrator', text: 'story.air.intro.0' }],
     mageName: 'speaker.mage.air',
     mageLines: [
       'story.air.mage.0',
       'story.air.mage.1',
+    ],
+    onClear: [
+      { speaker: 'speaker.galahad', text: 'story.air.galahad.clear.0' },
+      { speaker: 'speaker.galahad', text: 'story.air.galahad.clear.1' },
+      { speaker: 'speaker.caster',  text: 'story.air.galahad.clear.2' },
     ],
   }),
   earth: makeBranch({
