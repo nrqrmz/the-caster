@@ -1,13 +1,12 @@
 // BLOOD KNIGHT boss (caballero_sangre) — bespoke res:32 parts for the air-world nv4 boss.
 // Vampire-lord in blood-red + black plate armor: menacing visored helmet (no crown),
-// black flowing cape anchored to massive Saga-style pauldrons, slimmer/taller torso,
-// greaves, and a large two-handed greatsword with a blood-red gleam.
+// straight vertical black cape hanging behind, slim/tall torso, greaves, greatsword.
 //
 // Parts emitted (back-to-front composition order):
-//   bk_cape      — wide flowing black cape, wide at bottom, narrows at shoulder band
-//   bk_sword     — large two-handed greatsword with blood-gleam accent pixels
+//   bk_cape      — straight vertical black cape centered behind torso/legs
 //   bk_body      — full-height (h=32) armored lord: visor helm, red plate, black undersuit
-//   bk_pauldrons — massive ornate Saga-style shoulder pauldrons over cape + body
+//   bk_pauldrons — shoulder pauldrons (smaller, boss-worthy but not head-sized)
+//   bk_sword     — large two-handed greatsword with blood-gleam accent pixels
 //   bk_eyes      — red glowing eyes (vampglow palette)
 //
 // Run: node tools/gen-airboss.mjs
@@ -29,33 +28,29 @@ function disk(L, cx0, cy0, r, role) {
       if (((x - cx0) / r) ** 2 + ((y - cy0) / r) ** 2 <= 1) put(L, x, y, role);
 }
 
-// ============================ BK_CAPE (flowing black cape, drawn behind everything) ============================
-// The cape hangs from the shoulders (y≈12) and fans wide at the bottom (y≈31).
-// Uses vampblack palette: o=outline(black), b=base(near-black), s=shade(darker), h=highlight(dark-plum)
-// Cape silhouette: narrow at top (shoulder attachment band), fans out wide toward bottom.
-// Left edge: x=5 at top (y=12), fans to x=1 at bottom (y=31)
-// Right edge: x=27 at top (y=12), fans to x=30 at bottom (y=31)
-for (let y = 12; y <= 31; y++) {
-  const t = (y - 12) / 19; // 0..1
-  // Fan from narrow shoulder attach to wide bottom
-  const halfTop = 5, halfBot = 14;
-  const half = halfTop + (halfBot - halfTop) * t;
-  const Lx = Rd(cx - half), Rx = Rd(cx + half);
+// ============================ BK_CAPE (straight vertical drape centered behind the body) ============================
+// The cape falls STRAIGHT DOWN from the shoulder band at y=11 to the bottom of the figure (y=31).
+// Width is UNIFORM (not fanning) — it's a vertical curtain centered on cx.
+// Uses vampblack palette: o=outline, b=base(near-black), s=shade, h=highlight(dark-plum)
+// Cape width: 13px (cx-6 to cx+6) — narrower than the old fan, clean vertical hang.
+const CAPE_HALF = 6; // half-width of the cape body
+for (let y = 10; y <= 31; y++) {
+  const Lx = cx - CAPE_HALF, Rx = cx + CAPE_HALF;
   for (let x = Lx; x <= Rx; x++) {
     let r = 'b';
     if (x === Lx || x === Rx) r = 'o';
     else if (x === Lx + 1 || x === Rx - 1) r = 's';
     // highlight drape folds: two vertical highlight lines suggesting fabric folds
-    else if (x === cx - 3 || x === cx + 3) r = 'h';
+    else if (x === cx - 2 || x === cx + 2) r = 'h';
     put('bk_cape', x, y, r);
   }
 }
-// Cape top band at shoulder level (y=11..12) — narrower, connects to pauldrons
+// Cape top band at shoulder level (y=9..10) — narrower attachment band
 for (let x = cx - 4; x <= cx + 4; x++) {
-  put('bk_cape', x, 11, x === cx - 4 || x === cx + 4 ? 'o' : 's');
+  put('bk_cape', x, 9, x === cx - 4 || x === cx + 4 ? 'o' : 's');
 }
-// Drape wrinkle accents — a few horizontal 'h' strokes suggesting layered cloth folds
-for (let x = cx - 10; x <= cx + 10; x++) {
+// Horizontal drape accent rows — subtle shade/highlight stripes across the vertical hang
+for (let x = cx - CAPE_HALF + 1; x <= cx + CAPE_HALF - 1; x++) {
   if (layers['bk_cape'][`${x},16`] === 'b') put('bk_cape', x, 16, 'h');
   if (layers['bk_cape'][`${x},22`] === 'b') put('bk_cape', x, 22, 's');
   if (layers['bk_cape'][`${x},27`] === 'b') put('bk_cape', x, 27, 'h');
@@ -168,84 +163,74 @@ for (let y = 22; y <= 24; y++) {
   for (const x of [21, 22, 23, 24]) put('bk_body', x, y, x === 21 || x === 24 ? 'o' : 's');
 }
 
-// ---- Faulds / hip guards (y 23..26) ----
-for (let y = 23; y <= 26; y++) {
-  const half = 6, Lx = Rd(cx - half), Rx = Rd(cx + half);
+// ---- Faulds / hip guards (y 23..25) — NARROWER, no flare ----
+// Keep them close to the torso width to avoid wide-hip look
+for (let y = 23; y <= 25; y++) {
+  const half = 5, Lx = Rd(cx - half), Rx = Rd(cx + half);
   for (let x = Lx; x <= Rx; x++) {
     put('bk_body', x, y, x === Lx || x === Rx ? 'o' : ((y - 23) % 2 === 0 ? 'b' : 's'));
   }
 }
 
-// ---- Greaves (y 26..31) — two separate leg pillars ----
-for (let y = 26; y <= 31; y++) {
-  // Left greave: x=11..13
-  for (const x of [11, 12, 13]) put('bk_body', x, y, x === 11 || x === 13 ? 'o' : 'b');
-  put('bk_body', 12, y, 'h');
-  // Right greave: x=19..21
-  for (const x of [19, 20, 21]) put('bk_body', x, y, x === 19 || x === 21 ? 'o' : 'b');
-  put('bk_body', 20, y, 'h');
+// ---- Greaves (y 25..31) — legs CLOSE TOGETHER, no gap between them ----
+// Left greave: x=13..15, Right greave: x=17..19 (only 1-px gap at center)
+for (let y = 25; y <= 31; y++) {
+  // Left greave: x=13..15
+  for (const x of [13, 14, 15]) put('bk_body', x, y, x === 13 || x === 15 ? 'o' : 'b');
+  put('bk_body', 14, y, 'h');
+  // Right greave: x=17..19
+  for (const x of [17, 18, 19]) put('bk_body', x, y, x === 17 || x === 19 ? 'o' : 'b');
+  put('bk_body', 18, y, 'h');
 }
 // Sabatons (foot plates) at y=31
-for (const x of [10, 11, 12, 13, 14]) put('bk_body', x, 31, x === 10 || x === 14 ? 'o' : 's');
-for (const x of [18, 19, 20, 21, 22]) put('bk_body', x, 31, x === 18 || x === 22 ? 'o' : 's');
+for (const x of [12, 13, 14, 15, 16]) put('bk_body', x, 31, x === 12 || x === 16 ? 'o' : 's');
+for (const x of [16, 17, 18, 19, 20]) put('bk_body', x, 31, x === 16 || x === 20 ? 'o' : 's');
 
-// ============================ BK_PAULDRONS (massive Saga-style shoulder armor) ============================
-// Big regal pauldrons from which the cape drapes. Drawn in front of body+cape.
-// Uses steel palette (per recipe): crisp metallic plates with red accent trim band.
-// Left pauldron: center at cx-10, right at cx+10; y range 9..18
+// ============================ BK_PAULDRONS (shoulder armor — SMALLER, boss-worthy but not head-sized) ============================
+// Drawn in front of body+cape. Inherits recipe's red type-color (no palette override in recipe).
+// Left pauldron: center at cx-9, right at cx+9; y range 10..16 (reduced from 9..19).
+// Radius ~3 (reduced from 4..4.5), no decorative upper crest to keep footprint down.
 
-// Left pauldron
-// Main plate (large rounded shoulder piece)
-for (let y = 10; y <= 17; y++) {
-  const r_half = (y <= 12) ? 4.0 : (y <= 14) ? 4.5 : (y <= 16) ? 4.2 : 3.5;
-  const px = cx - 10;
+// Left pauldron — main plate
+for (let y = 10; y <= 15; y++) {
+  const r_half = (y <= 11) ? 2.5 : (y <= 13) ? 3.0 : (y <= 14) ? 2.8 : 2.2;
+  const px = cx - 9;
   const Lx = Rd(px - r_half), Rx = Rd(px + r_half);
   for (let x = Lx; x <= Rx; x++) {
     let r = 'b';
     if (x === Lx || x === Rx) r = 'o';
     else if (x === Lx + 1) r = 'h';
     else if (x === Rx - 1) r = 's';
-    if (y === 14) r = 'a'; // red accent band mid-pauldron (type color bleeds as accent)
-    if ((x === Lx || x === Rx) && y === 14) r = 'o'; // keep outline
+    if (y === 13) r = 'a'; // red accent band mid-pauldron
+    if ((x === Lx || x === Rx) && y === 13) r = 'o'; // keep outline
     put('bk_pauldrons', x, y, r);
   }
 }
-// Upper crest of left pauldron — decorative layered edge
-for (let y = 9; y <= 11; y++) {
-  for (const x of [cx - 13, cx - 12, cx - 11, cx - 10, cx - 9]) {
-    put('bk_pauldrons', x, y, x === cx - 13 || x === cx - 9 ? 'o' : 'h');
-  }
-}
-// Lower rim lames (stacked bands)
-for (let y = 17; y <= 19; y++) {
-  const px = cx - 10;
-  const w2 = 4 - (y - 17);
+// Left lower rim lames (2 stacked bands)
+for (let y = 15; y <= 16; y++) {
+  const px = cx - 9;
+  const w2 = 3 - (y - 15);
   for (let x = px - w2; x <= px + w2; x++) put('bk_pauldrons', x, y, x === px - w2 || x === px + w2 ? 'o' : 's');
 }
 
 // Right pauldron (mirror)
-for (let y = 10; y <= 17; y++) {
-  const r_half = (y <= 12) ? 4.0 : (y <= 14) ? 4.5 : (y <= 16) ? 4.2 : 3.5;
-  const px = cx + 10;
+for (let y = 10; y <= 15; y++) {
+  const r_half = (y <= 11) ? 2.5 : (y <= 13) ? 3.0 : (y <= 14) ? 2.8 : 2.2;
+  const px = cx + 9;
   const Lx = Rd(px - r_half), Rx = Rd(px + r_half);
   for (let x = Lx; x <= Rx; x++) {
     let r = 'b';
     if (x === Lx || x === Rx) r = 'o';
     else if (x === Rx - 1) r = 'h';
     else if (x === Lx + 1) r = 's';
-    if (y === 14) r = 'a';
-    if ((x === Lx || x === Rx) && y === 14) r = 'o';
+    if (y === 13) r = 'a';
+    if ((x === Lx || x === Rx) && y === 13) r = 'o';
     put('bk_pauldrons', x, y, r);
   }
 }
-for (let y = 9; y <= 11; y++) {
-  for (const x of [cx + 9, cx + 10, cx + 11, cx + 12, cx + 13]) {
-    put('bk_pauldrons', x, y, x === cx + 9 || x === cx + 13 ? 'o' : 'h');
-  }
-}
-for (let y = 17; y <= 19; y++) {
-  const px = cx + 10;
-  const w2 = 4 - (y - 17);
+for (let y = 15; y <= 16; y++) {
+  const px = cx + 9;
+  const w2 = 3 - (y - 15);
   for (let x = px - w2; x <= px + w2; x++) put('bk_pauldrons', x, y, x === px - w2 || x === px + w2 ? 'o' : 's');
 }
 

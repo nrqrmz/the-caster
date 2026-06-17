@@ -41,9 +41,9 @@ const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
 // Layer order back-to-front: cape → sword → body → pauldrons → eyes.
 const BLOOD_KNIGHT = [
   { name: 'bk_cape', palette: 'vampblack' },
-  { name: 'bk_sword', palette: 'steel' },
   { name: 'bk_body' },
-  { name: 'bk_pauldrons', palette: 'steel' },
+  { name: 'bk_pauldrons' },
+  { name: 'bk_sword', palette: 'steel' },
   { name: 'bk_eyes', palette: 'vampglow' },
 ];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
