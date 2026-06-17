@@ -24,10 +24,24 @@ test('minibosses each have exactly 2 phases', () => {
   }
 });
 
-test('Kraken has 3 phases; phase 2 and 3 enter spawnWhirlpool', () => {
+test('Kraken has 3 phases; whirlpool is sustained from phase 1', () => {
   assert.equal(KRAKEN.phases.length, 3);
-  assert.ok(KRAKEN.phases[1].enter?.includes('spawnWhirlpool'), 'Kraken p2 enters whirlpool');
-  assert.ok(KRAKEN.phases[2].enter?.includes('spawnWhirlpool'), 'Kraken p3 enters whirlpool');
+  assert.ok(KRAKEN.phases[0].enter?.includes('sustainWhirlpool'), 'Kraken p1 starts the sustained whirlpool');
+});
+
+test('Kraken submerges from phase 2 onward (not phase 1)', () => {
+  const submerges = (p) => (p.sequence ?? []).some((s) => s.do === 'submerge');
+  assert.ok(!submerges(KRAKEN.phases[0]), 'no submerge in p1');
+  assert.ok(submerges(KRAKEN.phases[1]), 'submerge in p2');
+  assert.ok(submerges(KRAKEN.phases[2]), 'submerge in p3');
+});
+
+test('Kraken capped summons (jellyfish/serpents) declare a cap', () => {
+  for (const phase of KRAKEN.phases) {
+    for (const step of phase.sequence ?? []) {
+      if (step.do === 'summon') assert.ok(step.cap > 0, `Kraken summon of ${step.spawnType} must be capped`);
+    }
+  }
 });
 
 test('Kraken phase thresholds: 1.0, 0.6, 0.3 (descending)', () => {

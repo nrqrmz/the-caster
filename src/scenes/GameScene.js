@@ -88,6 +88,7 @@ export default class GameScene extends Phaser.Scene {
     this._healFxTimer = 0;       // accumulator throttling heal pulse/tether VFX (created/destroyed each tick would saturate)
     this.triangle = null; // { mode, t } while a trio fight is active
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
+    this.whirlpoolSustain = false; // Kraken: keep auto-respawning the whirlpool for the whole fight
     this.tornado = null; // { center, radius, phase, mode, t } while a tornado is active
     this.tornadoGfx = null; // created lazily in updateTornado
     this.ritualGfx = null; // created lazily in updateRitual; reset here on level restart
@@ -653,6 +654,26 @@ export default class GameScene extends Phaser.Scene {
       }
       return;
     }
+    if (att.type === 'submerge') {
+      // Dive deep: vanish completely (untargetable + invisible, no fin) for a window and
+      // summon a minion from the depths. A DPS-denial beat — it stays put, never moves.
+      const dur = att.duration ?? 2500;
+      enemy._untargetable = true;            // auto-aim (Caster.nearestEnemy) already skips this
+      enemy.setVisible(false);
+      if (enemy.body) enemy.body.enable = false; // no contact damage while submerged
+      this.flashCircle(enemy.x, enemy.y, (enemy.def.radius || 42) + 10, COLORS.waterDeep); // implosion tell
+      this.spawnKrakenAdd();
+      const bx = enemy.x, by = enemy.y;
+      this.time.delayedCall(dur, () => {
+        if (!enemy.active) return;
+        enemy._untargetable = false;
+        enemy.setVisible(true);
+        if (enemy.body) enemy.body.enable = true;
+        this.flashCircle(bx, by, (enemy.def.radius || 42) + 24, COLORS.water); // resurface burst
+        this.spawnZone({ x: bx, y: by, radius: 70, duration: 700, casterDps: 20, color: COLORS.water, style: 'water' });
+      });
+      return;
+    }
     const type = resolveProjectile(att, this.regionElement);
     const spec = PROJECTILES[type] || PROJECTILES.arrow;
     const eff = spec.effect;
@@ -941,14 +962,14 @@ export default class GameScene extends Phaser.Scene {
       }
     }
     if (hook === 'spawnWhirlpool') {
-      const phase = typeof boss._whirlpoolPhase === 'number' ? boss._whirlpoolPhase : 1;
-      this.whirlpool = {
-        center: { x: Phaser.Math.Between(80, GAME_WIDTH - 80), y: Phaser.Math.Between(80, GAME_HEIGHT - 80) },
-        radius: WHIRLPOOL_RADIUS,
-        phase,
-        mode: 'telegraph',
-        t: WHIRLPOOL_TELEGRAPH_MS,
-      };
+      // One-shot (Dama forms): spawn once at the form's whirlpool phase, no auto-respawn.
+      this.spawnWhirlpoolAt(typeof boss._whirlpoolPhase === 'number' ? boss._whirlpoolPhase : 1);
+    }
+    if (hook === 'sustainWhirlpool') {
+      // Kraken: keep a whirlpool up for the whole fight; updateWhirlpool re-spawns it on
+      // cooldown-end and escalates strength by the boss's hp fraction.
+      this.whirlpoolSustain = true;
+      this.spawnWhirlpoolAt(this.krakenWhirlPhase());
     }
     if (hook === 'spawnTornado') {
       const phase = typeof boss._tornadoPhase === 'number' ? boss._tornadoPhase : 1;
@@ -969,6 +990,37 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  // Create a whirlpool at a random arena spot with the given strength phase (1..3).
+  spawnWhirlpoolAt(phase) {
+    this.whirlpool = {
+      center: { x: Phaser.Math.Between(80, GAME_WIDTH - 80), y: Phaser.Math.Between(80, GAME_HEIGHT - 80) },
+      radius: WHIRLPOOL_RADIUS,
+      phase,
+      mode: 'telegraph',
+      t: WHIRLPOOL_TELEGRAPH_MS,
+    };
+  }
+
+  // Whirlpool strength phase from the Kraken's current hp fraction (1 > 0.6 > 0.3).
+  krakenWhirlPhase() {
+    const b = this.boss;
+    if (!b || !b.maxHp) return 1;
+    const f = b.hp / b.maxHp;
+    return f > 0.6 ? 1 : f > 0.3 ? 2 : 3;
+  }
+
+  // Summon a random mid-low water minion from the deep while the Kraken is submerged.
+  // Capped at 3 alive so repeated submerges can't pile them up if the player ignores them.
+  spawnKrakenAdd() {
+    const alive = this.enemies.getChildren().filter((e) => e.active && e._krakenAdd).length;
+    if (alive >= 3) return;
+    const pool = ['ahogado', 'sapo_escupidor', 'pez_globo'];
+    const def = ENEMY_TYPES[pool[Phaser.Math.Between(0, pool.length - 1)]];
+    if (!def) return;
+    const e = this.spawnEnemy(def);
+    if (e) e._krakenAdd = true;
+  }
+
   updateWhirlpool(delta) {
     if (!this.whirlpool) return;
     const w = this.whirlpool;
@@ -983,7 +1035,8 @@ export default class GameScene extends Phaser.Scene {
       const pulse = 0.4 + 0.4 * Math.abs(Math.sin(this.lavaTime * 4));
       this.whirlpoolGfx.lineStyle(3, COLORS.water, pulse);
       this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, w.radius);
-      if (w.t <= 0) { w.mode = 'active'; w.t = WHIRLPOOL_ACTIVE_MS; }
+      // p3 vortex lasts longer (near-permanent) so the late fight has a single fierce whirlpool.
+      if (w.t <= 0) { w.mode = 'active'; w.t = WHIRLPOOL_ACTIVE_MS * (w.phase >= 3 ? 1.8 : 1); }
       return;
     }
 
@@ -1019,12 +1072,17 @@ export default class GameScene extends Phaser.Scene {
         if (dot > 0) this.damageCaster(dot * (delta / 1000));
       }
 
-      if (w.t <= 0) { w.mode = 'cooldown'; w.t = WHIRLPOOL_COOLDOWN_MS; }
+      if (w.t <= 0) { w.mode = 'cooldown'; w.t = WHIRLPOOL_COOLDOWN_MS * (w.phase >= 3 ? 0.4 : 1); }
       return;
     }
 
     if (w.mode === 'cooldown') {
-      if (w.t <= 0) this.whirlpool = null; // boss will re-trigger via hook
+      if (w.t <= 0) {
+        // Sustained (Kraken): immediately re-telegraph a fresh vortex, escalated to the boss's
+        // current hp phase, for as long as it lives. Otherwise (Dama one-shot) it just clears.
+        if (this.whirlpoolSustain && this.boss && this.boss.active) this.spawnWhirlpoolAt(this.krakenWhirlPhase());
+        else this.whirlpool = null;
+      }
     }
   }
 

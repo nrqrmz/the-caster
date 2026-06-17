@@ -87,30 +87,38 @@ export const TIBURON_ABISAL = {
 // p1 tentacle barrages; p2 maelstrom (spawnWhirlpool) + tentacles;
 // p3 frenzy (stronger pull, faster tentacles, summons adds).
 // The whirlpool is handled by GameScene + WhirlpoolHazard (Plan 1).
+// Whirlpool is SUSTAINED for the whole fight (enter:['sustainWhirlpool'] on p1); GameScene
+// auto-respawns it and escalates its strength by the Kraken's hp fraction (stronger + longer +
+// shorter-cooldown vortex in p3). From p2 on, `submerge` makes it vanish completely (untargetable
+// + invisible, no fin) for a window and summon a deep minion — a DPS-denial beat, not movement.
 export const KRAKEN = {
   key: 'kraken', tex: TEX.boss, color: COLORS.miniboss,
-  hp: 650, speed: 28, damage: 20, radius: 42,
+  hp: 1300, speed: 28, damage: 20, radius: 42, // doubled (was 650) — a true levelBoss, not a miniboss
   elite: true,
-  movement: { type: 'static' }, // anchored — the whirlpool and tentacles do the work
+  movement: { type: 'static' }, // anchored — the whirlpool, tentacles and submerges do the work
   phases: [
-    { from: 1.0, sequence: [
+    // p1: sustained whirlpool + tentacles + jellyfish adds (capped). No submerge yet.
+    { from: 1.0, enter: ['sustainWhirlpool'], sequence: [
       { do: 'lobAoe', radius: 70, dps: 20, duration: 3000, telegraph: 500, dur: 900 }, // tentacle at player pos
       { do: 'lobAoe', radius: 55, dps: 18, duration: 2500, telegraph: 500, dur: 900 }, // perimeter tentacle
-      { do: 'nova', count: 10, speed: 200, damage: 12, telegraph: 380, dur: 700 },     // ink burst
+      { do: 'summon', spawnType: 'medusa', count: 1, cap: 2, capKey: 'kraken_jelly', respawnMs: 12000, telegraph: 350, dur: 700 },
       { do: 'wait', dur: 600 },
     ] },
-    { from: 0.6, enter: ['spawnWhirlpool'], sequence: [
+    // p2: + 3 serpents (capped) + submerge (vanish ~2.5s, summons a deep minion).
+    { from: 0.6, sequence: [
       { do: 'lobAoe', radius: 70, dps: 22, duration: 3200, telegraph: 450, dur: 850 }, // tentacle at player
       { do: 'lobAoe', radius: 55, dps: 20, duration: 2800, telegraph: 450, dur: 850 }, // perimeter tentacle
-      { do: 'lobAoe', radius: 55, dps: 20, duration: 2800, telegraph: 450, dur: 850 }, // second perimeter
-      { do: 'nova', count: 12, speed: 210, damage: 12, telegraph: 350, dur: 650 },
+      { do: 'summon', spawnType: 'serpiente_marina', count: 3, cap: 3, capKey: 'kraken_serpent', respawnMs: 14000, telegraph: 300, dur: 700 },
+      { do: 'submerge', duration: 2500, telegraph: 500, dur: 2500 },
       { do: 'wait', dur: 400 },
     ] },
-    { from: 0.3, speedMul: 1.1, enter: ['spawnWhirlpool'], sequence: [
+    // p3 frenzy: stronger sustained whirlpool + tentacles + jellyfish + dense nova + longer submerge.
+    { from: 0.3, speedMul: 1.1, sequence: [
       { do: 'lobAoe', radius: 75, dps: 26, duration: 3500, telegraph: 380, dur: 750 }, // faster tentacles
       { do: 'lobAoe', radius: 60, dps: 22, duration: 3000, telegraph: 380, dur: 750 },
-      { do: 'summon', spawnType: 'serpiente_marina', count: 2, telegraph: 300, dur: 700 }, // adds (ranged lake beasts)
+      { do: 'summon', spawnType: 'medusa', count: 1, cap: 2, capKey: 'kraken_jelly', respawnMs: 12000, telegraph: 300, dur: 700 },
       { do: 'nova', count: 14, speed: 220, damage: 13, telegraph: 320, dur: 600 },
+      { do: 'submerge', duration: 3000, telegraph: 450, dur: 3000 },
       { do: 'wait', dur: 300 },
     ] },
   ],
