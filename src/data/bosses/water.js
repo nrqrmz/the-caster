@@ -23,6 +23,7 @@ export const SOLDADO_HIELO = {
       { do: 'dashStrike', damage: 18, range: 60, telegraph: 300, dur: 400 }, // lands onHitSlow via modifier
       { do: 'wait', dur: 800 },                                              // recover (vulnerable window)
       { do: 'shootStraight', speed: 250, damage: 12, telegraph: 280, dur: 600 },
+      { do: 'summon', spawnType: 'guardia_hielo', count: 2, cap: 2, respawnMs: 15000, dur: 800 },
     ] },
     { from: 0.5, speedMul: 1.25, sequence: [
       { do: 'wait', dur: 500 },
@@ -70,6 +71,7 @@ export const TIBURON_ABISAL = {
     { from: 1.0, sequence: [
       { do: 'dashStrike', damage: 22, range: 70, telegraph: 400, dur: 450 }, // telegraphed by emerge ring
       { do: 'wait', dur: 700 },                                               // recover (vulnerable)
+      { do: 'summon', spawnType: 'tiburon_joven', count: 1, cap: 1, respawnMs: 15000, dur: 800 },
     ] },
     { from: 0.4, speedMul: 1.3, sequence: [
       { do: 'dashStrike', damage: 22, range: 70, telegraph: 280, dur: 380 }, // frenzy: shorter submerge + faster emerge
@@ -204,7 +206,9 @@ const DAMA_BALLENA = {
     ] },
     { from: 0.45, speedMul: 1.1, sequence: [
       { do: 'lobAoe', radius: 95, dps: 30, duration: 4200, telegraph: 500, dur: 950 },
-      { do: 'summon', spawnType: 'ahogado', count: 3, telegraph: 350, dur: 800 },        // summons drowned adds
+      { do: 'summon', spawnType: 'ahogado', count: 3, telegraph: 350, dur: 800 },        // summons drowned adds (uncapped)
+      { do: 'summon', spawnType: 'cangrejo_acorazado', count: 2, cap: 2, respawnMs: 15000, dur: 800 },
+      { do: 'summon', spawnType: 'pez_globo', count: 2, cap: 2, respawnMs: 15000, dur: 800 },
       { do: 'nova', count: 18, speed: 200, damage: 15, telegraph: 380, dur: 750 },
       { do: 'wait', dur: 500 },
     ] },
