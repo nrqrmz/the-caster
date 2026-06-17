@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeMovement, MOVEMENTS, summonSlots } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
-import { BURROW_SUBMERGE_MS } from '../src/data/tuning.js';
+import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS } from '../src/data/tuning.js';
 
 const mag = (v) => Math.hypot(v.x, v.y);
 const ctx = (overrides = {}) => ({
@@ -175,6 +175,36 @@ test('burrow: emerge transitions to surface after emergeMs', () => {
   MOVEMENTS.burrow({ self, target, speed: 100, dt: 100, params, state });
   v = MOVEMENTS.burrow({ self, target, speed: 100, dt: 16, params, state });
   assert.equal(v.vulnerable, true);
+});
+
+test('burrow: full cycle — surface chases target and loops back to submerged', () => {
+  const self = { x: 0, y: 0, radius: 17 };
+  const target = { x: 500, y: 0 }; // Far from self so never triggers safe-ring hold
+  const speed = 100;
+  const state = {};
+
+  // Phase 1: advance past submerged window (BURROW_SUBMERGE_MS)
+  let v = MOVEMENTS.burrow({ self, target, speed, dt: BURROW_SUBMERGE_MS, params: {}, state });
+  assert.equal(state.mode, 'emerge', 'should transition to emerge after submergeMs');
+  assert.equal(v.submerged, true, 'last submerged frame should return submerged=true');
+
+  // Phase 2: advance past emerge/telegraph window (BURROW_TELEGRAPH_MS)
+  v = MOVEMENTS.burrow({ self, target, speed, dt: BURROW_TELEGRAPH_MS, params: {}, state });
+  assert.equal(state.mode, 'surface', 'should transition to surface after emergeMs');
+  assert.equal(v.surfacing, true, 'last emerge frame should return surfacing=true');
+  assert.equal(v.submerged, true, 'emerge is still submerged');
+
+  // Phase 3: assert surface frame — chase velocity toward target + vulnerable
+  v = MOVEMENTS.burrow({ self, target, speed, dt: 16, params: {}, state });
+  assert.equal(state.mode, 'surface', 'mode stays surface on small dt');
+  assert.equal(v.vulnerable, true, 'surface should be vulnerable');
+  assert.ok(v.x > 0, 'surface should chase toward target (x-component > 0)');
+  assert.ok(Number.isFinite(v.y), 'surface should have finite y velocity');
+
+  // Phase 4: advance past surface window (BURROW_SURFACE_MS) and verify loop-back
+  v = MOVEMENTS.burrow({ self, target, speed, dt: BURROW_SURFACE_MS, params: {}, state });
+  assert.equal(state.mode, 'submerged', 'should loop back to submerged after surfaceMs');
+  assert.equal(v.submerged, true, 'transition frame returns submerged=true');
 });
 
 test('every movement type (including burrow) returns finite velocity', () => {
