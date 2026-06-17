@@ -54,6 +54,7 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
     let bestD = Infinity;
     for (const e of enemies) {
       if (!e.active) continue;
+      if (e._untargetable) continue;
       const d = Phaser.Math.Distance.Between(this.x, this.y, e.x, e.y);
       if (d < bestD) { bestD = d; best = e; }
     }

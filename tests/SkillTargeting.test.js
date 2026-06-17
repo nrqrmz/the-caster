@@ -35,3 +35,14 @@ test('freezeEffect tiers by elite flag', () => {
   assert.equal(freezeEffect({ elite: false }), 'freeze');
   assert.equal(freezeEffect({}), 'freeze');
 });
+
+test('chainTargets skips untargetable enemies', () => {
+  const caster = { x: 0, y: 0 };
+  const enemies = [
+    { x: 10, y: 0, untargetable: true },  // nearest but shielded — must be skipped
+    { x: 40, y: 0 },                      // chosen primary
+    { x: 70, y: 0 },                      // chain hop
+  ];
+  const hits = chainTargets(caster, enemies, 100, 3);
+  assert.deepEqual(hits, [1, 2]);
+});

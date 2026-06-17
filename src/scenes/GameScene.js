@@ -353,6 +353,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   hitEnemy(enemy, damage) {
+    if (enemy._untargetable) return;
     // Burrow invuln gate (set by burrow movement; always falsy on non-burrow enemies).
     if (enemy._burrowed) return;
     // Form sequencer: route damage through FormSequencer and handle transform.
@@ -702,7 +703,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   cast_lightning() {
-    const live = this.liveEnemies();
+    const live = this.liveEnemies().map((e) => {
+      e.untargetable = !!e._untargetable; // expose runtime flag to the pure targeter
+      return e;
+    });
     if (!live.length) return false;
     const idx = chainTargets({ x: this.caster.x, y: this.caster.y }, live, this.stats.lightningJumpRadius, this.stats.lightningChain);
     if (!idx.length) return false;
