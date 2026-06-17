@@ -665,8 +665,12 @@ export default class GameScene extends Phaser.Scene {
     if (att.type === 'melee') return; // contact damage via the caster/enemies overlap
     if (att.type === 'lobAoe') {
       const water = this.regionElement === 'water';
+      // Cae en el punto congelado por el telegraph (esquivable); solo si no hubo
+      // telegraph cae sobre la posición viva (no debería pasar: todo lobAoe avisa).
+      const mark = enemy._lobAoeMark || { x: this.caster.x, y: this.caster.y };
+      enemy._lobAoeMark = null;
       this.spawnZone({
-        x: this.caster.x, y: this.caster.y,
+        x: mark.x, y: mark.y,
         radius: att.radius ?? 60, duration: att.duration ?? 3000,
         casterDps: att.dps ?? 18,
         color: water ? COLORS.water : COLORS.fireball,
@@ -760,7 +764,11 @@ export default class GameScene extends Phaser.Scene {
     const g = this.telegraphGfx;
     g.lineStyle(2, 0xffffff, 0.9);
     if (step.do === 'lobAoe') {
-      g.strokeCircle(this.caster.x, this.caster.y, step.radius ?? 60); // ground marker where it lands
+      // Congela el punto de caída en el PRIMER frame del telegraph: la marca (y la zona)
+      // se quedan quietas y la jugadora puede salir, en vez de perseguirla cada frame.
+      if (!enemy._lobAoeMark) enemy._lobAoeMark = { x: this.caster.x, y: this.caster.y };
+      const m = enemy._lobAoeMark;
+      g.strokeCircle(m.x, m.y, step.radius ?? 60); // ground marker where it lands (committed)
     } else {
       g.strokeCircle(enemy.x, enemy.y, (enemy.def.radius || 20) + 16);  // wind-up ring on the boss
     }
@@ -1321,8 +1329,15 @@ export default class GameScene extends Phaser.Scene {
       if (casterIn && z.casterHeal) {
         this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + z.casterHeal * dt);
       }
-      if (casterIn && z.casterLiftMs) applyCasterCc(this.caster, 'lift', z.casterLiftMs);
-      if (casterIn && z.casterStunMs) applyCasterCc(this.caster, 'stun', z.casterStunMs);
+      // CC (lift/stun) SOLO al entrar (rising-edge), nunca cada frame: reaplicar refresca
+      // el timer y la inmunidad anti-cadena (que se arma al terminar el lock) nunca dispara,
+      // dejando a la jugadora atrapada toda la vida de la zona. Aplicado una vez, el lift
+      // corre 500ms, termina, arma la inmunidad 600ms y la jugadora sale del charco.
+      if (casterIn && !z._casterWasIn) {
+        if (z.casterLiftMs) applyCasterCc(this.caster, 'lift', z.casterLiftMs);
+        if (z.casterStunMs) applyCasterCc(this.caster, 'stun', z.casterStunMs);
+      }
+      z._casterWasIn = casterIn;
       if (z.enemyDps) {
         // Snapshot (filter returns a new array) so a kill mid-loop can't skip an enemy.
         const live = this.enemies.getChildren().filter((e) => e.active);
