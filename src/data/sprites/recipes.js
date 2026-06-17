@@ -117,6 +117,18 @@ const GALAHAD_BAT = [
   { name: 'gbat_body' },
   { name: 'gbat_eyes', palette: 'vampglow' },
 ];
+// Galahad Cadáver — the Count lying dead/prone on the floor (native 2:1 64×32 canvas).
+// Shown during death/rise transitions. Head at LEFT (hair fanned out), feet at RIGHT.
+// Layers back-to-front: cape spread flat → black trousers → linen shirt + hands
+//   → gold medallion → dark hair fan → pale gaunt face (eyes closed, NOT glowing).
+const GALAHAD_CADAVER = [
+  { name: 'cad_cape',      palette: 'vampblack' },
+  { name: 'cad_legs',      palette: 'vampblack' },
+  { name: 'cad_body',      palette: 'linen' },
+  { name: 'cad_medallion', palette: 'glow' },
+  { name: 'cad_hair',      palette: 'blackhair' },
+  { name: 'cad_head',      palette: 'vampskin' },
+];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
 const JELLY = [
@@ -403,6 +415,7 @@ export const RECIPES = {
   galahad_rage:       { archetype: 'boss', size: 96, parts: GALAHAD_RAGE },   // Count + red tint: blood-stained shirt, flushed skin, first corruption
   galahad_rage2:      { archetype: 'boss', size: 96, parts: GALAHAD_RAGE2 },  // Count no cape + dark gore: deeply bloodied, full fury, caped removed
   galahad_murcielago: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x4a148c, parts: GALAHAD_BAT }, // bespoke colossal symmetric bat — native 2:1 (64×32 → 128×64)
+  galahad_cadaver:    { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x1a0e12, parts: GALAHAD_CADAVER }, // prone dead count — native 2:1 (64×32 → 128×64)
   galahad_final:      { archetype: 'boss', size: 96, parts: GALAHAD_FINAL },  // Count ashen/dying: grey cloth, death-pale skin, dim eyes (true death)
 };
 
