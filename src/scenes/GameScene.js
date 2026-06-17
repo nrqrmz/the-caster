@@ -531,11 +531,13 @@ export default class GameScene extends Phaser.Scene {
   executeAttack(enemy, att) {
     if (att.type === 'melee') return; // contact damage via the caster/enemies overlap
     if (att.type === 'lobAoe') {
-      // Telegraphed fire pool dropped on the caster's current position.
+      const water = this.regionElement === 'water';
       this.spawnZone({
         x: this.caster.x, y: this.caster.y,
         radius: att.radius ?? 60, duration: att.duration ?? 3000,
-        casterDps: att.dps ?? 18, color: COLORS.fireball,
+        casterDps: att.dps ?? 18,
+        color: water ? COLORS.water : COLORS.fireball,
+        style: water ? 'water' : 'fire',
       });
       return;
     }
@@ -744,10 +746,11 @@ export default class GameScene extends Phaser.Scene {
   // Fire-colored zones (or opts.fire) render as animated lava on the shared lavaGfx; others keep a flat disk.
   spawnZone(opts) {
     const color = opts.color != null ? opts.color : COLORS.poison;
-    const fire = opts.fire ?? (color === COLORS.fireball || color === COLORS.magma);
+    const style = opts.style || (color === COLORS.fireball || color === COLORS.magma ? 'fire' : 'flat');
+    const fire = style === 'fire' || opts.fire === true;
     const gfx = fire ? null : this.add.circle(opts.x, opts.y, opts.radius, color, 0.30).setDepth(5);
     this.zones.push({
-      x: opts.x, y: opts.y, radius: opts.radius, remaining: opts.duration, gfx, fire,
+      x: opts.x, y: opts.y, radius: opts.radius, remaining: opts.duration, gfx, fire, style,
       casterDps: opts.casterDps || 0,
       casterHeal: opts.casterHeal || 0,
       enemyDps: opts.enemyDps || 0,
@@ -756,10 +759,10 @@ export default class GameScene extends Phaser.Scene {
 
   runBossHook(boss, hook) {
     if (hook === 'spawnLavaFloor') {
-      const lanes = 4;
+      const lanes = 2;                                  // antes 4: menos saturación
       for (let i = 0; i < lanes; i++) {
         const x = GAME_WIDTH * (i + 0.5) / lanes;
-        this.spawnZone({ x, y: GAME_HEIGHT / 2, radius: 46, duration: 6000, casterDps: 20, color: COLORS.fireball });
+        this.spawnZone({ x, y: GAME_HEIGHT / 2, radius: 46, duration: 7000, casterDps: 20, color: COLORS.fireball });
       }
     }
     if (hook === 'spawnWhirlpool') {
