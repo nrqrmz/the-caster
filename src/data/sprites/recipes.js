@@ -110,6 +110,13 @@ const GALAHAD_FINAL = [
   { name: 'cnt_medallion', palette: 'ashen_glow' },
   { name: 'cnt_eyes',      palette: 'ashen_glow' },
 ];
+// Galahad Murciélago — bespoke colossal symmetric vampire bat (native 2:1 64×32 canvas).
+// Wings dominate (full width), body has a snarling fanged maw + pointed ears, eyes glow red.
+const GALAHAD_BAT = [
+  { name: 'gbat_wings' },
+  { name: 'gbat_body' },
+  { name: 'gbat_eyes', palette: 'vampglow' },
+];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
 const JELLY = [
@@ -395,7 +402,7 @@ export const RECIPES = {
   galahad_humano:     { archetype: 'boss', size: 96, parts: GALAHAD_COUNT },  // vampire Count: pale, caped, white shirt, black trousers, gold medallion, red eyes
   galahad_rage:       { archetype: 'boss', size: 96, parts: GALAHAD_RAGE },   // Count + red tint: blood-stained shirt, flushed skin, first corruption
   galahad_rage2:      { archetype: 'boss', size: 96, parts: GALAHAD_RAGE2 },  // Count no cape + dark gore: deeply bloodied, full fury, caped removed
-  galahad_murcielago: { archetype: 'boss', size: 96, baseColor: 0x4a148c, parts: BAT }, // deep purple giant bat
+  galahad_murcielago: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x4a148c, parts: GALAHAD_BAT }, // bespoke colossal symmetric bat — native 2:1 (64×32 → 128×64)
   galahad_final:      { archetype: 'boss', size: 96, parts: GALAHAD_FINAL },  // Count ashen/dying: grey cloth, death-pale skin, dim eyes (true death)
 };
 
