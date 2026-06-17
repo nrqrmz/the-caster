@@ -7,14 +7,14 @@ export const AIR_ENEMIES = {
   // === Humanoides vampiros (por tierra; les afecta el terreno) — nv1–7 ===
 
   // #1 — Siervo de la Torre: fast melee filler that heals on contact (drain).
-  siervo_torre: { key: 'siervo_torre', geometric: true, tex: TEX.villager, color: COLORS.vampPale,
+  siervo_torre: { key: 'siervo_torre', tex: TEX.villager, color: COLORS.vampPale,
     hp: 24, speed: 95, damage: 9, radius: 16,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'drain', heal: 4 }] },
 
   // #2 — Duelista Nocturno: evade movement — dashes to dodge your orbs, hit-and-run dashStrike + drain.
-  duelista_nocturno: { key: 'duelista_nocturno', geometric: true, tex: TEX.archer, color: COLORS.duelistSteel,
+  duelista_nocturno: { key: 'duelista_nocturno', tex: TEX.archer, color: COLORS.duelistSteel,
     hp: 30, speed: 120, damage: 12, radius: 16,
     movement: { type: 'evade', range: 120 },
     attacks: [{ type: 'dashStrike' }],
@@ -53,7 +53,7 @@ export const AIR_ENEMIES = {
     attacks: [{ type: 'shootStraight', lift: true, every: 2600, speed: 210 }] },
 
   // #8 — Vástago Vampírico: chases, drains, and RISES ONCE (reviveOnce) — forces a finishing blow.
-  vastago_vampirico: { key: 'vastago_vampirico', geometric: true, tex: TEX.villager, color: COLORS.vampPale,
+  vastago_vampirico: { key: 'vastago_vampirico', tex: TEX.villager, color: COLORS.vampPale,
     hp: 42, speed: 85, damage: 11, radius: 16,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],

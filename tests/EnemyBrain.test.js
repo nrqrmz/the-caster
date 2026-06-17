@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeMovement, MOVEMENTS, summonSlots, isFlying } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
-import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS, EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL } from '../src/data/tuning.js';
+import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS, BURROW_EMERGE_DIST, EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL } from '../src/data/tuning.js';
 
 const mag = (v) => Math.hypot(v.x, v.y);
 const ctx = (overrides = {}) => ({
@@ -412,11 +412,11 @@ test('burrow: sumergido nada HACIA el objetivo (ya no se queda quieto)', () => {
   assert.ok(Math.abs(v.y) < 1e-6);
 });
 
-test('burrow: sumergido se DETIENE dentro del anillo seguro', () => {
+test('burrow: sumergido se DETIENE al alcanzar la distancia de emersión', () => {
   const state = {};
   const v = computeMovement(
     { movement: { type: 'burrow' } }, state,
-    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 }, speed: 100, dt: 16 }); // dist 100 < 160
+    { self: { x: 0, y: 0 }, target: { x: BURROW_EMERGE_DIST - 20, y: 0 }, speed: 100, dt: 16 }); // dentro del anillo
   assert.equal(v.submerged, true);
   assert.equal(v.x, 0);
   assert.equal(v.y, 0);
