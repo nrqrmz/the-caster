@@ -62,7 +62,7 @@ export const AIR_ENEMIES = {
   // === Voladores (flying: inmunes al terreno, rápidos/erráticos) — nv1–6 ===
 
   // #9 — Murciélago: erratic swarm flyer + drain. Cheap, fast — the big chain target for Lightning.
-  murcielago: { key: 'murcielago', geometric: true, tex: TEX.villager, color: COLORS.batPurple,
+  murcielago: { key: 'murcielago', tex: TEX.villager, color: COLORS.batPurple,
     hp: 20, speed: 130, damage: 6, radius: 16,
     flying: true,
     movement: { type: 'erratic' },
@@ -92,7 +92,7 @@ export const AIR_ENEMIES = {
     modifiers: [{ type: 'auraDamage', dps: 9, radius: 42 }, { type: 'onHitStun', kind: 'stun', ms: 300 }] },
 
   // #13 — Vampiro Alado: heavy dive flyer. Charges, dashStrikes, drains hard (+8).
-  vampiro_alado: { key: 'vampiro_alado', geometric: true, tex: TEX.archer, color: COLORS.bloodRed,
+  vampiro_alado: { key: 'vampiro_alado', tex: TEX.archer, color: COLORS.bloodRed,
     hp: 120, speed: 100, damage: 18, radius: 19,
     flying: true,
     movement: { type: 'charge', windup: 500, dash: 340, recover: 550, dashMul: 3.0 },
