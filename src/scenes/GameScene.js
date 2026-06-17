@@ -865,6 +865,13 @@ export default class GameScene extends Phaser.Scene {
   updateTriangle(delta) {
     if (!this.triangle) return;
     const live = this.bosses.filter((b) => b && b.active);
+    // Última hermana viva: cancela el triángulo y recupera sus charcos de lava.
+    if (live.length === 1 && live[0].def.soloSequence && !live[0]._wentSolo) {
+      const b = live[0];
+      b.def = { ...b.def, phases: [{ from: 1.0, sequence: b.def.soloSequence }] };
+      b.brainState.boss = {};   // reinicia el sequencer a la nueva fase
+      b._wentSolo = true;
+    }
     this.triangleGfx.clear();
     if (live.length < 2) return; // degraded to nothing; the sisters' own kits remain
     const edges = hazardEdges(live.map((b) => ({ x: b.x, y: b.y })));

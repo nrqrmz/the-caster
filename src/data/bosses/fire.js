@@ -64,12 +64,26 @@ export const FAVILLA = {
 // trio showcase. Favilla's phase-1 is all summons + lobAoe (it would be empty
 // after stripping), so she runs her phase-2 nova instead; she keeps healAllies
 // so "kill the healer first" stays the tactical hook.
+// When only ONE sister remains the triangle is cancelled and she adopts her
+// soloSequence (which restores lobAoe so the survivor drops lava pools again).
 const stripFloorAndAdds = (seq) => seq.filter((s) => s.do !== 'lobAoe' && s.do !== 'summon');
-const trio = (def, hp, seq) => ({ ...def, hp, phases: [{ from: 1.0, sequence: seq }] });
+// soloSeq: lo que hace la hermana cuando queda SOLA (recupera sus charcos de lava).
+const trio = (def, hp, movement, seq, soloSequence) => ({
+  ...def, hp, movement,
+  phases: [{ from: 1.0, sequence: seq }],
+  soloSequence,
+});
+const SOLO_LAVA = { do: 'lobAoe', radius: 64, dps: 22, duration: 3500, telegraph: 500, dur: 900 };
 export const SISTERS_TRIO = [
-  trio(PYRA,    280, stripFloorAndAdds(PYRA.phases[0].sequence)),    // cono de proyectiles
-  trio(VESTA,   320, stripFloorAndAdds(VESTA.phases[0].sequence)),   // embiste + disparo recto
-  trio(FAVILLA, 300, stripFloorAndAdds(FAVILLA.phases[1].sequence)), // nova (sin summons); conserva healAllies
+  trio(PYRA, 360, { type: 'kite', range: 240 },
+    stripFloorAndAdds(PYRA.phases[0].sequence),
+    [SOLO_LAVA, { do: 'shootSpread', count: 6, arc: 90, speed: 240, damage: 14, telegraph: 320, dur: 700 }]),
+  trio(VESTA, 480, { type: 'chase' },
+    stripFloorAndAdds(VESTA.phases[0].sequence),
+    [SOLO_LAVA, { do: 'shootStraight', speed: 260, damage: 12, telegraph: 250, dur: 600 }]),
+  trio(FAVILLA, 300, { type: 'kite', range: 240 },
+    stripFloorAndAdds(FAVILLA.phases[1].sequence),
+    [SOLO_LAVA, { do: 'nova', count: 12, speed: 200, damage: 10, telegraph: 400, dur: 800 }]),
 ];
 
 // Ignatius — el padre, mago de templo (nv7). Setpiece de 3 fases. Reusa el
