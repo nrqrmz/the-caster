@@ -32,7 +32,103 @@ const KNIGHT_WATER = [
   { name: 'knight_sword' }, { name: 'knight_body' }, { name: 'knight_shield' }, { name: 'knight_helm' },
   { name: 'knight_visor', palette: 'shadow' }, { name: 'knight_eyes', palette: 'orbblue' },
 ];
+const KNIGHT_VAMP = [...KNIGHT.slice(0, 5), { name: 'knight_eyes', palette: 'vampglow' }];
 const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
+// Air caster pair A: acolito (light grey hood, yellow ember) vs heraldo (dark steel-blue, cyan ember)
+const ACOLITO = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'glow' }, ...CULT_HOODED];
+const HERALDO = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'orbblue' }, ...CULT_HOODED];
+// Air caster pair B: hechicero (bare-head, grey robe, cyan orb) vs tronador (hooded, tan, yellow orb)
+const TRONADOR_PARTS = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'glow' }, ...CULT_HOODED];
+// Bruja del Vendaval — wind-witch boss (air nv5). Clearly HUMANOID: purple robe/torso,
+// silver hair framing a visible skin face, wind-orb staff. Gale accents (cyan) stay subtle.
+// Layer order back-to-front: wind gust → robe/body → hair → skin face → staff.
+const BRUJA = [
+  { name: 'bruja_wind', palette: 'orbblue' },
+  { name: 'bruja_body' },
+  { name: 'bruja_hair', palette: 'silverhair' },
+  { name: 'bruja_head', palette: 'skin' },
+  { name: 'bruja_staff', palette: 'wood' },
+];
+// Bespoke blood-knight lord for caballero_sangre (air nv4 boss). Full-height (h32)
+// imposing armored vampire-lord: black flowing cape, red+black plate armor, massive
+// Saga-style pauldrons, slimmer torso, visored helm (no crown), greaves + greatsword.
+// Distinctly different from the plain fodder KNIGHT_VAMP used by guardia_nocturno.
+// Layer order back-to-front: cape → body → pauldrons → sword → eyes.
+const BLOOD_KNIGHT = [
+  { name: 'bk_cape', palette: 'vampblack' },
+  { name: 'bk_body' },
+  { name: 'bk_pauldrons' },
+  { name: 'bk_sword', palette: 'steel' },
+  { name: 'bk_eyes', palette: 'vampglow' },
+];
+// Galahad Form 1 — Vampire Count (human form).
+// A risen vampire Count: iconic high-collar cape, white dress shirt, black trousers,
+// pale gaunt face with slicked dark hair, gold medallion, red glowing eyes.
+// NOT armored — aristocratic, menacing, unmistakably Dracula-archetype.
+// Layer order back-to-front: cape → legs → shirt → head → medallion → eyes.
+const GALAHAD_COUNT = [
+  { name: 'cnt_cape',      palette: 'vampblack' },
+  { name: 'cnt_legs',      palette: 'vampblack' },
+  { name: 'cnt_shirt',     palette: 'linen' },
+  { name: 'cnt_head',      palette: 'vampskin' },
+  { name: 'cnt_hair',      palette: 'blackhair' },
+  { name: 'cnt_medallion', palette: 'glow' },
+  { name: 'cnt_eyes',      palette: 'vampglow' },
+];
+// Galahad Rage — same Count silhouette, corrupted red tint (first corruption stage).
+// Blood-stained shirt, flushed reddened skin, cape stays near-black, eyes brighter red.
+// Layer order back-to-front: cape → legs → shirt → head → hair → medallion → eyes.
+const GALAHAD_RAGE = [
+  { name: 'cnt_cape',      palette: 'vampblack' },
+  { name: 'cnt_legs',      palette: 'vampblack' },
+  { name: 'cnt_shirt',     palette: 'countrage_shirt' },
+  { name: 'cnt_head',      palette: 'countrage_skin' },
+  { name: 'cnt_hair',      palette: 'blackhair' },
+  { name: 'cnt_medallion', palette: 'glow' },
+  { name: 'cnt_eyes',      palette: 'vampglow' },
+];
+// Galahad Rage2 — deeper corruption, NO CAPE, darker/bloodier palettes.
+// The cape is dropped so the bloodied shirt is fully exposed. More monstrous.
+// Layer order back-to-front: legs → shirt → head → hair → medallion → eyes.
+const GALAHAD_RAGE2 = [
+  { name: 'cnt_legs',      palette: 'vampblack' },
+  { name: 'cnt_shirt',     palette: 'countrage2_shirt' },
+  { name: 'cnt_head',      palette: 'countrage2_skin' },
+  { name: 'cnt_hair',      palette: 'blackhair' },
+  { name: 'cnt_medallion', palette: 'glow' },
+  { name: 'cnt_eyes',      palette: 'vampglow' },
+];
+// Galahad Final — ashen/dying Count: desaturated grey-white (true death form).
+// Ashen cloth, death-pale skin, dim fading eyes. Cape present (crumbling remnant of dignity).
+// Layer order back-to-front: cape → legs → shirt → head → hair → medallion → eyes.
+const GALAHAD_FINAL = [
+  { name: 'cnt_cape',      palette: 'vampblack' },
+  { name: 'cnt_legs',      palette: 'ashen_cloth' },
+  { name: 'cnt_shirt',     palette: 'ashen_cloth' },
+  { name: 'cnt_head',      palette: 'ashen_skin' },
+  { name: 'cnt_hair',      palette: 'blackhair' },
+  { name: 'cnt_medallion', palette: 'ashen_glow' },
+  { name: 'cnt_eyes',      palette: 'ashen_glow' },
+];
+// Galahad Murciélago — bespoke colossal symmetric vampire bat (native 2:1 64×32 canvas).
+// Wings dominate (full width), body has a snarling fanged maw + pointed ears, eyes glow red.
+const GALAHAD_BAT = [
+  { name: 'gbat_wings' },
+  { name: 'gbat_body' },
+  { name: 'gbat_eyes', palette: 'vampglow' },
+];
+// Galahad Cadáver — the Count lying dead/prone on the floor (native 2:1 64×32 canvas).
+// Shown during death/rise transitions. Head at LEFT (hair fanned out), feet at RIGHT.
+// Layers back-to-front: cape spread flat → black trousers → linen shirt + hands
+//   → gold medallion → dark hair fan → pale gaunt face (eyes closed, NOT glowing).
+const GALAHAD_CADAVER = [
+  { name: 'cad_cape',      palette: 'vampblack' },
+  { name: 'cad_legs',      palette: 'vampblack' },
+  { name: 'cad_body',      palette: 'linen' },
+  { name: 'cad_medallion', palette: 'glow' },
+  { name: 'cad_hair',      palette: 'blackhair' },
+  { name: 'cad_head',      palette: 'vampskin' },
+];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
 const JELLY = [
@@ -62,6 +158,24 @@ const MAGE_CASTER = (hairPal) => [
   { name: 'mage_staff', palette: 'wood' }, { name: 'mage_robe' }, MAGE_HEAD,
   { name: 'mage_hair', palette: hairPal }, MAGE_HANDS, { name: 'mage_orb', palette: 'orbblue' },
 ];
+// Vampire footsoldiers: bare-headed humanoid with pale `vampskin` face/hands.
+const VAMP_GRUNT = (hairPal) => [
+  { name: 'villager_legs', palette: 'pants' }, { name: 'villager_shirt' },
+  { name: 'mage_head', palette: 'vampskin' }, { name: 'mage_hands', palette: 'vampskin' },
+  { name: 'hair_short', palette: hairPal },
+];
+// Lean night swordsman: small cape behind shoulders, fitted shirt+trousers, pale vamp face/hands,
+// black hair, and a slender rapier held to the right. Dark steel-blue (0x455a64) fitted top.
+// Layer order back-to-front: cape → legs → shirt → head → hands → hair → blade.
+const DUELIST = [
+  { name: 'duelist_cape', palette: 'vampblack' },
+  { name: 'villager_legs', palette: 'pants' },
+  { name: 'villager_shirt' },
+  { name: 'mage_head', palette: 'vampskin' },
+  { name: 'mage_hands', palette: 'vampskin' },
+  { name: 'hair_short', palette: 'blackhair' },
+  { name: 'duelist_blade', palette: 'steel' },
+];
 // Fire beasts. body = type color; molten cracks/crest/core = `ember`; eyes = `glow`;
 // horns = `bone` (filled ivory cow-horns).
 const LARVA = [{ name: 'larva_body' }, { name: 'larva_glow', palette: 'ember' }, { name: 'larva_eyes', palette: 'glow' }];
@@ -83,6 +197,9 @@ const FENIX = [{ name: 'fenix_crest', palette: 'ember' }, { name: 'fenix_body' }
 const AVISPA = [{ name: 'avispa_wings', palette: 'bone' }, { name: 'avispa_body' }, { name: 'avispa_eyes', palette: 'shadow' }];
 const TOTEM_FIRE = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'glow' }];
 const TOTEM_FROST = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'orbblue' }];
+// Bat: membranous wings + small furred body + ears + glowing eyes. Serves the swarm
+// bat, the heavy winged vampire, and (later) Galahad's giant-bat form (size/baseColor vary).
+const BAT = [{ name: 'bat_wings' }, { name: 'bat_body' }, { name: 'bat_eyes', palette: 'glow' }];
 // Fish / serpent / shelled. body = type color (belly = its own highlight); teeth/fangs
 // = bone; eyes shadow|glow. Turtle/crab carry their own green/red type colors.
 const SHARK = [{ name: 'shark_body' }, { name: 'shark_teeth', palette: 'bone' }, { name: 'shark_eye', palette: 'shadow' }];
@@ -120,6 +237,30 @@ const DAMA = [{ name: 'dama_gown' }, { name: 'dama_hair', palette: 'silverhair' 
 // Tentáculo de agua: sprite de zona lobAoe (brota del suelo con scaleY 0→1→0).
 // baseColor = COLORS.water (0x00bcd4); derivePalette genera la paleta cyan/teal.
 const TENTACLE = [{ name: 'tentacle_body' }];
+
+// Stone gargoyle (gargola_pararrayos) — perched/crouching grotesque, distinct from the totem.
+// Bat-like stone wings (folded), hunched body, horned grotesque head with fanged snarl,
+// electric glowing eyes (glow palette). Layer order back-to-front: wings → body → head → eyes.
+const GARGOLA = [
+  { name: 'gar_wings' },
+  { name: 'gar_body' },
+  { name: 'gar_head' },
+  { name: 'gar_eyes', palette: 'glow' },
+];
+// Harpy (Arpía) — winged humanoid bird-woman. Wings behind body, torso + clawed legs,
+// fierce head + feather crest, glowing eyes. Layer order back-to-front: wings → body → head → eyes.
+const HARPY = [
+  { name: 'harpy_wings' },
+  { name: 'harpy_body' },
+  { name: 'harpy_head' },
+  { name: 'harpy_eyes', palette: 'glow' },
+];
+// Torbellino Errante — spinning wind vortex (ambient hazard, no face).
+const WHIRL = [{ name: 'whirl_body' }];
+// Elemental de Tormenta — nv6 setpiece. Organic cloud cluster: dark storm body, animated
+// lightning veins (wispglow = electric yellow, 4 idle frames crackling through the cloud),
+// and THREE glaring eyes (glow) across the left/center/right puffs.
+const STORM_ELEM = [{ name: 'storm_body' }, { name: 'storm_bolts', palette: 'wispglow' }, { name: 'storm_eyes', palette: 'glow' }];
 
 export const RECIPES = {
   hero: {
@@ -217,6 +358,65 @@ export const RECIPES = {
   // --- Ambient ---
   burbuja_gelida:    { archetype: 'blob',     size: 32, parts: BURBUJA },
   totem_escarcha:    { archetype: 'floating', size: 64, parts: TOTEM_FROST },
+
+  // --- Air cultists (La Torre Montaña) ---
+  // Three visually distinct hooded fodder: purple / dark-storm / grey-blue, all glowing eyes.
+  // Líder carries an arcane force-field barrier (lider_field=orbblue) + authority staff
+  // with a large crystal orb finial (lider_staff=wood shaft; crystal roles glow palette).
+  cultista:            { archetype: 'humanoid', size: 32, baseColor: 0x4a148c, parts: CULT_HOODED },
+  guardian_rito:       { archetype: 'humanoid', size: 32, baseColor: 0x37474f, parts: CULT_HOODED },
+  cultista_canalizador:{ archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: CULT_HOODED },
+  lider_cultista:      { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: [
+    { name: 'lider_field', palette: 'orbblue' },
+    ...CULT_HOODED,
+    { name: 'lider_staff', palette: 'wood' },
+  ] },
+
+  // --- Air knights (vampiric) ---
+  guardia_nocturno: { archetype: 'humanoid', size: 64, baseColor: 0x37474f, parts: KNIGHT_VAMP },
+  caballero_sangre: { archetype: 'boss',     size: 96, baseColor: 0xb71c1c, parts: BLOOD_KNIGHT },
+
+  // --- Air humanoid vampires ---
+  siervo_torre:      { archetype: 'humanoid', size: 32, baseColor: 0x37474f, parts: VAMP_GRUNT('blackhair') },
+  vastago_vampirico: { archetype: 'humanoid', size: 32, baseColor: 0x6a1b9a, parts: VAMP_GRUNT('blackhair') },
+  duelista_nocturno: { archetype: 'humanoid', size: 32, baseColor: 0x455a64, parts: DUELIST },
+
+  // --- Air casters ---
+  acolito_trueno:   { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: ACOLITO },
+  heraldo_rayo:     { archetype: 'humanoid', size: 32, baseColor: 0x455a64, parts: HERALDO },
+  hechicero_viento: { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: MAGE_CASTER('blackhair') },
+  tronador:         { archetype: 'humanoid', size: 32, baseColor: 0x8d6e63, parts: TRONADOR_PARTS },
+  sacerdote_sangre: { archetype: 'humanoid', size: 32, baseColor: 0xb71c1c, parts: CULT_STAFF },
+  bruja_vendaval:   { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: BRUJA },
+
+  // --- Air winged (new art) ---
+  murcielago:    { archetype: 'floating', size: 32, baseColor: 0x6a1b9a, parts: BAT },
+  vampiro_alado: { archetype: 'floating', size: 64, baseColor: 0xb71c1c, parts: BAT },
+  arpia:             { archetype: 'floating', size: 32, baseColor: 0x8e24aa, parts: HARPY },
+  torbellino_errante:{ archetype: 'blob',     size: 32, baseColor: 0xb0bec5, parts: WHIRL },
+
+  // --- Air blobs + stone sentinels ---
+  fuego_fatuo:        { archetype: 'blob',     size: 32, baseColor: 0xffee58, parts: BRASA },
+  espiritu_tormenta:  { archetype: 'blob',     size: 32, baseColor: 0xb0bec5, parts: CENIZA },
+  centinela_piedra:   { archetype: 'floating', size: 64, baseColor: 0x78909c, parts: TOTEM_FIRE },
+  // Bespoke stone gargoyle — perched/crouching grotesque with folded bat-wings, horned head,
+  // snarling fanged jaws, clawed forelimbs. Electric glowing eyes (glow palette). Distinct
+  // from centinela_piedra (which keeps TOTEM_FIRE). Layer order: wings → body → head → eyes.
+  gargola_pararrayos: { archetype: 'floating', size: 64, baseColor: 0x546e7a, parts: GARGOLA },
+
+  // --- Air boss (nv6 setpiece) ---
+  // Native 2:1: authored 64×32, forged at scale 2 → 128×64 texture (uniform pixels).
+  elemental_tormenta: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x37474f, anim: { idle: 4 }, parts: STORM_ELEM },
+
+  // --- Galahad (nv8 air temple final boss) — 5 shapeshifter forms ---
+  // Count → rage (red tint) → rage2 (no cape, deeper corruption) → giant bat → final (ashen/dying).
+  // All human forms reuse cnt_* Count parts with per-part palette overrides; bat reuses BAT.
+  galahad_humano:     { archetype: 'boss', size: 96, parts: GALAHAD_COUNT },  // vampire Count: pale, caped, white shirt, black trousers, gold medallion, red eyes
+  galahad_rage:       { archetype: 'boss', size: 96, parts: GALAHAD_RAGE },   // Count + red tint: blood-stained shirt, flushed skin, first corruption
+  galahad_rage2:      { archetype: 'boss', size: 96, parts: GALAHAD_RAGE2 },  // Count no cape + dark gore: deeply bloodied, full fury, caped removed
+  galahad_murcielago: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x4a148c, parts: GALAHAD_BAT }, // bespoke colossal symmetric bat — native 2:1 (64×32 → 128×64)
+  galahad_cadaver:    { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x1a0e12, parts: GALAHAD_CADAVER }, // prone dead count — native 2:1 (64×32 → 128×64)
+  galahad_final:      { archetype: 'boss', size: 96, parts: GALAHAD_FINAL },  // Count ashen/dying: grey cloth, death-pale skin, dim eyes (true death)
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }

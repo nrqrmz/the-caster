@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { ENEMY_TYPES } from '../src/data/enemies/index.js';
 import { AIR_ENEMIES } from '../src/data/enemies/air.js';
 import { REGIONS } from '../src/data/regions.js';
+import { hasRecipe } from '../src/data/sprites/recipes.js';
 
 // ── 1. Full roster registration ───────────────────────────────────────────────
 const AIR_CREATURE_KEYS = [

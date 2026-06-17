@@ -4,6 +4,7 @@ import {
   CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, GALAHAD,
 } from '../src/data/bosses/air.js';
 import { ENEMY_TYPES } from '../src/data/enemies/index.js';
+import { hasRecipe } from '../src/data/sprites/recipes.js';
 
 const MINIBOSSES = [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA];
 const ALL = [...MINIBOSSES, LIDER_CULTISTA, GALAHAD];
@@ -12,7 +13,10 @@ test('all five Air bosses are exported and flagged elite', () => {
   for (const b of ALL) {
     assert.ok(b && typeof b === 'object', 'boss def exists');
     assert.equal(b.elite, true, `${b.key} must be elite`);
-    assert.equal(b.geometric, true, `${b.key} must be geometric:true`);
+    // Galahad and forms are spritted; others must be geometric:true or have a recipe.
+    if (b.key !== 'galahad') {
+      assert.ok(b.geometric === true || hasRecipe(b.key), `${b.key} must be geometric:true or have a sprite recipe`);
+    }
   }
 });
 
