@@ -182,7 +182,7 @@ export default class GameScene extends Phaser.Scene {
     // Oversized single-def bosses (e.g. Elemental de Tormenta, radius 56) need their
     // display size set explicitly; the forms path does this in _applyBossForm, but a
     // plain (no-forms) def is not routed through there.
-    if (!def.forms && def.radius) this.boss.setDisplaySize(def.radius * 2, def.radius * 2);
+    if (def.key === 'elemental_tormenta' && def.radius) this.boss.setDisplaySize(def.radius * 2, def.radius * 2);
     if (def.forms && def.forms.length) {
       this.boss._formSeq = new FormSequencer(def.forms);
       // Bootstrap the boss def to the first form.
