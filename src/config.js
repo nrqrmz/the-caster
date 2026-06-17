@@ -70,6 +70,7 @@ export const COLORS = {
   sentinelStone: 0x78909c,  // Centinela de Piedra — paler statue grey
   whirlGrey: 0xb0bec5,      // Torbellino Errante — pale dust-devil grey
   cultRobe: 0x4a148c,       // Cultista, Cultista Canalizador, Guardián del Rito — dark ritual purple
+  heal: 0x00e676,       // vivid healing green — healer marker ring + tethers (region-agnostic so "green = cura")
   healthBack: 0x33272a,
   healthFill: 0x66bb6a,
 };

@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG, spriteKey, ENEMY_MARGIN } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG, spriteKey, ENEMY_MARGIN, ACTOR_DEPTH } from '../config.js';
 import { t, tLines } from '../i18n/index.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
@@ -43,6 +43,7 @@ import Boss from '../objects/Boss.js';
 
 const ITEM = Object.fromEntries(SHOP_ITEMS.map((i) => [i.key, i]));
 const RITUAL_TAUNT_EVERY = 5200; // ms between the leader's deceiving taunts
+const HEAL_FX_INTERVAL_MS = 500; // throttle for healer pulse + tether VFX (heal math still runs every frame)
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -83,6 +84,8 @@ export default class GameScene extends Phaser.Scene {
     this.telegraphGfx = this.add.graphics().setDepth(1400);
     this.triangleGfx = this.add.graphics().setDepth(6);
     this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
+    this._healRings = new Map(); // healer enemy -> persistent marker ring; lifecycle managed entirely in updateAuras
+    this._healFxTimer = 0;       // accumulator throttling heal pulse/tether VFX (created/destroyed each tick would saturate)
     this.triangle = null; // { mode, t } while a trio fight is active
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
     this.tornado = null; // { center, radius, phase, mode, t } while a tornado is active
@@ -810,6 +813,17 @@ export default class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: c, alpha: 0, scale: 1.2, duration: 250, onComplete: () => c.destroy() });
   }
 
+  // A green beam from a healer to an ally it's restoring — fades out so a new one is drawn each VFX tick.
+  drawHealTether(from, to) {
+    const g = this.add.graphics().setDepth(ACTOR_DEPTH + 1);
+    g.lineStyle(2, COLORS.heal, 0.8);
+    g.beginPath();
+    g.moveTo(from.x, from.y);
+    g.lineTo(to.x, to.y);
+    g.strokePath();
+    this.tweens.add({ targets: g, alpha: 0, duration: 320, onComplete: () => g.destroy() });
+  }
+
   update(time, delta) {
     if (this.startedAt === null) this.startedAt = time; // valid game time on the first active frame
     this.lavaTime += delta;      // drives the animated lava/fire VFX (zones + triangle edges)
@@ -1258,15 +1272,35 @@ export default class GameScene extends Phaser.Scene {
   updateAuras(delta) {
     const dt = delta / 1000;
     const live = this.enemies.getChildren().filter((e) => e.active);
+    // VFX is throttled (drawing a tether/pulse every frame would saturate); the heal math below still runs each frame.
+    const emitFx = (this._healFxTimer += delta) >= HEAL_FX_INTERVAL_MS;
+    if (emitFx) this._healFxTimer = 0;
     for (const e of live) {
       const heal = findModifier(e.def, 'healAllies');
       if (heal) {
         const r = heal.radius ?? 120; const hps = heal.hps ?? 8;
+        const healed = []; // allies actually receiving cura this tick — drives the tethers
         for (const o of live) {
           if (o === e || o.hp >= o.maxHp) continue;
           if (Phaser.Math.Distance.Between(e.x, e.y, o.x, o.y) <= r) {
             o.hp = Math.min(o.maxHp, o.hp + hps * dt);
+            if (emitFx) healed.push(o);
           }
+        }
+        // Persistent identifier ring so the player can spot/prioritize a healer even when idle.
+        // Bosses are skipped — they already telegraph heavily and a ring would clutter their fights.
+        if (!this.bosses.includes(e)) {
+          let ring = this._healRings.get(e);
+          if (!ring) {
+            ring = this.add.circle(e.x, e.y, (e.def.radius || 16) + 6).setStrokeStyle(2, COLORS.heal, 0.55).setDepth(ACTOR_DEPTH - 1);
+            this._healRings.set(e, ring);
+          }
+          ring.setPosition(e.x, e.y);
+        }
+        // Throttled feedback: a green pulse on the healer + a fading tether to each ally it's healing.
+        if (emitFx && healed.length) {
+          this.flashCircle(e.x, e.y, (e.def.radius || 16) + 12, COLORS.heal);
+          for (const o of healed) this.drawHealTether(e, o);
         }
       }
       const aura = findModifier(e.def, 'auraDamage');
@@ -1276,6 +1310,10 @@ export default class GameScene extends Phaser.Scene {
           this.damageCaster((aura.dps ?? 10) * dt);
         }
       }
+    }
+    // Reap marker rings whose healer has died/despawned — covers every death path (split, revive, level cleanup).
+    for (const [enemy, ring] of this._healRings) {
+      if (!enemy.active) { ring.destroy(); this._healRings.delete(enemy); }
     }
   }
 
