@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, GALAHAD,
 } from '../src/data/bosses/air.js';
+import { ENEMY_TYPES } from '../src/data/enemies/index.js';
 
 const MINIBOSSES = [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA];
 const ALL = [...MINIBOSSES, LIDER_CULTISTA, GALAHAD];
@@ -11,6 +12,7 @@ test('all five Air bosses are exported and flagged elite', () => {
   for (const b of ALL) {
     assert.ok(b && typeof b === 'object', 'boss def exists');
     assert.equal(b.elite, true, `${b.key} must be elite`);
+    assert.equal(b.geometric, true, `${b.key} must be geometric:true`);
   }
 });
 
@@ -107,10 +109,11 @@ test('Galahad form keys in order', () => {
   ]);
 });
 
-test('Galahad forms have ascending resist across the first four forms', () => {
-  const r = GALAHAD.forms.slice(0, 4).map((f) => f.resist ?? 0);
-  assert.deepEqual(r, [0, 0.10, 0.20, 0.30]);
-  for (let i = 1; i < r.length; i++) assert.ok(r[i] > r[i - 1], `resist ascends at ${i}`);
+test('Galahad forms have ascending resist across the first four forms, final resets to 0', () => {
+  const r = GALAHAD.forms.map((f) => f.resist ?? 0);
+  assert.deepEqual(r, [0, 0.10, 0.20, 0.30, 0]);
+  for (let i = 1; i < r.length - 1; i++) assert.ok(r[i] > r[i - 1], `resist ascends at ${i}`);
+  assert.equal(r[4], 0, 'final form resist resets to 0');
 });
 
 test('Galahad form hp matches spec §4.5 (340/460/560/700/90)', () => {
@@ -138,4 +141,17 @@ test('last Galahad form is galahad_final with low hp + minimal kit', () => {
   assert.equal(last.key, 'galahad_final');
   assert.ok(last.hp <= 100, `final hp low, got ${last.hp}`);
   assert.equal(last.phases.length, 1, 'final has one phase (minimal kit)');
+});
+
+test('every boss summon spawnType is a registered enemy', () => {
+  const defs = [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, ...GALAHAD.forms];
+  for (const def of defs) {
+    for (const phase of def.phases || []) {
+      for (const step of phase.sequence || []) {
+        if (step.do === 'summon') {
+          assert.ok(step.spawnType in ENEMY_TYPES, `${def.key}: summon spawnType '${step.spawnType}' not in ENEMY_TYPES`);
+        }
+      }
+    }
+  }
 });
