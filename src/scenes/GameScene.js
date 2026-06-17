@@ -697,27 +697,30 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  // Aleta dorsal de un tiburón sumergido: un triángulo en la capa de telegraph que
-  // apunta en su dirección de avance (o hacia la princesa si está quieto en el anillo).
+  // Aleta dorsal de un tiburón sumergido. El tiburón se ve de PERFIL, así que la aleta
+  // siempre apunta hacia ARRIBA (sale del agua) y solo se voltea izq/der según hacia
+  // dónde nada — nunca rota a ángulos arbitrarios. Silueta de aleta real: borde de ataque
+  // recto, cresta rastrillada hacia atrás (hacia la cola) y borde de fuga cóncavo.
   drawDorsalFin(e) {
     const g = this.telegraphGfx;
     const vx = e.body ? e.body.velocity.x : 0;
-    const vy = e.body ? e.body.velocity.y : 0;
-    const ang = Math.hypot(vx, vy) > 6
-      ? Math.atan2(vy, vx)
-      : Phaser.Math.Angle.Between(e.x, e.y, this.caster.x, this.caster.y);
-    const len = 18, wid = 7;
-    const tipX = e.x + Math.cos(ang) * len;
-    const tipY = e.y + Math.sin(ang) * len;
-    const baseX = e.x - Math.cos(ang) * (len * 0.4);
-    const baseY = e.y - Math.sin(ang) * (len * 0.4);
-    const px = Math.cos(ang + Math.PI / 2);
-    const py = Math.sin(ang + Math.PI / 2);
-    g.fillStyle(COLORS.sharkYoung, 1);
+    // Facing igual que FacingController: mira a la izquierda cuando vx<0. Al detenerse
+    // conserva el último facing; si nunca nadó, encara a la princesa.
+    if (Math.abs(vx) > 6) e._finFace = vx < 0 ? -1 : 1;
+    const s = e._finFace ?? (this.caster.x < e.x ? -1 : 1); // +1 mira derecha, -1 mira izquierda
+    const k = (e.def && e.def.radius ? e.def.radius : 17) / 17; // escala con el tamaño del tiburón
+    const X = (dx) => e.x + s * dx * k; // dx en orientación "mira a la derecha"; s lo voltea
+    const Y = (dy) => e.y + dy * k;     // dy negativo = arriba (fuera del agua)
+    const frontBottom = [X(8), Y(3)];   // base delantera, sobre la superficie
+    const peak        = [X(-3), Y(-15)];// cresta arriba, rastrillada hacia la cola
+    const notch       = [X(-5), Y(-4)]; // jalada hacia el cuerpo → borde de fuga cóncavo
+    const backBottom  = [X(-9), Y(3)];  // base trasera
+    g.fillStyle(e.def && e.def.color ? e.def.color : COLORS.sharkYoung, 1);
     g.beginPath();
-    g.moveTo(tipX, tipY);
-    g.lineTo(baseX + px * wid, baseY + py * wid);
-    g.lineTo(baseX - px * wid, baseY - py * wid);
+    g.moveTo(frontBottom[0], frontBottom[1]);
+    g.lineTo(peak[0], peak[1]);
+    g.lineTo(notch[0], notch[1]);
+    g.lineTo(backBottom[0], backBottom[1]);
     g.closePath();
     g.fillPath();
   }

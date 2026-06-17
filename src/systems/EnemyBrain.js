@@ -4,8 +4,8 @@
 // so they can be unit-tested under `node --test`.
 
 import {
-  BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS,
-  EGG_HATCH_MS, TADPOLE_GROW_MS, SPAWN_SAFE_DIST,
+  BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS, BURROW_EMERGE_DIST,
+  EGG_HATCH_MS, TADPOLE_GROW_MS,
   EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL,
 } from '../data/tuning.js';
 import { GAME_WIDTH, GAME_HEIGHT, ENEMY_MARGIN } from '../config.js'; // config.js is Phaser-free (constants only)
@@ -142,7 +142,7 @@ export const MOVEMENTS = {
       // se detiene al alcanzar el anillo seguro para no emerger encima de ella.
       if (state.t >= submergeMs) { state.mode = 'emerge'; state.t = 0; return { x: 0, y: 0, submerged: true }; }
       const d = distance(self.x, self.y, target.x, target.y);
-      if (d <= SPAWN_SAFE_DIST + 4) return { x: 0, y: 0, submerged: true };
+      if (d <= BURROW_EMERGE_DIST) return { x: 0, y: 0, submerged: true };
       const a = angleBetween(self.x, self.y, target.x, target.y);
       return { x: Math.cos(a) * speed, y: Math.sin(a) * speed, submerged: true };
     }

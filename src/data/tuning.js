@@ -57,6 +57,10 @@ export const WHIRLPOOL_ACTIVE_MS = 4500;      // vortex is live for this long
 export const WHIRLPOOL_COOLDOWN_MS = 5000;    // gap before the boss can trigger it again
 
 // Burrow movement.
+// How close (px, center-to-center) the submerged shark swims before parking to emerge.
+// Independent of SPAWN_SAFE_DIST (which governs where enemies first spawn): the shark
+// should surface right next to the princess, not 160px away.
+export const BURROW_EMERGE_DIST = 60;
 export const BURROW_SUBMERGE_MS = 1500;       // invuln + hidden window
 export const BURROW_TELEGRAPH_MS = 450;       // surface-warning ring duration (antes 400)
 export const BURROW_SURFACE_MS = 2500;        // ventana de superficie/persecución vulnerable
