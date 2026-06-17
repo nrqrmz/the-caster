@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeMovement, MOVEMENTS } from '../src/systems/EnemyBrain.js';
+import { ENEMY_MARGIN } from '../src/config.js';
 
 const mag = (v) => Math.hypot(v.x, v.y);
 const ctx = (overrides = {}) => ({
@@ -329,4 +330,16 @@ test('no enemy def has a radius below the floor of 16', () => {
   for (const [key, def] of Object.entries(ENEMY_TYPES)) {
     if (typeof def.radius === 'number') assert.ok(def.radius >= 16, `${key} radius ${def.radius} < 16`);
   }
+});
+
+test('burrow reposiciona dentro de los bordes respetando radio + ENEMY_MARGIN', () => {
+  // target pegado a la esquina superior-izquierda fuerza el clamp del destino.
+  const self = { x: 5, y: 5, radius: 16 };
+  const target = { x: 0, y: 0 };
+  const state = { mode: 'reposition', t: 0 };
+  const out = MOVEMENTS.burrow({ self, target, speed: 60, dt: 16, params: {}, state });
+  assert.ok(out.repositionTo, 'debe emitir un destino de reposición');
+  const min = 16 + ENEMY_MARGIN;
+  assert.ok(out.repositionTo.x >= min, `x (${out.repositionTo.x}) >= ${min}`);
+  assert.ok(out.repositionTo.y >= min, `y (${out.repositionTo.y}) >= ${min}`);
 });
