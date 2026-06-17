@@ -34,6 +34,19 @@ const KNIGHT_WATER = [
 ];
 const KNIGHT_VAMP = [...KNIGHT.slice(0, 5), { name: 'knight_eyes', palette: 'vampglow' }];
 const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
+// Air caster pair A: acolito (light grey hood, yellow ember) vs heraldo (dark steel-blue, cyan ember)
+const ACOLITO = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'glow' }, ...CULT_HOODED];
+const HERALDO = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'orbblue' }, ...CULT_HOODED];
+// Air caster pair B: hechicero (bare-head, grey robe, cyan orb) vs tronador (hooded, tan, yellow orb)
+const TRONADOR_PARTS = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'glow' }, ...CULT_HOODED];
+// Bruja del Vendaval — wind-witch boss (air nv5). Windswept flowing robe (purple/storm),
+// streaming silver hair, gnarled staff with storm orb, wind-gust aura.
+const BRUJA = [
+  { name: 'bruja_wind', palette: 'orbblue' },
+  { name: 'bruja_body' },
+  { name: 'bruja_hair', palette: 'silverhair' },
+  { name: 'bruja_staff', palette: 'wood' },
+];
 // Bespoke blood-knight lord for caballero_sangre (air nv4 boss). Full-height (h32)
 // imposing armored vampire-lord: black flowing cape, red+black plate armor, massive
 // Saga-style pauldrons, slimmer torso, visored helm (no crown), greaves + greatsword.
@@ -249,12 +262,12 @@ export const RECIPES = {
   caballero_sangre: { archetype: 'boss',     size: 96, baseColor: 0xb71c1c, parts: BLOOD_KNIGHT },
 
   // --- Air casters ---
-  acolito_trueno:   { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: CULT_STAFF },
-  heraldo_rayo:     { archetype: 'humanoid', size: 32, baseColor: 0x546e7a, parts: CULT_STAFF },
-  hechicero_viento: { archetype: 'humanoid', size: 32, baseColor: 0x90a4ae, parts: MAGE_CASTER('blackhair') },
-  tronador:         { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: MAGE_CASTER('hair') },
+  acolito_trueno:   { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: ACOLITO },
+  heraldo_rayo:     { archetype: 'humanoid', size: 32, baseColor: 0x455a64, parts: HERALDO },
+  hechicero_viento: { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: MAGE_CASTER('blackhair') },
+  tronador:         { archetype: 'humanoid', size: 32, baseColor: 0x8d6e63, parts: TRONADOR_PARTS },
   sacerdote_sangre: { archetype: 'humanoid', size: 32, baseColor: 0xb71c1c, parts: CULT_STAFF },
-  bruja_vendaval:   { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: MAGE_CASTER('silverhair') },
+  bruja_vendaval:   { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: BRUJA },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
