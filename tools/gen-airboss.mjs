@@ -16,6 +16,7 @@ const layers = {
   bruja_body: {}, bruja_head: {}, bruja_hair: {}, bruja_staff: {}, bruja_wind: {},
   duelist_blade: {}, duelist_cape: {},
   gar_wings: {}, gar_body: {}, gar_head: {}, gar_eyes: {},
+  gal_cape: {}, gal_body: {}, gal_sword: {}, gal_eyes: {},
 };
 const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
 const Rd = (v) => Math.round(v);
@@ -756,3 +757,242 @@ emit('gar_wings');
 emit('gar_body');
 emit('gar_head');
 emit('gar_eyes');
+
+// ============================ GALAHAD THE GRAIL KNIGHT (nv8 air temple boss) ============================
+// Sir Galahad: immortal cursed grail-king in ornate full plate, wide flowing royal cape,
+// holy longsword with cross crossguard, and a golden CROWN (not a visor — DISTINCT from bk_body).
+// The breastplate bears a chalice/grail emblem (vertical line + cup outline = cross+grail hybrid).
+// Parts (back-to-front): gal_cape → gal_body → gal_sword → gal_eyes
+// Silhouette distinctions vs. Caballero de Sangre (bk_*):
+//   - Crown on helm top (visible rounded prongs) vs visor beak
+//   - Wide fanning cape vs narrow straight curtain
+//   - Grail-cross chalice emblem on breastplate vs blood-V mark
+//   - Holy longsword cross-guard vs greatsword serrated blade
+//   - Wider ornate pauldrons (part of gal_body) vs separate bk_pauldrons layer
+//   - Gold accent marks (crown/emblem) vs red blood-gleam accent
+//
+// All on a 32×32 canvas. Recipe drives baseColor (steel/blood/ashen per form).
+// Palette roles: o=outline, b=base(type-color plate), s=shade, h=highlight, a=accent(gold trim per recipe)
+
+// ============================ GAL_CAPE (wide royal flowing cape, fans behind figure) ============================
+// Unlike bk_cape (straight curtain, 13px constant), this cape FANS OUT: narrow at shoulder
+// attachment (~8px wide at y=10), spreading to full canvas width (26px) by y=31.
+// Gives a regal triangular silhouette — like a king's mantle.
+// vampblack palette: o=outline, b=base(near-black), s=shade, h=highlight(dark plum)
+const GAL_CAPE_TOP = 10, GAL_CAPE_BOT = 31;
+for (let y = GAL_CAPE_TOP; y <= GAL_CAPE_BOT; y++) {
+  const t = (y - GAL_CAPE_TOP) / (GAL_CAPE_BOT - GAL_CAPE_TOP); // 0..1
+  // Fans: half-width from 4 to 13
+  const half = Rd(4 + t * 9);
+  const Lx = Math.max(0, cx - half), Rx = Math.min(31, cx + half);
+  for (let x = Lx; x <= Rx; x++) {
+    let r = 'b';
+    if (x === Lx || x === Rx) r = 'o';
+    else if (x === Lx + 1 || x === Rx - 1) r = 's';
+    // Highlight drape folds: two diagonal highlight lines suggesting royal fabric
+    else if (x === cx - Rd(t * 3) || x === cx + Rd(t * 3)) r = 'h';
+    put('gal_cape', x, y, r);
+  }
+}
+// Shoulder attachment band (y=8..10) — ornate with gold accent edge (role 'a' = gold)
+for (let x = cx - 4; x <= cx + 4; x++) {
+  const isEdge = x === cx - 4 || x === cx + 4;
+  put('gal_cape', x, 8, isEdge ? 'o' : 'a');
+  put('gal_cape', x, 9, isEdge ? 'o' : (x % 2 === 0 ? 's' : 'h'));
+}
+// Royal scallop at the cape hem (y=31): three small notched dips
+for (const xc of [cx - 8, cx, cx + 8]) {
+  if (layers['gal_cape'][`${xc},31`]) put('gal_cape', xc, 31, 'h');
+}
+
+// ============================ GAL_BODY (regal grail-knight — CROWN helm, ornate plate, grail emblem) ============================
+// Key distinctions from bk_body:
+//   1. CROWN on top (y=0..5): three pointed prongs with gold accent 'a' tips
+//   2. Open-faced helm / gorget (no beak visor): noble open face reveals the cursed man
+//   3. Wide breastplate (half≈10 at shoulders — grander)
+//   4. Grail chalice emblem on chest: vertical staff + U-shaped cup (y=16..20)
+//   5. Wide ornate pauldrons built into the body silhouette (no separate layer needed)
+
+// ---- CROWN helm (y=0..8) ----
+// Three prongs rising above the helm top; helm is a broad noble crown-cap (not a beak)
+// Crown prong LEFT at cx-3, CENTER at cx, RIGHT at cx+3
+// Prong tips ('a' = gold accent) at y=0..2, base at y=3..4
+for (const px of [cx - 3, cx, cx + 3]) {
+  put('gal_body', px, 0, 'a');
+  put('gal_body', px, 1, 'a');
+  put('gal_body', px, 2, 'h');
+  put('gal_body', px, 3, 'b');
+}
+// Crown band connecting the prong bases (y=3..5, full width between prongs)
+for (let x = cx - 4; x <= cx + 4; x++) {
+  put('gal_body', x, 3, x === cx - 4 || x === cx + 4 ? 'o' : 'b');
+  put('gal_body', x, 4, x === cx - 4 || x === cx + 4 ? 'o' : (x % 2 === 0 ? 'h' : 's'));
+  put('gal_body', x, 5, x === cx - 4 || x === cx + 4 ? 'o' : 's');
+}
+// Gold band accent across the crown (y=4): narrow gold stripe
+for (let x = cx - 3; x <= cx + 3; x++) put('gal_body', x, 4, 'a');
+
+// ---- Helm skull (y=5..12): broad noble open-faced helm, wider than bk_body ----
+// Half-width: 4.5 at top narrowing to 4 at base — grander presence
+for (let y = 5; y <= 11; y++) {
+  const half = (y <= 6) ? 4.5 : (y <= 8) ? 4.8 : (y <= 10) ? 4.5 : 4.0;
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
+  for (let x = Lx; x <= Rx; x++) {
+    let r = 'b';
+    if (x === Lx || x === Rx) r = 'o';
+    else if (x === Lx + 1) r = 'h';
+    else if (x === Rx - 1) r = 's';
+    put('gal_body', x, y, r);
+  }
+}
+// Open face slit (not a full visor): a narrow rectangular opening revealing the cursed eyes
+// Central face opening: x=cx-2..cx+2, y=6..9 — replaced with 'o' for the opening shadow
+for (let y = 6; y <= 9; y++) {
+  for (let x = cx - 2; x <= cx + 2; x++) put('gal_body', x, y, 'o');
+}
+// Narrow nasal guard (center ridge): single pixel at cx, y=6..9
+for (let y = 6; y <= 9; y++) put('gal_body', cx, y, 's');
+// Gorget (chin-collar y=11..12): broader than bk's visor, noble curve
+for (let y = 11; y <= 13; y++) {
+  const half = 4.0 + (y - 11) * 0.8;
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
+  for (let x = Lx; x <= Rx; x++) put('gal_body', x, y, x === Lx || x === Rx ? 'o' : (x % 3 === 0 ? 'h' : 's'));
+}
+
+// ---- Wide breastplate / torso (y=13..23) — grander than bk_body (half≈10 at shoulders) ----
+// Also includes built-in pauldrons at y=13..18 (shoulder extenders at left/right edges)
+for (let y = 13; y <= 23; y++) {
+  // Main torso: half-width goes 9→8.5 from shoulder→waist
+  const half = (y <= 15) ? 9.0 : (y <= 18) ? 8.5 : (y <= 20) ? 7.5 : 6.5;
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
+  for (let x = Lx; x <= Rx; x++) {
+    let r = 'b';
+    if (x === Lx || x === Rx) r = 'o';
+    else if (x === Lx + 1) r = 'h';
+    else if (x === Rx - 1) r = 's';
+    else if (x === Lx + 2 || x === Rx - 2) r = 's'; // inner pauldron band
+    // Plate ridge bands every 3 rows
+    if ((y - 13) % 3 === 0 && x > Lx + 2 && x < Rx - 2) r = 's';
+    // Breastplate central ridge (holy light catch)
+    if (x === cx) r = 'h';
+    put('gal_body', x, y, r);
+  }
+}
+// Pauldron accent rim (gold trim band at shoulder y=13..14): mark x=Lx+1 and Rx-1 as gold
+for (let y = 13; y <= 14; y++) {
+  put('gal_body', Rd(cx - 9) + 1, y, 'a');
+  put('gal_body', Rd(cx + 9) - 1, y, 'a');
+}
+
+// ---- GRAIL CHALICE EMBLEM on breastplate (y=15..22, centered) ----
+// A grail/chalice outline: vertical stem (cx, y=15..22), cup U-shape (y=15..17),
+// and a small base foot (y=22). This is the cross+grail hybrid holy emblem.
+// Uses 'a' (gold accent) for the emblem so it renders gold in the recipe.
+// Cup top horizontal bar (y=15): 3 wide
+for (let x = cx - 3; x <= cx + 3; x++) put('gal_body', x, 15, 'a');
+// Cup sides (y=16..18): left at cx-3, right at cx+3
+for (let y = 16; y <= 18; y++) {
+  put('gal_body', cx - 3, y, 'a');
+  put('gal_body', cx + 3, y, 'a');
+}
+// Cup bottom curve (y=18..19): convergence to stem
+for (const [dx, dy] of [[-2, 19], [-1, 20], [0, 20], [1, 20], [2, 19]]) put('gal_body', cx + dx, dy, 'a');
+// Stem (y=20..22, 1 wide at cx)
+for (let y = 21; y <= 22; y++) put('gal_body', cx, y, 'a');
+// Base foot (y=22): 3 wide
+for (let x = cx - 2; x <= cx + 2; x++) put('gal_body', x, 22, 'a');
+
+// ---- Arms (y=13..23) — slim ornate plate sleeves ----
+for (let y = 13; y <= 23; y++) {
+  put('gal_body', 7, y, 'o');
+  put('gal_body', 8, y, 'b');
+  put('gal_body', 23, y, 'b');
+  put('gal_body', 24, y, 'o');
+}
+// Gauntlets at y=22..24 (wider cuff with gold accent edge)
+for (let y = 22; y <= 24; y++) {
+  for (const x of [6, 7, 8, 9]) put('gal_body', x, y, x === 6 || x === 9 ? 'o' : (y === 22 ? 'a' : 's'));
+  for (const x of [22, 23, 24, 25]) put('gal_body', x, y, x === 22 || x === 25 ? 'o' : (y === 22 ? 'a' : 's'));
+}
+
+// ---- Faulds / hip guards (y=23..25) ----
+for (let y = 23; y <= 25; y++) {
+  const half = 5.5, Lx = Rd(cx - half), Rx = Rd(cx + half);
+  for (let x = Lx; x <= Rx; x++) {
+    put('gal_body', x, y, x === Lx || x === Rx ? 'o' : ((y - 23) % 2 === 0 ? 'b' : 's'));
+  }
+}
+
+// ---- Greaves (y=25..31) — legs with gold knee-caps ----
+// Left greave: x=12..14; Right greave: x=18..20
+for (let y = 25; y <= 31; y++) {
+  for (const x of [12, 13, 14]) put('gal_body', x, y, x === 12 || x === 14 ? 'o' : (y === 27 ? 'a' : 'b'));
+  put('gal_body', 13, y, y === 27 ? 'a' : 'h');
+  for (const x of [18, 19, 20]) put('gal_body', x, y, x === 18 || x === 20 ? 'o' : (y === 27 ? 'a' : 'b'));
+  put('gal_body', 19, y, y === 27 ? 'a' : 'h');
+}
+// Sabatons (foot plates) y=31
+for (const x of [11, 12, 13, 14, 15]) put('gal_body', x, 31, x === 11 || x === 15 ? 'o' : 's');
+for (const x of [17, 18, 19, 20, 21]) put('gal_body', x, 31, x === 17 || x === 21 ? 'o' : 's');
+
+// ============================ GAL_SWORD (holy longsword with cross crossguard) ============================
+// A noble holy longsword: slimmer, more upright than bk_sword. Cross-shaped crossguard
+// (not just a horizontal bar) distinguishes it as a paladin/crusader weapon.
+// Blade at x=23..25 (narrower than bk_sword's 3px + serration), y=0..21.
+// Crossguard: a TRUE cross (horizontal bar AND vertical extension for cross shape).
+// Holy gleam accent: not blood-red but using 'a' role (gold via recipe accent).
+// Steel palette: o=outline, h=highlight(bright steel), b=base(mid), s=shade, a=accent(gold holy glow)
+const GSX = 23; // blade left edge
+// Tip (pointed)
+put('gal_sword', GSX + 1, 0, 'h');
+put('gal_sword', GSX + 1, 1, 'h');
+// Blade shaft: 3px wide, y=2..20
+for (let y = 2; y <= 20; y++) {
+  put('gal_sword', GSX,     y, 'o');
+  put('gal_sword', GSX + 1, y, 'h');
+  put('gal_sword', GSX + 2, y, 'b');
+  // Holy gleam (gold) every 5 rows — subtle divine light
+  if (y % 5 === 0) put('gal_sword', GSX + 1, y, 'a');
+}
+// Right edge outline
+for (let y = 2; y <= 20; y++) put('gal_sword', GSX + 3, y, 'o');
+
+// Cross-shaped crossguard: HORIZONTAL bar (y=21, x=GSX-5..GSX+7) + short vertical flanges
+// Horizontal arm of the cross
+for (let x = GSX - 5; x <= GSX + 7; x++) {
+  put('gal_sword', x, 21, x === GSX - 5 || x === GSX + 7 ? 'o' : (x === GSX - 4 || x === GSX + 6 ? 's' : (x === GSX + 1 ? 'a' : 'b')));
+}
+// Cross crossguard lower edge
+for (let x = GSX - 4; x <= GSX + 6; x++) put('gal_sword', x, 22, x === GSX - 4 || x === GSX + 6 ? 'o' : 's');
+// Vertical flanges of the cross — small downward prongs at tips
+put('gal_sword', GSX - 5, 22, 'o');
+put('gal_sword', GSX + 7, 22, 'o');
+
+// Grip: y=23..26, with wrapped detail
+for (let y = 23; y <= 26; y++) {
+  put('gal_sword', GSX,     y, 'o');
+  put('gal_sword', GSX + 1, y, y % 2 === 0 ? 'h' : 'b');
+  put('gal_sword', GSX + 2, y, y % 2 === 0 ? 'b' : 's');
+  put('gal_sword', GSX + 3, y, 'o');
+  // Grip wrapping bands (gold accent every other row)
+  if (y % 2 === 0) put('gal_sword', GSX + 1, y, 'a');
+}
+// Pommel: a broad rounded pommel (wider than bk's disk) — regal ornate
+disk('gal_sword', GSX + 1.5, 29, 2.0, 'b');
+put('gal_sword', GSX + 1, 27, 'o');
+put('gal_sword', GSX + 2, 27, 'o');
+
+// ============================ GAL_EYES (holy golden eyes — through the open face slit) ============================
+// Two golden glowing eyes peeking through the narrow open-face helm slit (y=6..9 area).
+// Uses glow palette: h=bright highlight (inner glow), b=base(mid glow), o=outline.
+// Left eye: (cx-1, 7..8); Right eye: (cx+1, 7..8).
+// (gal_body's face opening is at cx-2..cx+2, y=6..9; eyes sit inside it)
+put('gal_eyes', cx - 1, 7, 'h');
+put('gal_eyes', cx - 1, 8, 'b');
+put('gal_eyes', cx + 1, 7, 'h');
+put('gal_eyes', cx + 1, 8, 'b');
+
+emit('gal_cape');
+emit('gal_body');
+emit('gal_sword');
+emit('gal_eyes');

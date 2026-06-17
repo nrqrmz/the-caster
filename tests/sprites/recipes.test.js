@@ -100,6 +100,19 @@ test('every water boss + form has a recipe with baseColor and known parts', () =
   }
 });
 
+test('every air boss + form has a recipe with a forgeable base', () => {
+  const keys = ['caballero_sangre','bruja_vendaval','elemental_tormenta','lider_cultista',
+    'galahad_humano','galahad_rage','galahad_rage2','galahad_murcielago','galahad_final'];
+  for (const key of keys) {
+    assert.ok(hasRecipe(key), `air boss '${key}' has no recipe`);
+    const r = getRecipe(key);
+    for (const ref of r.parts) {
+      const name = typeof ref === 'string' ? ref : ref.name;
+      assert.ok(PARTS[name], `recipe '${key}' references unknown part '${name}'`);
+    }
+  }
+});
+
 // GLOBAL parity: every registered enemy type the game can spawn must have a sprite recipe.
 import { ENEMY_TYPES } from '../../src/data/enemies.js';
 

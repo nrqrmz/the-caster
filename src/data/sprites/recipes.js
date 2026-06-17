@@ -61,6 +61,18 @@ const BLOOD_KNIGHT = [
   { name: 'bk_sword', palette: 'steel' },
   { name: 'bk_eyes', palette: 'vampglow' },
 ];
+// Sir Galahad — nv8 air temple final boss. Bespoke regal grail-knight, GRANDER than
+// the Caballero de Sangre. Key visual distinctions: wide FANNING royal cape (vs straight
+// curtain), CROWN prongs on helm (vs visor beak), grail-chalice emblem on breastplate
+// (vs blood-V mark), cross-shaped longsword crossguard (vs greatsword serrations), gold
+// holy-gleam accent (vs blood-red accent), open face slit with golden eyes (vs vampglow).
+// Layer order back-to-front: cape → body → sword → eyes.
+const GALAHAD_KNIGHT = [
+  { name: 'gal_cape', palette: 'vampblack' },
+  { name: 'gal_body' },
+  { name: 'gal_sword', palette: 'steel' },
+  { name: 'gal_eyes', palette: 'glow' },
+];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
 const JELLY = [
@@ -339,6 +351,15 @@ export const RECIPES = {
   // --- Air boss (nv6 setpiece) ---
   // Native 2:1: authored 64×32, forged at scale 2 → 128×64 texture (uniform pixels).
   elemental_tormenta: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x37474f, anim: { idle: 4 }, parts: STORM_ELEM },
+
+  // --- Galahad (nv8 air temple final boss) — 5 shapeshifter forms ---
+  // Holy → blood → dark fury → giant bat → ashen. The 4 human forms use the bespoke
+  // GALAHAD_KNIGHT parts; the bat form reuses the BAT archetype at boss scale (96px).
+  galahad_humano:     { archetype: 'boss', size: 96, baseColor: 0x9aa6b2, accent: 0xffd54f, parts: GALAHAD_KNIGHT }, // pale steel plate, gold trim — holy paladin
+  galahad_rage:       { archetype: 'boss', size: 96, baseColor: 0xb71c1c, accent: 0xffd54f, parts: GALAHAD_KNIGHT }, // blood-red — first corruption
+  galahad_rage2:      { archetype: 'boss', size: 96, baseColor: 0x7f0000, accent: 0xff5252, parts: GALAHAD_KNIGHT }, // dark crimson, scarlet accent — full fury
+  galahad_murcielago: { archetype: 'boss', size: 96, baseColor: 0x4a148c, parts: BAT },                             // deep purple giant bat
+  galahad_final:      { archetype: 'boss', size: 96, baseColor: 0xcdbfc9, accent: 0xffd54f, parts: GALAHAD_KNIGHT }, // ashen — the cursed grail king stripped bare
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
