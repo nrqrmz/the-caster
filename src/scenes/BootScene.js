@@ -5,6 +5,17 @@ import { forge } from '../systems/SpriteForge.js';
 import { ENEMY_TYPES } from '../data/enemies/index.js';
 import { derivePalette, NAMED_PALETTES } from '../data/sprites/palettes.js';
 
+// Mirror every composed frame of a forged sprite horizontally (reverse each row of the
+// pixel grid). Used for `flip:true` recipes whose art was drawn facing left. Operates on
+// the final composed grids, so part anchors/positions need no adjustment.
+function mirrorFrames(out) {
+  for (const frames of Object.values(out.anims)) {
+    for (let i = 0; i < frames.length; i++) {
+      frames[i] = frames[i].map((row) => [...row].reverse());
+    }
+  }
+}
+
 export default class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
 
@@ -31,6 +42,10 @@ export default class BootScene extends Phaser.Scene {
       const baseColor = recipe.baseColor ?? ENEMY_TYPES[key]?.color ?? COLORS.caster;
       const palette = paletteFor(key, baseColor);
       const out = forge(recipe, PARTS, palette, (ref) => this.resolvePartPalette(ref));
+      // Some animal art was authored facing LEFT, but the convention (and FacingController)
+      // is side = facing RIGHT (left via flipX). `flip:true` recipes mirror every composed
+      // frame horizontally at build time so the stored texture obeys the convention.
+      if (recipe.flip) mirrorFrames(out);
       this.paintForged(key, out);
     }
   }

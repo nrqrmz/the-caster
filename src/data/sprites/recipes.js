@@ -162,7 +162,7 @@ export const RECIPES = {
   larva_magma:     { archetype: 'beast', size: 64, parts: LARVA },
   salamandra:      { archetype: 'beast', size: 32, parts: SALAMANDRA },
   espiritu_ceniza: { archetype: 'blob', size: 32, parts: CENIZA },
-  can_lava:        { archetype: 'beast', size: 64, parts: CAN_LAVA },
+  can_lava:        { archetype: 'beast', size: 64, parts: CAN_LAVA, flip: true },
   elemental_fuego: { archetype: 'blob', size: 64, parts: FUEGO_ELEM },
   coloso_magma:    { archetype: 'beast', size: 64, parts: COLOSO },
   fenix_menor:     { archetype: 'floating', size: 64, parts: FENIX },
@@ -181,14 +181,14 @@ export const RECIPES = {
   // --- Water bosses (single-form) ---
   soldado_hielo:   { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, parts: ICE_KNIGHT },
   sapo_desovador:  { archetype: 'boss', size: 96, baseColor: 0x7cb342, parts: SAPO_DESOV },
-  tiburon_abisal:  { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL },
+  tiburon_abisal:  { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL, flip: true },
   kraken:          { archetype: 'boss', size: 96, baseColor: 0xab47bc, anim: { idle: 4, walk: 4 }, parts: KRAKEN },
   // --- Dama del Lago + her 5 forms (each a distinct creature) ---
   dama_lago:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
   dama_maga:       { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
-  dama_tiburon:    { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL },
+  dama_tiburon:    { archetype: 'boss', size: 96, baseColor: 0x4fc3f7, parts: TIBURON_ABISAL, flip: true },
   dama_kraken:     { archetype: 'boss', size: 96, baseColor: 0xab47bc, anim: { idle: 4, walk: 4 }, parts: KRAKEN },
-  dama_ballena:    { archetype: 'boss', size: 96, baseColor: 0xd32f2f, parts: WHALE },
+  dama_ballena:    { archetype: 'boss', size: 96, baseColor: 0xd32f2f, parts: WHALE, flip: true },
   dama_maga_final: { archetype: 'boss', size: 96, baseColor: 0xb3e5fc, accent: 0xffd54f, parts: DAMA },
 
   // --- Water cultists (humanoid) ---
@@ -201,16 +201,16 @@ export const RECIPES = {
   vidente_marea:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF_WATER },
   guardia_hielo:     { archetype: 'humanoid', size: 64, parts: KNIGHT_WATER },
   // --- Water beasts ---
-  tiburon_joven:     { archetype: 'fish',    size: 64, parts: SHARK },
+  tiburon_joven:     { archetype: 'fish',    size: 64, parts: SHARK, flip: true },
   serpiente_marina:  { archetype: 'serpent', size: 64, parts: SERPIENTE },
   tortuga_acorazada: { archetype: 'shelled', size: 64, parts: TORTUGA },
   cangrejo_acorazado:{ archetype: 'shelled', size: 64, parts: CANGREJO },
   medusa:            { archetype: 'jelly',   size: 64, parts: JELLY },
   medusa_cria:       { archetype: 'jelly',   size: 32, parts: JELLY },
-  pez_globo:         { archetype: 'blob',    size: 32, parts: PEZ_GLOBO },
+  pez_globo:         { archetype: 'blob',    size: 32, parts: PEZ_GLOBO, flip: true },
   // --- Frog lineage ---
   huevo_sapo:        { archetype: 'egg',     size: 32, parts: HUEVO },
-  renacuajo:         { archetype: 'blob',    size: 32, parts: RENACUAJO },
+  renacuajo:         { archetype: 'blob',    size: 32, parts: RENACUAJO, flip: true },
   rana_saltarina:    { archetype: 'frog',    size: 32, parts: RANA },
   sapo_escupidor:    { archetype: 'frog',    size: 64, parts: SAPO_ESCUPIDOR },
   sapo_adulto:       { archetype: 'frog',    size: 64, parts: SAPO_ADULTO },

@@ -87,30 +87,38 @@ export const TIBURON_ABISAL = {
 // p1 tentacle barrages; p2 maelstrom (spawnWhirlpool) + tentacles;
 // p3 frenzy (stronger pull, faster tentacles, summons adds).
 // The whirlpool is handled by GameScene + WhirlpoolHazard (Plan 1).
+// Whirlpool is SUSTAINED for the whole fight (enter:['sustainWhirlpool'] on p1); GameScene
+// auto-respawns it and escalates its strength by the Kraken's hp fraction (stronger + longer +
+// shorter-cooldown vortex in p3). From p2 on, `submerge` makes it vanish completely (untargetable
+// + invisible, no fin) for a window and summon a deep minion — a DPS-denial beat, not movement.
 export const KRAKEN = {
   key: 'kraken', tex: TEX.boss, color: COLORS.miniboss,
-  hp: 650, speed: 28, damage: 20, radius: 42,
+  hp: 1300, speed: 28, damage: 20, radius: 42, // doubled (was 650) — a true levelBoss, not a miniboss
   elite: true,
-  movement: { type: 'static' }, // anchored — the whirlpool and tentacles do the work
+  movement: { type: 'static' }, // anchored — the whirlpool, tentacles and submerges do the work
   phases: [
-    { from: 1.0, sequence: [
+    // p1: sustained whirlpool + tentacles + jellyfish adds (capped). No submerge yet.
+    { from: 1.0, enter: ['sustainWhirlpool'], sequence: [
       { do: 'lobAoe', radius: 70, dps: 20, duration: 3000, telegraph: 500, dur: 900 }, // tentacle at player pos
       { do: 'lobAoe', radius: 55, dps: 18, duration: 2500, telegraph: 500, dur: 900 }, // perimeter tentacle
-      { do: 'nova', count: 10, speed: 200, damage: 12, telegraph: 380, dur: 700 },     // ink burst
+      { do: 'summon', spawnType: 'medusa', count: 1, cap: 2, capKey: 'kraken_jelly', respawnMs: 12000, telegraph: 350, dur: 700 },
       { do: 'wait', dur: 600 },
     ] },
-    { from: 0.6, enter: ['spawnWhirlpool'], sequence: [
+    // p2: + 3 serpents (capped) + submerge (vanish ~2.5s, summons a deep minion).
+    { from: 0.6, sequence: [
       { do: 'lobAoe', radius: 70, dps: 22, duration: 3200, telegraph: 450, dur: 850 }, // tentacle at player
       { do: 'lobAoe', radius: 55, dps: 20, duration: 2800, telegraph: 450, dur: 850 }, // perimeter tentacle
-      { do: 'lobAoe', radius: 55, dps: 20, duration: 2800, telegraph: 450, dur: 850 }, // second perimeter
-      { do: 'nova', count: 12, speed: 210, damage: 12, telegraph: 350, dur: 650 },
+      { do: 'summon', spawnType: 'serpiente_marina', count: 3, cap: 3, capKey: 'kraken_serpent', respawnMs: 14000, telegraph: 300, dur: 700 },
+      { do: 'submerge', duration: 2500, telegraph: 500, dur: 2500 },
       { do: 'wait', dur: 400 },
     ] },
-    { from: 0.3, speedMul: 1.1, enter: ['spawnWhirlpool'], sequence: [
+    // p3 frenzy: stronger sustained whirlpool + tentacles + jellyfish + dense nova + longer submerge.
+    { from: 0.3, speedMul: 1.1, sequence: [
       { do: 'lobAoe', radius: 75, dps: 26, duration: 3500, telegraph: 380, dur: 750 }, // faster tentacles
       { do: 'lobAoe', radius: 60, dps: 22, duration: 3000, telegraph: 380, dur: 750 },
-      { do: 'summon', spawnType: 'serpiente_marina', count: 2, telegraph: 300, dur: 700 }, // adds (ranged lake beasts)
+      { do: 'summon', spawnType: 'medusa', count: 1, cap: 2, capKey: 'kraken_jelly', respawnMs: 12000, telegraph: 300, dur: 700 },
       { do: 'nova', count: 14, speed: 220, damage: 13, telegraph: 320, dur: 600 },
+      { do: 'submerge', duration: 3000, telegraph: 450, dur: 3000 },
       { do: 'wait', dur: 300 },
     ] },
   ],
@@ -134,7 +142,7 @@ export const KRAKEN = {
 const DAMA_MAGA = {
   key: 'dama_maga', tex: TEX.boss, color: COLORS.ice,
   hp: 340, speed: 70, damage: 14, radius: 26, resist: 0,
-  elite: true,
+  elite: true, iceImmune: true, // Madame Le Fay — immune to ice (her own element)
   movement: { type: 'kite', range: 240 },
   phases: [
     { from: 1.0, sequence: [
@@ -154,7 +162,7 @@ const DAMA_MAGA = {
 const DAMA_TIBURON = {
   key: 'dama_tiburon', tex: TEX.boss, color: COLORS.caster,
   hp: 460, speed: 90, damage: 20, radius: 28, resist: 0.10,
-  elite: true,
+  elite: true, iceImmune: true,
   movement: { type: 'burrow', submergeMs: 1400, emergeMs: 450, surfaceMs: 2200 },
   phases: [
     { from: 1.0, sequence: [
@@ -173,7 +181,7 @@ const DAMA_TIBURON = {
 const DAMA_KRAKEN = {
   key: 'dama_kraken', tex: TEX.boss, color: COLORS.miniboss,
   hp: 580, speed: 30, damage: 18, radius: 38, resist: 0.20,
-  elite: true,
+  elite: true, iceImmune: true,
   movement: { type: 'static' },
   phases: [
     { from: 1.0, enter: ['spawnWhirlpool'], sequence: [
@@ -195,7 +203,7 @@ const DAMA_KRAKEN = {
 const DAMA_BALLENA = {
   key: 'dama_ballena', tex: TEX.boss, color: COLORS.boss,
   hp: 720, speed: 22, damage: 24, radius: 50, resist: 0.30,
-  elite: true,
+  elite: true, iceImmune: true,
   movement: { type: 'chase' }, // slow chase — the wall
   phases: [
     { from: 1.0, sequence: [
@@ -220,7 +228,7 @@ const DAMA_BALLENA = {
 const DAMA_MAGA_FINAL = {
   key: 'dama_maga_final', tex: TEX.boss, color: COLORS.ice,
   hp: 320, speed: 55, damage: 10, radius: 24, resist: 0,
-  elite: true,
+  elite: true, iceImmune: true,
   movement: { type: 'kite', range: 240 },
   phases: [
     { from: 1.0, sequence: [
@@ -236,7 +244,8 @@ const DAMA_MAGA_FINAL = {
 export const DAMA_LAGO = {
   key: 'dama_lago', tex: TEX.boss, color: COLORS.ice,
   hp: 340, speed: 70, damage: 14, radius: 26,
-  elite: true,
+  elite: true, iceImmune: true, // Madame Le Fay — immune to ice (her own element)
+  scaleForms: true, // forms' hp/damage scale with difficulty (temple-boss tier), like every other boss
   movement: { type: 'kite', range: 240 },
   forms: [DAMA_MAGA, DAMA_TIBURON, DAMA_KRAKEN, DAMA_BALLENA, DAMA_MAGA_FINAL],
 };

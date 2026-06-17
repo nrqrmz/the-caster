@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG, spriteKey, ENEMY_MARGIN } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG, spriteKey, ENEMY_MARGIN, ACTOR_DEPTH } from '../config.js';
 import { t, tLines } from '../i18n/index.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
@@ -43,6 +43,7 @@ import Boss from '../objects/Boss.js';
 
 const ITEM = Object.fromEntries(SHOP_ITEMS.map((i) => [i.key, i]));
 const RITUAL_TAUNT_EVERY = 5200; // ms between the leader's deceiving taunts
+const HEAL_FX_INTERVAL_MS = 500; // throttle for healer pulse + tether VFX (heal math still runs every frame)
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -83,8 +84,11 @@ export default class GameScene extends Phaser.Scene {
     this.telegraphGfx = this.add.graphics().setDepth(1400);
     this.triangleGfx = this.add.graphics().setDepth(6);
     this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
+    this._healRings = new Map(); // healer enemy -> persistent marker ring; lifecycle managed entirely in updateAuras
+    this._healFxTimer = 0;       // accumulator throttling heal pulse/tether VFX (created/destroyed each tick would saturate)
     this.triangle = null; // { mode, t } while a trio fight is active
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
+    this.whirlpoolSustain = false; // Kraken: keep auto-respawning the whirlpool for the whole fight
     this.tornado = null; // { center, radius, phase, mode, t } while a tornado is active
     this.tornadoGfx = null; // created lazily in updateTornado
     this.ritualGfx = null; // created lazily in updateRitual; reset here on level restart
@@ -203,7 +207,15 @@ export default class GameScene extends Phaser.Scene {
       this.boss._ritualTaunt = 0;
     }
     if (def.forms && def.forms.length) {
-      this.boss._formSeq = new FormSequencer(def.forms);
+      // `scaleForms` (opt-in) pre-scales every form's hp/damage/resist by difficulty BEFORE
+      // the sequencer, so the depleted pool (FormSequencer.currentHp) is the scaled value —
+      // otherwise forms fight at raw hp and bypass difficulty (bug). Without the flag the
+      // legacy raw path is kept (_applyBossForm scales boss.maxHp only).
+      const forms = def.scaleForms
+        ? def.forms.map((f) => scaleEnemyDef({ elite: true, ...f }, this.diff))
+        : def.forms;
+      this.boss._formsPreScaled = !!def.scaleForms;
+      this.boss._formSeq = new FormSequencer(forms);
       // Bootstrap the boss def to the first form.
       this._applyBossForm(this.boss, 0);
     }
@@ -214,7 +226,8 @@ export default class GameScene extends Phaser.Scene {
     const form = boss._formSeq.forms[formIndex];
     // Each form is an elite creature; scale its hp/damage + combine resist the same
     // way spawnBoss scaled the base def, otherwise raw form.hp bypasses difficulty.
-    const scaledForm = scaleEnemyDef({ elite: true, ...form }, this.diff);
+    // When forms were pre-scaled (scaleForms), they're already scaled — don't double it.
+    const scaledForm = boss._formsPreScaled ? form : scaleEnemyDef({ elite: true, ...form }, this.diff);
     // Merge scaled form fields onto def (movement, speed, damage, hp, resist).
     boss.def = { ...boss.def, ...scaledForm };
     boss.hp = scaledForm.hp;
@@ -650,6 +663,26 @@ export default class GameScene extends Phaser.Scene {
       }
       return;
     }
+    if (att.type === 'submerge') {
+      // Dive deep: vanish completely (untargetable + invisible, no fin) for a window and
+      // summon a minion from the depths. A DPS-denial beat — it stays put, never moves.
+      const dur = att.duration ?? 2500;
+      enemy._untargetable = true;            // auto-aim (Caster.nearestEnemy) already skips this
+      enemy.setVisible(false);
+      if (enemy.body) enemy.body.enable = false; // no contact damage while submerged
+      this.flashCircle(enemy.x, enemy.y, (enemy.def.radius || 42) + 10, COLORS.waterDeep); // implosion tell
+      this.spawnKrakenAdd();
+      const bx = enemy.x, by = enemy.y;
+      this.time.delayedCall(dur, () => {
+        if (!enemy.active) return;
+        enemy._untargetable = false;
+        enemy.setVisible(true);
+        if (enemy.body) enemy.body.enable = true;
+        this.flashCircle(bx, by, (enemy.def.radius || 42) + 24, COLORS.water); // resurface burst
+        this.spawnZone({ x: bx, y: by, radius: 70, duration: 700, casterDps: 20, color: COLORS.water, style: 'water' });
+      });
+      return;
+    }
     const type = resolveProjectile(att, this.regionElement);
     const spec = PROJECTILES[type] || PROJECTILES.arrow;
     const eff = spec.effect;
@@ -694,27 +727,30 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  // Aleta dorsal de un tiburón sumergido: un triángulo en la capa de telegraph que
-  // apunta en su dirección de avance (o hacia la princesa si está quieto en el anillo).
+  // Aleta dorsal de un tiburón sumergido. El tiburón se ve de PERFIL, así que la aleta
+  // siempre apunta hacia ARRIBA (sale del agua) y solo se voltea izq/der según hacia
+  // dónde nada — nunca rota a ángulos arbitrarios. Silueta de aleta real: borde de ataque
+  // recto, cresta rastrillada hacia atrás (hacia la cola) y borde de fuga cóncavo.
   drawDorsalFin(e) {
     const g = this.telegraphGfx;
     const vx = e.body ? e.body.velocity.x : 0;
-    const vy = e.body ? e.body.velocity.y : 0;
-    const ang = Math.hypot(vx, vy) > 6
-      ? Math.atan2(vy, vx)
-      : Phaser.Math.Angle.Between(e.x, e.y, this.caster.x, this.caster.y);
-    const len = 18, wid = 7;
-    const tipX = e.x + Math.cos(ang) * len;
-    const tipY = e.y + Math.sin(ang) * len;
-    const baseX = e.x - Math.cos(ang) * (len * 0.4);
-    const baseY = e.y - Math.sin(ang) * (len * 0.4);
-    const px = Math.cos(ang + Math.PI / 2);
-    const py = Math.sin(ang + Math.PI / 2);
-    g.fillStyle(COLORS.sharkYoung, 1);
+    // Facing igual que FacingController: mira a la izquierda cuando vx<0. Al detenerse
+    // conserva el último facing; si nunca nadó, encara a la princesa.
+    if (Math.abs(vx) > 6) e._finFace = vx < 0 ? -1 : 1;
+    const s = e._finFace ?? (this.caster.x < e.x ? -1 : 1); // +1 mira derecha, -1 mira izquierda
+    const k = (e.def && e.def.radius ? e.def.radius : 17) / 17; // escala con el tamaño del tiburón
+    const X = (dx) => e.x + s * dx * k; // dx en orientación "mira a la derecha"; s lo voltea
+    const Y = (dy) => e.y + dy * k;     // dy negativo = arriba (fuera del agua)
+    const frontBottom = [X(8), Y(3)];   // base delantera, sobre la superficie
+    const peak        = [X(-3), Y(-15)];// cresta arriba, rastrillada hacia la cola
+    const notch       = [X(-5), Y(-4)]; // jalada hacia el cuerpo → borde de fuga cóncavo
+    const backBottom  = [X(-9), Y(3)];  // base trasera
+    g.fillStyle(e.def && e.def.color ? e.def.color : COLORS.sharkYoung, 1);
     g.beginPath();
-    g.moveTo(tipX, tipY);
-    g.lineTo(baseX + px * wid, baseY + py * wid);
-    g.lineTo(baseX - px * wid, baseY - py * wid);
+    g.moveTo(frontBottom[0], frontBottom[1]);
+    g.lineTo(peak[0], peak[1]);
+    g.lineTo(notch[0], notch[1]);
+    g.lineTo(backBottom[0], backBottom[1]);
     g.closePath();
     g.fillPath();
   }
@@ -786,10 +822,21 @@ export default class GameScene extends Phaser.Scene {
     const live = this.liveEnemies();
     const center = this.caster.nearestEnemy(live);
     if (!center) return false;
+    const baseDmg = this.stats.freezeDamage ?? 0;
     for (const e of live) {
       if (Phaser.Math.Distance.Between(center.x, center.y, e.x, e.y) > this.stats.freezeRadius) continue;
-      if (freezeEffect(e.def) === 'slow') e.applySlow(this.stats.freezeSlowPct, this.stats.freezeDuration);
-      else e.applyFreeze(this.stats.freezeDuration);
+      if (e.def.iceImmune) continue; // Madame Le Fay — immune to ice (no slow, no damage)
+      // Non-elite: freeze solid (max slow). Elite/boss: a reduced slow (forced past CC immunity).
+      let intensity;
+      if (freezeEffect(e.def) === 'slow') {
+        e.applySlow(this.stats.freezeSlowPct, this.stats.freezeDuration, true);
+        intensity = 1 - this.stats.freezeSlowPct; // scales with the slow strength (slow tree)
+      } else {
+        e.applyFreeze(this.stats.freezeDuration);
+        intensity = 1; // frozen solid = full bonus
+      }
+      // Bonus frost damage, scaled by how much the target is slowed (per-enemy + slow-tree synergy).
+      if (baseDmg > 0) this.hitEnemy(e, baseDmg * intensity);
     }
     this.flashCircle(center.x, center.y, this.stats.freezeRadius, COLORS.ice);
     return true;
@@ -808,6 +855,17 @@ export default class GameScene extends Phaser.Scene {
   flashCircle(x, y, radius, color) {
     const c = this.add.circle(x, y, radius, color, 0.35).setDepth(6);
     this.tweens.add({ targets: c, alpha: 0, scale: 1.2, duration: 250, onComplete: () => c.destroy() });
+  }
+
+  // A green beam from a healer to an ally it's restoring — fades out so a new one is drawn each VFX tick.
+  drawHealTether(from, to) {
+    const g = this.add.graphics().setDepth(ACTOR_DEPTH + 1);
+    g.lineStyle(2, COLORS.heal, 0.8);
+    g.beginPath();
+    g.moveTo(from.x, from.y);
+    g.lineTo(to.x, to.y);
+    g.strokePath();
+    this.tweens.add({ targets: g, alpha: 0, duration: 320, onComplete: () => g.destroy() });
   }
 
   update(time, delta) {
@@ -924,14 +982,14 @@ export default class GameScene extends Phaser.Scene {
       }
     }
     if (hook === 'spawnWhirlpool') {
-      const phase = typeof boss._whirlpoolPhase === 'number' ? boss._whirlpoolPhase : 1;
-      this.whirlpool = {
-        center: { x: Phaser.Math.Between(80, GAME_WIDTH - 80), y: Phaser.Math.Between(80, GAME_HEIGHT - 80) },
-        radius: WHIRLPOOL_RADIUS,
-        phase,
-        mode: 'telegraph',
-        t: WHIRLPOOL_TELEGRAPH_MS,
-      };
+      // One-shot (Dama forms): spawn once at the form's whirlpool phase, no auto-respawn.
+      this.spawnWhirlpoolAt(typeof boss._whirlpoolPhase === 'number' ? boss._whirlpoolPhase : 1);
+    }
+    if (hook === 'sustainWhirlpool') {
+      // Kraken: keep a whirlpool up for the whole fight; updateWhirlpool re-spawns it on
+      // cooldown-end and escalates strength by the boss's hp fraction.
+      this.whirlpoolSustain = true;
+      this.spawnWhirlpoolAt(this.krakenWhirlPhase());
     }
     if (hook === 'spawnTornado') {
       const phase = typeof boss._tornadoPhase === 'number' ? boss._tornadoPhase : 1;
@@ -952,6 +1010,37 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  // Create a whirlpool at a random arena spot with the given strength phase (1..3).
+  spawnWhirlpoolAt(phase) {
+    this.whirlpool = {
+      center: { x: Phaser.Math.Between(80, GAME_WIDTH - 80), y: Phaser.Math.Between(80, GAME_HEIGHT - 80) },
+      radius: WHIRLPOOL_RADIUS,
+      phase,
+      mode: 'telegraph',
+      t: WHIRLPOOL_TELEGRAPH_MS,
+    };
+  }
+
+  // Whirlpool strength phase from the Kraken's current hp fraction (1 > 0.6 > 0.3).
+  krakenWhirlPhase() {
+    const b = this.boss;
+    if (!b || !b.maxHp) return 1;
+    const f = b.hp / b.maxHp;
+    return f > 0.6 ? 1 : f > 0.3 ? 2 : 3;
+  }
+
+  // Summon a random mid-low water minion from the deep while the Kraken is submerged.
+  // Capped at 3 alive so repeated submerges can't pile them up if the player ignores them.
+  spawnKrakenAdd() {
+    const alive = this.enemies.getChildren().filter((e) => e.active && e._krakenAdd).length;
+    if (alive >= 3) return;
+    const pool = ['ahogado', 'sapo_escupidor', 'pez_globo'];
+    const def = ENEMY_TYPES[pool[Phaser.Math.Between(0, pool.length - 1)]];
+    if (!def) return;
+    const e = this.spawnEnemy(def);
+    if (e) e._krakenAdd = true;
+  }
+
   updateWhirlpool(delta) {
     if (!this.whirlpool) return;
     const w = this.whirlpool;
@@ -966,7 +1055,8 @@ export default class GameScene extends Phaser.Scene {
       const pulse = 0.4 + 0.4 * Math.abs(Math.sin(this.lavaTime * 4));
       this.whirlpoolGfx.lineStyle(3, COLORS.water, pulse);
       this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, w.radius);
-      if (w.t <= 0) { w.mode = 'active'; w.t = WHIRLPOOL_ACTIVE_MS; }
+      // p3 vortex lasts longer (near-permanent) so the late fight has a single fierce whirlpool.
+      if (w.t <= 0) { w.mode = 'active'; w.t = WHIRLPOOL_ACTIVE_MS * (w.phase >= 3 ? 1.8 : 1); }
       return;
     }
 
@@ -1002,12 +1092,17 @@ export default class GameScene extends Phaser.Scene {
         if (dot > 0) this.damageCaster(dot * (delta / 1000));
       }
 
-      if (w.t <= 0) { w.mode = 'cooldown'; w.t = WHIRLPOOL_COOLDOWN_MS; }
+      if (w.t <= 0) { w.mode = 'cooldown'; w.t = WHIRLPOOL_COOLDOWN_MS * (w.phase >= 3 ? 0.4 : 1); }
       return;
     }
 
     if (w.mode === 'cooldown') {
-      if (w.t <= 0) this.whirlpool = null; // boss will re-trigger via hook
+      if (w.t <= 0) {
+        // Sustained (Kraken): immediately re-telegraph a fresh vortex, escalated to the boss's
+        // current hp phase, for as long as it lives. Otherwise (Dama one-shot) it just clears.
+        if (this.whirlpoolSustain && this.boss && this.boss.active) this.spawnWhirlpoolAt(this.krakenWhirlPhase());
+        else this.whirlpool = null;
+      }
     }
   }
 
@@ -1258,15 +1353,35 @@ export default class GameScene extends Phaser.Scene {
   updateAuras(delta) {
     const dt = delta / 1000;
     const live = this.enemies.getChildren().filter((e) => e.active);
+    // VFX is throttled (drawing a tether/pulse every frame would saturate); the heal math below still runs each frame.
+    const emitFx = (this._healFxTimer += delta) >= HEAL_FX_INTERVAL_MS;
+    if (emitFx) this._healFxTimer = 0;
     for (const e of live) {
       const heal = findModifier(e.def, 'healAllies');
       if (heal) {
         const r = heal.radius ?? 120; const hps = heal.hps ?? 8;
+        const healed = []; // allies actually receiving cura this tick — drives the tethers
         for (const o of live) {
           if (o === e || o.hp >= o.maxHp) continue;
           if (Phaser.Math.Distance.Between(e.x, e.y, o.x, o.y) <= r) {
             o.hp = Math.min(o.maxHp, o.hp + hps * dt);
+            if (emitFx) healed.push(o);
           }
+        }
+        // Persistent identifier ring so the player can spot/prioritize a healer even when idle.
+        // Bosses are skipped — they already telegraph heavily and a ring would clutter their fights.
+        if (!this.bosses.includes(e)) {
+          let ring = this._healRings.get(e);
+          if (!ring) {
+            ring = this.add.circle(e.x, e.y, (e.def.radius || 16) + 6).setStrokeStyle(2, COLORS.heal, 0.55).setDepth(ACTOR_DEPTH - 1);
+            this._healRings.set(e, ring);
+          }
+          ring.setPosition(e.x, e.y);
+        }
+        // Throttled feedback: a green pulse on the healer + a fading tether to each ally it's healing.
+        if (emitFx && healed.length) {
+          this.flashCircle(e.x, e.y, (e.def.radius || 16) + 12, COLORS.heal);
+          for (const o of healed) this.drawHealTether(e, o);
         }
       }
       const aura = findModifier(e.def, 'auraDamage');
@@ -1276,6 +1391,10 @@ export default class GameScene extends Phaser.Scene {
           this.damageCaster((aura.dps ?? 10) * dt);
         }
       }
+    }
+    // Reap marker rings whose healer has died/despawned — covers every death path (split, revive, level cleanup).
+    for (const [enemy, ring] of this._healRings) {
+      if (!enemy.active) { ring.destroy(); this._healRings.delete(enemy); }
     }
   }
 
