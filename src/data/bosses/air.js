@@ -121,7 +121,6 @@ export const LIDER_CULTISTA = {
   key: 'lider_cultista', tex: TEX.boss, color: COLORS.boss,
   hp: 200, speed: 60, damage: 12, radius: 26,
   elite: true,
-  geometric: true,
   ritual: true,         // GameScene.updateRitual gates on this
   untargetable: true,   // seeds enemy._untargetable at spawn (channel phase)
   movement: { type: 'static' },

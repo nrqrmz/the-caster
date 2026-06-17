@@ -130,20 +130,20 @@ export const AIR_ENEMIES = {
   // === Fodder del ritual (nv7) — summoned by the cultist leader (Plan 3) ===
 
   // #18 — Cultista: cheap melee filler for the ritual waves.
-  cultista: { key: 'cultista', geometric: true, tex: TEX.villager, color: COLORS.cultRobe,
+  cultista: { key: 'cultista', tex: TEX.villager, color: COLORS.cultRobe,
     hp: 16, speed: 60, damage: 7, radius: 16,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }] },
 
   // #19 — Cultista Canalizador: static, no attack — feeds the rite. Targetable fodder
   // (only the LEADER is untargetable, in Plan 3); killing it does NOT stop the ritual.
-  cultista_canalizador: { key: 'cultista_canalizador', geometric: true, tex: TEX.villager, color: COLORS.cultRobe,
+  cultista_canalizador: { key: 'cultista_canalizador', tex: TEX.villager, color: COLORS.cultRobe,
     hp: 14, speed: 0, damage: 0, radius: 16,
     movement: { type: 'static' },
     attacks: [] },
 
   // #20 — Guardián del Rito: chases to defend the leader (invoked).
-  guardian_rito: { key: 'guardian_rito', geometric: true, tex: TEX.villager, color: COLORS.cultRobe,
+  guardian_rito: { key: 'guardian_rito', tex: TEX.villager, color: COLORS.cultRobe,
     hp: 18, speed: 70, damage: 8, radius: 16,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }] },
