@@ -58,4 +58,44 @@ export const AIR_ENEMIES = {
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'drain', heal: 5 }, { type: 'reviveOnce' }] },
+
+  // === Voladores (flying: inmunes al terreno, rápidos/erráticos) — nv1–6 ===
+
+  // #9 — Murciélago: erratic swarm flyer + drain. Cheap, fast — the big chain target for Lightning.
+  murcielago: { key: 'murcielago', tex: TEX.villager, color: COLORS.batPurple,
+    hp: 20, speed: 130, damage: 6, radius: 14,
+    flying: true,
+    movement: { type: 'erratic' },
+    attacks: [{ type: 'melee' }],
+    modifiers: [{ type: 'drain', heal: 3 }] },
+
+  // #10 — Arpía: dive-bomb flyer. Charges in then dashStrikes.
+  arpia: { key: 'arpia', tex: TEX.archer, color: COLORS.harpyPlum,
+    hp: 40, speed: 110, damage: 13, radius: 16,
+    flying: true,
+    movement: { type: 'charge', windup: 450, dash: 320, recover: 500, dashMul: 3.2 },
+    attacks: [{ type: 'dashStrike' }] },
+
+  // #11 — Espíritu de Tormenta: ranged flyer. Drifts erratically, fires straight lightning.
+  espiritu_tormenta: { key: 'espiritu_tormenta', tex: TEX.archer, color: COLORS.stormGrey,
+    hp: 30, speed: 80, damage: 8, radius: 16,
+    flying: true,
+    movement: { type: 'erratic' },
+    attacks: [{ type: 'shootStraight', every: 1800, speed: 240 }] },
+
+  // #12 — Fuego Fatuo: erratic flyer with a damage aura; brushing it stuns you (0.3 s). No direct attack.
+  fuego_fatuo: { key: 'fuego_fatuo', tex: TEX.villager, color: COLORS.wispYellow,
+    hp: 26, speed: 75, damage: 8, radius: 14,
+    flying: true,
+    movement: { type: 'erratic' },
+    attacks: [],
+    modifiers: [{ type: 'auraDamage', dps: 9, radius: 42 }, { type: 'onHitStun', kind: 'stun', ms: 300 }] },
+
+  // #13 — Vampiro Alado: heavy dive flyer. Charges, dashStrikes, drains hard (+8).
+  vampiro_alado: { key: 'vampiro_alado', tex: TEX.archer, color: COLORS.bloodRed,
+    hp: 120, speed: 100, damage: 18, radius: 19,
+    flying: true,
+    movement: { type: 'charge', windup: 500, dash: 340, recover: 550, dashMul: 3.0 },
+    attacks: [{ type: 'dashStrike' }],
+    modifiers: [{ type: 'drain', heal: 8 }] },
 };
