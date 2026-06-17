@@ -231,21 +231,11 @@ put(bodyLayer, 12, 27, 'o'); put(bodyLayer, 12, 28, 'o');
 put(bodyLayer, 14, 27, 'o'); put(bodyLayer, 14, 28, 'o');
 put(bodyLayer, 16, 27, 'o'); put(bodyLayer, 16, 28, 'o');
 
-// ---- Right arm (rests along body edge, x≈38..52, y≈19..22) ----
-line(bodyLayer, 38, 20, 50, 21, 'b');
-line(bodyLayer, 38, 19, 50, 20, 'h');
-// Right hand (small, fingers extending right)
-for (let y = 19; y <= 23; y++) {
-  for (let x = 49; x <= 53; x++) {
-    if (bodyLayer[`${x},${y}`]) continue;
-    let r = (x === 49 || x === 53 || y === 19 || y === 23) ? 'o' : (y >= 22 ? 's' : 'b');
-    put(bodyLayer, x, y, r);
-  }
-}
-// Right claw fingers (3 extend rightward)
-put(bodyLayer, 54, 20, 'o'); put(bodyLayer, 55, 20, 'o');
-put(bodyLayer, 54, 21, 'o'); put(bodyLayer, 55, 21, 'o');
-put(bodyLayer, 54, 22, 'o'); put(bodyLayer, 55, 22, 'o');
+// ---- Right arm ----
+// Omitted: in the prone pose the right arm lies tucked under the body/cape
+// and is not visible. Drawing it in linen over the trouser region produced
+// a wide white patch that visually read as a "white leg". The shirt torso
+// blob already covers the shoulder edge; nothing further is needed here.
 
 
 // ============================= CAD_MEDALLION (GLOW) =============================
