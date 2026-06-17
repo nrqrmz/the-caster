@@ -14,9 +14,9 @@
 <div class="grid" id="grid"></div>
 <script type="module">
 import { composeColorGrid, DESIGN } from '../src/systems/SpriteForge.js';
-import { RECIPES, getRecipe, paletteFor, hasRecipe } from '../src/data/sprites/recipes.js';
+import { getRecipe, paletteFor, hasRecipe } from '../src/data/sprites/recipes.js';
 import { PARTS } from '../src/data/sprites/parts.js';
-import { NAMED_PALETTES } from '../src/data/sprites/palettes.js';
+import { derivePalette, NAMED_PALETTES } from '../src/data/sprites/palettes.js';
 
 // Keys to review. Edit this list per batch; defaults to the full Air roster.
 const KEYS = new URLSearchParams(location.search).get('keys')?.split(',') ?? [
@@ -30,11 +30,13 @@ const KEYS = new URLSearchParams(location.search).get('keys')?.split(',') ?? [
 const SCALE = 8;
 const grid = document.getElementById('grid');
 let done = 0;
-// partPalette resolver: a part-ref's own named palette wins, else the recipe palette.
+// partPalette resolver: a part-ref's own named palette wins, else ref.color, else null.
 function makePartPalette(recipeKey) {
   return (ref) => {
-    const name = typeof ref === 'string' ? null : ref.palette;
-    return name ? NAMED_PALETTES[name] : null;
+    if (typeof ref === 'string') return null;
+    if (ref.palette) return NAMED_PALETTES[ref.palette];
+    if (ref.color != null) return derivePalette(ref.color, ref.accent != null ? { accent: ref.accent } : {});
+    return null;
   };
 }
 for (const key of KEYS) {
