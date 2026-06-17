@@ -77,14 +77,14 @@ export const AIR_ENEMIES = {
     attacks: [{ type: 'dashStrike' }] },
 
   // #11 — Espíritu de Tormenta: ranged flyer. Drifts erratically, fires straight lightning.
-  espiritu_tormenta: { key: 'espiritu_tormenta', geometric: true, tex: TEX.archer, color: COLORS.stormGrey,
+  espiritu_tormenta: { key: 'espiritu_tormenta', tex: TEX.archer, color: COLORS.stormGrey,
     hp: 30, speed: 80, damage: 8, radius: 16,
     flying: true,
     movement: { type: 'erratic' },
     attacks: [{ type: 'shootStraight', every: 1800, speed: 240 }] },
 
   // #12 — Fuego Fatuo: erratic flyer with a damage aura; brushing it stuns you (0.3 s). No direct attack.
-  fuego_fatuo: { key: 'fuego_fatuo', geometric: true, tex: TEX.villager, color: COLORS.wispYellow,
+  fuego_fatuo: { key: 'fuego_fatuo', tex: TEX.villager, color: COLORS.wispYellow,
     hp: 26, speed: 75, damage: 8, radius: 16,
     flying: true,
     movement: { type: 'erratic' },
@@ -102,14 +102,14 @@ export const AIR_ENEMIES = {
   // === Ambientales / torreta — nv3–7 ===
 
   // #14 — Gárgola Pararrayos: static turret. Lightning nova whose bolts stun (0.3 s); shielded.
-  gargola_pararrayos: { key: 'gargola_pararrayos', geometric: true, tex: TEX.warrior, color: COLORS.gargoyleStone,
+  gargola_pararrayos: { key: 'gargola_pararrayos', tex: TEX.warrior, color: COLORS.gargoyleStone,
     hp: 250, speed: 0, damage: 8, radius: 18,
     movement: { type: 'static' },
     attacks: [{ type: 'nova', count: 8, every: 3200, speed: 200, telegraph: 550, stun: true }],
     modifiers: [{ type: 'shielded', reduce: 0.25 }] },
 
   // #15 — Centinela de Piedra: static homing turret. Fixed hazard that tracks you.
-  centinela_piedra: { key: 'centinela_piedra', geometric: true, tex: TEX.warrior, color: COLORS.sentinelStone,
+  centinela_piedra: { key: 'centinela_piedra', tex: TEX.warrior, color: COLORS.sentinelStone,
     hp: 60, speed: 0, damage: 10, radius: 18,
     movement: { type: 'static' },
     attacks: [{ type: 'shootHoming', every: 2600, speed: 120, telegraph: 350 }] },
