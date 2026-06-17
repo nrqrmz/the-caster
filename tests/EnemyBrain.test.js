@@ -312,3 +312,15 @@ test('summonSlots: cooldown expirado → repone el hueco', () => {
   assert.equal(summonSlots({ cap: 3, alive: 1, cooldownUntil: 5000 }, 6000), 2);
 });
 
+test('buildProjectiles: giantFireball es un único disparo recto marcado big', () => {
+  const out = buildProjectiles(
+    { type: 'giantFireball', speed: 120, damage: 28 },
+    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 } }
+  );
+  assert.equal(out.length, 1);
+  assert.equal(out[0].big, true);
+  assert.equal(out[0].speed, 120);
+  assert.equal(out[0].damage, 28);
+  assert.ok(Math.abs(out[0].angle) < 1e-9); // recto hacia +x
+});
+

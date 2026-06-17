@@ -583,6 +583,10 @@ export default class GameScene extends Phaser.Scene {
       const shot = this.enemyShots.fire(spec.tex, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
       if (!shot) continue;
       shot.setTint(spec.tint); // disparos enemigos distinguibles del orbe cian del jugador
+      if (p.big) {
+        shot.setDisplaySize(60, 60);                 // bola enorme reusando TEX.fireball (32px)
+        if (shot.body) shot.body.setCircle(28, shot.width / 2 - 28, shot.height / 2 - 28); // hitbox grande
+      }
       if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; shot.homingLife = HOMING_TTL_MS; }
       if (eff && eff.kind === 'burn') { shot.burnDps = burnMod?.dps ?? eff.dps; shot.burnMs = burnMod?.ms ?? eff.ms; }
       else if (eff && eff.kind === 'slow') { shot.slowFactor = slowMod?.factor ?? eff.factor; shot.slowMs = slowMod?.ms ?? eff.ms; }
