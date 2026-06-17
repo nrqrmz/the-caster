@@ -98,4 +98,53 @@ export const AIR_ENEMIES = {
     movement: { type: 'charge', windup: 500, dash: 340, recover: 550, dashMul: 3.0 },
     attacks: [{ type: 'dashStrike' }],
     modifiers: [{ type: 'drain', heal: 8 }] },
+
+  // === Ambientales / torreta — nv3–7 ===
+
+  // #14 — Gárgola Pararrayos: static turret. Lightning nova whose bolts stun (0.3 s); shielded.
+  gargola_pararrayos: { key: 'gargola_pararrayos', tex: TEX.warrior, color: COLORS.gargoyleStone,
+    hp: 250, speed: 0, damage: 8, radius: 18,
+    movement: { type: 'static' },
+    attacks: [{ type: 'nova', count: 8, every: 3200, speed: 200, telegraph: 550, stun: true }],
+    modifiers: [{ type: 'shielded', reduce: 0.25 }] },
+
+  // #15 — Centinela de Piedra: static homing turret. Fixed hazard that tracks you.
+  centinela_piedra: { key: 'centinela_piedra', tex: TEX.warrior, color: COLORS.sentinelStone,
+    hp: 60, speed: 0, damage: 10, radius: 18,
+    movement: { type: 'static' },
+    attacks: [{ type: 'shootHoming', every: 2600, speed: 120, telegraph: 350 }] },
+
+  // #16 — Torbellino Errante: 0-damage ambient hazard. Pushes you and briefly lifts (0.5 s) on contact.
+  torbellino_errante: { key: 'torbellino_errante', tex: TEX.archer, color: COLORS.whirlGrey,
+    hp: 40, speed: 50, damage: 0, radius: 20,
+    movement: { type: 'erratic' },
+    attacks: [],
+    modifiers: [{ type: 'onHitPush', force: 220, ms: 250 }, { type: 'onHitStun', kind: 'lift', ms: 500 }] },
+
+  // #17 — Tronador: kite spread ranged. Area-denial — 3 lightning bolts in a 36° arc.
+  tronador: { key: 'tronador', tex: TEX.archer, color: COLORS.stormGrey,
+    hp: 30, speed: 64, damage: 8, radius: 16,
+    movement: { type: 'kite', range: 230 },
+    attacks: [{ type: 'shootSpread', count: 3, arc: 36, every: 1900, speed: 230 }] },
+
+  // === Fodder del ritual (nv7) — summoned by the cultist leader (Plan 3) ===
+
+  // #18 — Cultista: cheap melee filler for the ritual waves.
+  cultista: { key: 'cultista', tex: TEX.villager, color: COLORS.cultRobe,
+    hp: 16, speed: 60, damage: 7, radius: 16,
+    movement: { type: 'chase' },
+    attacks: [{ type: 'melee' }] },
+
+  // #19 — Cultista Canalizador: static, no attack — feeds the rite. Targetable fodder
+  // (only the LEADER is untargetable, in Plan 3); killing it does NOT stop the ritual.
+  cultista_canalizador: { key: 'cultista_canalizador', tex: TEX.villager, color: COLORS.cultRobe,
+    hp: 14, speed: 0, damage: 0, radius: 16,
+    movement: { type: 'static' },
+    attacks: [] },
+
+  // #20 — Guardián del Rito: chases to defend the leader (invoked).
+  guardian_rito: { key: 'guardian_rito', tex: TEX.villager, color: COLORS.cultRobe,
+    hp: 18, speed: 70, damage: 8, radius: 16,
+    movement: { type: 'chase' },
+    attacks: [{ type: 'melee' }] },
 };
