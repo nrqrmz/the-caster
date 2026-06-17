@@ -219,10 +219,17 @@ export const RECIPES = {
   totem_escarcha:    { archetype: 'floating', size: 64, parts: TOTEM_FROST },
 
   // --- Air cultists (La Torre Montaña) ---
+  // Three visually distinct hooded fodder: purple / dark-storm / grey-blue, all glowing eyes.
+  // Líder carries an arcane force-field barrier (lider_field=orbblue) + authority staff
+  // with a large crystal orb finial (lider_staff=wood shaft; crystal roles glow palette).
   cultista:            { archetype: 'humanoid', size: 32, baseColor: 0x4a148c, parts: CULT_HOODED },
-  guardian_rito:       { archetype: 'humanoid', size: 32, baseColor: 0x4a148c, parts: CULT_HOODED },
-  cultista_canalizador:{ archetype: 'humanoid', size: 32, baseColor: 0x37474f, parts: CULT_FACELESS },
-  lider_cultista:      { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: CULT_STAFF },
+  guardian_rito:       { archetype: 'humanoid', size: 32, baseColor: 0x37474f, parts: CULT_HOODED },
+  cultista_canalizador:{ archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: CULT_HOODED },
+  lider_cultista:      { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: [
+    { name: 'lider_field', palette: 'orbblue' },
+    ...CULT_HOODED,
+    { name: 'lider_staff', palette: 'wood' },
+  ] },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
