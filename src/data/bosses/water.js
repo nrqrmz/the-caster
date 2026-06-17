@@ -65,7 +65,7 @@ export const TIBURON_ABISAL = {
   key: 'tiburon_abisal', tex: TEX.miniboss, color: COLORS.caster,
   hp: 520, speed: 85, damage: 30, radius: 28,
   elite: true,
-  movement: { type: 'burrow', submergeMs: 1600, repositionMs: 400, emergeMs: 400, recoverMs: 700, dashMul: 3.2 },
+  movement: { type: 'burrow', submergeMs: 1600, emergeMs: 450, surfaceMs: 2500 },
   phases: [
     { from: 1.0, sequence: [
       { do: 'dashStrike', damage: 22, range: 70, telegraph: 400, dur: 450 }, // telegraphed by emerge ring
@@ -153,7 +153,7 @@ const DAMA_TIBURON = {
   key: 'dama_tiburon', tex: TEX.boss, color: COLORS.caster,
   hp: 460, speed: 90, damage: 20, radius: 28, resist: 0.10,
   elite: true,
-  movement: { type: 'burrow', submergeMs: 1400, repositionMs: 350, emergeMs: 400, recoverMs: 600, dashMul: 3.0 },
+  movement: { type: 'burrow', submergeMs: 1400, emergeMs: 450, surfaceMs: 2200 },
   phases: [
     { from: 1.0, sequence: [
       { do: 'dashStrike', damage: 22, range: 65, telegraph: 400, dur: 420 },

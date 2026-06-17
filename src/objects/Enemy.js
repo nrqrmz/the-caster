@@ -91,18 +91,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     };
     const velocity = computeMovement(movementDef, this.brainState.move, ctx);
 
-    // Burrow side-effects: write the _burrowed / _surfacing flags that GameScene reads.
-    if (velocity.submerged !== undefined) {
+    // Burrow side-effects. El nuevo flujo: `submerged` controla la invulnerabilidad;
+    // `surfacing` solo enciende el anillo de aviso (sigue invuln durante el emerge).
+    // En `surface` el enemigo es vulnerable (no emite `submerged`).
+    if (velocity.submerged !== undefined || velocity.surfacing || velocity.vulnerable) {
       this._burrowed = !!velocity.submerged;
-      this._surfacing = false;
-    }
-    if (velocity.surfacing) {
-      this._burrowed = false;
-      this._surfacing = true;
-    }
-    if (velocity.vulnerable || velocity.dashStrike) {
-      this._burrowed = false;
-      this._surfacing = false;
+      this._surfacing = !!velocity.surfacing;
     }
     if (velocity.repositionTo) {
       this.x = velocity.repositionTo.x;

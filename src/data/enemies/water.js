@@ -123,11 +123,11 @@ export const WATER_ENEMIES = {
     attacks: [],
     modifiers: [{ type: 'auraDamage', dps: 8, radius: 34 }] },
 
-  // #14 — Tiburón Joven: burrow movement (submerge → reposition → emerge → dashStrike).
-  // While submerged: invulnerable + hidden. Emerges with telegraphed ring (~400 ms).
+  // #14 — Tiburón Joven: burrow movement (submerge → emerge telegrafado → surface vulnerable).
+  // While submerged/emerging: invulnerable + hidden. Surfaced ~2.5s with dashStrike disponible.
   tiburon_joven: { key: 'tiburon_joven', tex: TEX.archer, color: COLORS.sharkYoung,
     hp: 180, speed: 110, damage: 18, radius: 17,
-    movement: { type: 'burrow', submergeMs: 1500, repositionMs: 200, emergeMs: 400, attackMs: 600, recoverMs: 700 },
+    movement: { type: 'burrow', submergeMs: 1500, emergeMs: 450, surfaceMs: 2500 },
     attacks: [{ type: 'dashStrike' }] },
 
   // #15 — Serpiente Marina: kite spread ranged. Sinuous, keeps distance.
