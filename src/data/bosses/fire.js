@@ -46,12 +46,12 @@ export const FAVILLA = {
   modifiers: [{ type: 'healAllies', hps: 14, radius: 160 }],
   phases: [
     { from: 1.0, sequence: [
-      { do: 'summon', spawnType: 'imp_brasa', count: 2, dur: 1000 },
+      { do: 'summon', spawnType: 'imp_brasa', count: 2, cap: 3, capKey: 'favilla_adds', respawnMs: 6000, dur: 1600 },
       { do: 'lobAoe', radius: 60, dps: 20, duration: 3000, telegraph: 500, dur: 1200 },
     ] },
     { from: 0.5, speedMul: 1.15, sequence: [
-      { do: 'summon', spawnType: 'avispa_brasa', count: 3, dur: 900 },
-      { do: 'summon', spawnType: 'imp_brasa', count: 2, dur: 900 },
+      { do: 'summon', spawnTypes: ['avispa_brasa', 'imp_brasa'], count: 2, cap: 3, capKey: 'favilla_adds', respawnMs: 6000, dur: 1600 },
+      { do: 'wait', dur: 1200 },
       { do: 'nova', count: 12, speed: 200, damage: 10, telegraph: 400, dur: 800 },
     ] },
   ],
