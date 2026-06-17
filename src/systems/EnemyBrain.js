@@ -286,3 +286,13 @@ export function tickLifecycle(state, delta) {
   // ADULT: no further promotion.
   return { promote: false };
 }
+
+// --- Summoning mechanics -------------------------------------------------------
+// PURE. Cuántos enemigos puede invocar una instancia de ataque con tope ahora.
+// cap == null → sin tope (Infinity). En cooldown (now < cooldownUntil) → 0.
+// Si no, los huecos libres: max(0, cap - alive).
+export function summonSlots({ cap, alive, cooldownUntil = 0 }, now = 0) {
+  if (cap == null) return Infinity;
+  if (now < cooldownUntil) return 0;
+  return Math.max(0, cap - alive);
+}

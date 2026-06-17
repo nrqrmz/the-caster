@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeMovement, MOVEMENTS } from '../src/systems/EnemyBrain.js';
+import { computeMovement, MOVEMENTS, summonSlots } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
 
 const mag = (v) => Math.hypot(v.x, v.y);
@@ -290,5 +290,25 @@ test('no enemy def has a radius below the floor of 16', () => {
   for (const [key, def] of Object.entries(ENEMY_TYPES)) {
     if (typeof def.radius === 'number') assert.ok(def.radius >= 16, `${key} radius ${def.radius} < 16`);
   }
+});
+
+test('summonSlots: sin cap → sin límite propio', () => {
+  assert.equal(summonSlots({ cap: null, alive: 99 }, 0), Infinity);
+});
+
+test('summonSlots: con cap y sin invocados → cap completo', () => {
+  assert.equal(summonSlots({ cap: 3, alive: 0, cooldownUntil: 0 }, 0), 3);
+});
+
+test('summonSlots: al tope → 0', () => {
+  assert.equal(summonSlots({ cap: 3, alive: 3, cooldownUntil: 0 }, 0), 0);
+});
+
+test('summonSlots: en cooldown → 0 aunque haya hueco', () => {
+  assert.equal(summonSlots({ cap: 3, alive: 1, cooldownUntil: 5000 }, 1000), 0);
+});
+
+test('summonSlots: cooldown expirado → repone el hueco', () => {
+  assert.equal(summonSlots({ cap: 3, alive: 1, cooldownUntil: 5000 }, 6000), 2);
 });
 
