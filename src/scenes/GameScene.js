@@ -6,7 +6,7 @@ import {
   CONCURRENCY_CAP, ENEMY_SHOT_POOL, HOMING_TTL_MS,
   WHIRLPOOL_RADIUS, WHIRLPOOL_ACTIVE_MS, WHIRLPOOL_COOLDOWN_MS, WHIRLPOOL_TELEGRAPH_MS,
   LAVA_RIVER_COOLDOWN_MS, LAVA_RIVER_TELEGRAPH_MS, LAVA_RIVER_ACTIVE_MS, LAVA_RIVER_DPS,
-  MELEE_CONTACT_CD,
+  MELEE_CONTACT_CD, SPAWN_SAFE_DIST,
 } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
@@ -19,7 +19,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
@@ -276,6 +276,11 @@ export default class GameScene extends Phaser.Scene {
     else if (edge === 1) { x = GAME_WIDTH + 20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
     else if (edge === 2) { x = Phaser.Math.Between(0, GAME_WIDTH); y = GAME_HEIGHT + 20; }
     else { x = -20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
+    // No aparecer sobre la princesa: empuja el spawn fuera del anillo seguro.
+    if (this.caster) {
+      const safe = pushOutsideRing({ x, y }, this.caster, SPAWN_SAFE_DIST);
+      x = safe.x; y = safe.y;
+    }
     const e = new Enemy(this, x, y, scaleEnemyDef(def, this.diff));
     // Arm the generational lifecycle on freshly-laid eggs so tickLifecycle (update loop)
     // can hatch them. Without this, an egg's brainState.lifecycle is undefined and it

@@ -324,3 +324,23 @@ test('buildProjectiles: giantFireball es un único disparo recto marcado big', (
   assert.ok(Math.abs(out[0].angle) < 1e-9); // recto hacia +x
 });
 
+import { pushOutsideRing } from '../src/systems/EnemyBrain.js';
+
+test('pushOutsideRing deja el punto igual si ya está fuera del radio', () => {
+  const p = pushOutsideRing({ x: 400, y: 0 }, { x: 0, y: 0 }, 160);
+  assert.equal(p.x, 400);
+  assert.equal(p.y, 0);
+});
+
+test('pushOutsideRing empuja al borde conservando la dirección', () => {
+  const p = pushOutsideRing({ x: 30, y: 40 }, { x: 0, y: 0 }, 160); // dist 50 → 160
+  assert.ok(Math.abs(Math.hypot(p.x, p.y) - 160) < 1e-6);
+  assert.ok(Math.abs(p.x / p.y - 30 / 40) < 1e-6); // misma dirección (3:4)
+});
+
+test('pushOutsideRing usa ángulo 0 cuando el punto coincide con el centro', () => {
+  const p = pushOutsideRing({ x: 100, y: 100 }, { x: 100, y: 100 }, 160);
+  assert.equal(p.x, 260);
+  assert.equal(p.y, 100);
+});
+

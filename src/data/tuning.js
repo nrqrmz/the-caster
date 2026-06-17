@@ -26,6 +26,10 @@ export const CONCURRENCY_CAP = 16;
 // frame (~134 HP/s con un renacuajo); ahora el contacto es un golpe discreto.
 export const MELEE_CONTACT_CD = 600;
 
+// Distancia mínima a la princesa al que puede aparecer/emerger un enemigo invocado
+// (p. ej. tiburones). 160px es el valor más cercano válido; más lejos siempre vale.
+export const SPAWN_SAFE_DIST = 160;
+
 // Enemy projectile pool size (Fire is projectile-dense).
 export const ENEMY_SHOT_POOL = 400;
 

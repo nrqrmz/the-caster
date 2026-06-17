@@ -298,3 +298,16 @@ export function summonSlots({ cap, alive, cooldownUntil = 0 }, now = 0) {
   if (now < cooldownUntil) return 0;
   return Math.max(0, cap - alive);
 }
+
+// PURE. Empuja `point` fuera de un anillo seguro de radio `minDist` alrededor de
+// `center`. Si ya está fuera, lo devuelve igual. Si coincide con el centro, empuja
+// en ángulo 0 (+x). Usado por spawnEnemy y el burrow para no aparecer sobre la princesa.
+export function pushOutsideRing(point, center, minDist) {
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+  const d = Math.hypot(dx, dy);
+  if (d >= minDist) return { x: point.x, y: point.y };
+  if (d === 0) return { x: center.x + minDist, y: center.y };
+  const k = minDist / d;
+  return { x: center.x + dx * k, y: center.y + dy * k };
+}
