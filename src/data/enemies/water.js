@@ -10,8 +10,7 @@ export const WATER_ENEMIES = {
   acolito_escarcha: { key: 'acolito_escarcha', tex: TEX.archer, color: COLORS.frostBlue,
     hp: 18, speed: 68, damage: 8, radius: 16,
     movement: { type: 'kite', range: 210 },
-    attacks: [{ type: 'shootStraight', every: 1500, speed: 240 }],
-    modifiers: [{ type: 'onHitSlow' }] },
+    attacks: [{ type: 'shootStraight', every: 1500, speed: 240 }] },
 
   // #2 — Lanzahielos: kite area-denial spread (3 projectiles). No slow.
   lanzahielos: { key: 'lanzahielos', tex: TEX.archer, color: COLORS.frostSpread,
@@ -73,7 +72,7 @@ export const WATER_ENEMIES = {
     hp: 34, speed: 60, damage: 10, radius: 23,
     movement: { type: 'strafe', range: 200 },
     attacks: [
-      { type: 'shootStraight', every: 1700, speed: 230 },
+      { type: 'shootStraight', projectile: 'poison', every: 1700, speed: 230 },
       { type: 'summon', spawnType: 'huevo_sapo', count: 1, every: 5000 },
     ] },
 
@@ -87,7 +86,7 @@ export const WATER_ENEMIES = {
   sapo_escupidor: { key: 'sapo_escupidor', tex: TEX.villager, color: COLORS.toadSpit,
     hp: 26, speed: 62, damage: 9, radius: 19,
     movement: { type: 'strafe', range: 200 },
-    attacks: [{ type: 'shootStraight', every: 1600, speed: 230 }] },
+    attacks: [{ type: 'shootStraight', projectile: 'poison', every: 1600, speed: 230 }] },
 
   // #11 — Pez Globo: erratic melee + explodesOnDeath. Punishes close-range kills.
   pez_globo: { key: 'pez_globo', tex: TEX.villager, color: COLORS.globeFish,
