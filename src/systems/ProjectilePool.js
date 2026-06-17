@@ -1,5 +1,5 @@
 // A reusable physics group of projectiles. fire() activates one from the pool.
-import { TEX, spriteKey } from '../config.js';
+import { TEX, spriteKey, PROJECTILE_DEPTH } from '../config.js';
 import { hasRecipe } from '../data/sprites/recipes.js';
 
 const PROJECTILE_KEY = {
@@ -25,7 +25,7 @@ export class ProjectilePool {
       p.setTexture(drawKey);
       p.enableBody(true, x, y, true, true);
     }
-    p.setActive(true).setVisible(true);
+    p.setActive(true).setVisible(true).setDepth(PROJECTILE_DEPTH); // above ground hazards (5-7) so lava can't hide shots
     p.damage = damage;
     p.aoeRadius = radius || 0; // > 0 means explode-on-impact (fireball)
     p.burnDps = 0;             // reset; effect props se setean tras fire() según el tipo
