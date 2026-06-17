@@ -39,12 +39,14 @@ const ACOLITO = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', 
 const HERALDO = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'orbblue' }, ...CULT_HOODED];
 // Air caster pair B: hechicero (bare-head, grey robe, cyan orb) vs tronador (hooded, tan, yellow orb)
 const TRONADOR_PARTS = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'glow' }, ...CULT_HOODED];
-// Bruja del Vendaval — wind-witch boss (air nv5). Windswept flowing robe (purple/storm),
-// streaming silver hair, gnarled staff with storm orb, wind-gust aura.
+// Bruja del Vendaval — wind-witch boss (air nv5). Clearly HUMANOID: purple robe/torso,
+// silver hair framing a visible skin face, wind-orb staff. Gale accents (cyan) stay subtle.
+// Layer order back-to-front: wind gust → robe/body → hair → skin face → staff.
 const BRUJA = [
   { name: 'bruja_wind', palette: 'orbblue' },
   { name: 'bruja_body' },
   { name: 'bruja_hair', palette: 'silverhair' },
+  { name: 'bruja_head', palette: 'skin' },
   { name: 'bruja_staff', palette: 'wood' },
 ];
 // Bespoke blood-knight lord for caballero_sangre (air nv4 boss). Full-height (h32)

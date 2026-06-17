@@ -13,7 +13,7 @@
 const N = 32, cx = 16, cy = 16;
 const layers = {
   bk_cape: {}, bk_sword: {}, bk_body: {}, bk_pauldrons: {}, bk_eyes: {},
-  bruja_body: {}, bruja_hair: {}, bruja_staff: {}, bruja_wind: {},
+  bruja_body: {}, bruja_head: {}, bruja_hair: {}, bruja_staff: {}, bruja_wind: {},
 };
 const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
 const Rd = (v) => Math.round(v);
@@ -267,208 +267,201 @@ emit('bk_pauldrons');
 emit('bk_eyes');
 
 // ============================ BRUJA DEL VENDAVAL (air nv5 boss) ============================
-// Wind-witch: imposing windswept figure. Wind blows from RIGHT so robe/hair flow LEFT.
-// Purple/dark palette. Parts: bruja_body, bruja_hair, bruja_staff, bruja_wind
-// (res:32 like all boss parts; canvas is 96px via recipe size)
+// Wind-witch: unmistakably HUMANOID sorceress. Wind blows from RIGHT so hair/hem billow LEFT.
+// Parts: bruja_body (purple robe+torso+arms), bruja_head (skin face — rendered ON TOP),
+//        bruja_hair (silver, frames face + streams left), bruja_staff (wood+wind orb),
+//        bruja_wind (subtle cyan gust accents, NOT a mass).
+// Layer order back-to-front: bruja_wind → bruja_body → bruja_hair → bruja_head → bruja_staff
+// res:32 canvas; figure head at y=2..10, torso y=10..22, skirt y=22..31.
+// Figure is center-right (cx=16) so the staff on x=22..26 stays in the 32-grid.
 
-// ============================ BRUJA_BODY (full windswept figure) ============================
-// Tall figure: head y=0..5, bodice y=6..18, robe hem fans LEFT y=19..31
-// Torso centered ~x=14-16, robe billows left so hem spans x=0..22 at bottom
-// Palette roles: o=outline, b=base(robe purple), s=shade(deep purple), h=highlight(light purple), a=accent(storm silver)
+// ============================ BRUJA_BODY (robe torso + skirt + arms — purple) ============================
+// Palette: o=outline, b=base(purple), s=shade(dark purple), h=highlight(light purple), a=accent
 
-// --- Head (y 0..5, centered x=12..19) ---
-for (let y = 0; y <= 5; y++) {
-  const half = (y === 0) ? 2.5 : (y <= 2) ? 3.5 : (y <= 4) ? 3.8 : 3.0;
-  const Lx = Rd(14 - half), Rx = Rd(14 + half);
-  for (let x = Lx; x <= Rx; x++) {
-    let r = 'b';
-    if (x === Lx || x === Rx) r = 'o';
-    else if (x === Lx + 1) r = 'h';
-    else if (x === Rx - 1) r = 's';
-    put('bruja_body', x, y, r);
-  }
-}
-// Face detail: eyes at y=3 (two pixels), thin nose at y=4 center
-put('bruja_body', 12, 3, 'a'); put('bruja_body', 16, 3, 'a');
-put('bruja_body', 14, 4, 's');
-
-// --- Neck / collar (y 5..7) ---
-for (let y = 5; y <= 7; y++) {
-  const half = 2.5 + (y - 5) * 0.5;
-  const Lx = Rd(14 - half), Rx = Rd(14 + half);
+// --- Neck stub / collar (y=9..11, centered cx=16) — visible under head ---
+for (let y = 9; y <= 11; y++) {
+  const half = 1.5 + (y - 9) * 0.5;
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
   for (let x = Lx; x <= Rx; x++) put('bruja_body', x, y, x === Lx || x === Rx ? 'o' : 's');
 }
 
-// --- Bodice / torso (y 7..18) — slightly wider, windswept: leans slightly left ---
-for (let y = 7; y <= 18; y++) {
-  // Windswept lean: torso shifts slightly left as we go down
-  const centerX = 14 - Math.round((y - 7) * 0.15);
-  const half = (y <= 9) ? 5.5 : (y <= 13) ? 5.0 : (y <= 16) ? 4.5 : 4.0;
-  const Lx = Rd(centerX - half), Rx = Rd(centerX + half);
+// --- Bodice / torso (y=11..20): shoulders y=11..13, cinched waist y=17..20 ---
+for (let y = 11; y <= 20; y++) {
+  const half = (y <= 13) ? 5.5 : (y <= 16) ? 5.0 : (y <= 18) ? 4.2 : 3.8; // shoulder → waist taper
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
   for (let x = Lx; x <= Rx; x++) {
     let r = 'b';
     if (x === Lx || x === Rx) r = 'o';
     else if (x === Lx + 1) r = 'h';
     else if (x === Rx - 1) r = 's';
-    // Central ridge highlight
-    if (x === centerX) r = 'h';
+    if (x === cx) r = 'h';          // center seam highlight
     put('bruja_body', x, y, r);
   }
-  // Robe fold accent: vertical stripe slightly left of center
-  if (y >= 9 && y <= 18) put('bruja_body', centerX - 2, y, 'a');
 }
-// Arms (y 9..18): right arm (staff side) at x=20..21, left arm at x=6..7
-for (let y = 9; y <= 18; y++) {
-  put('bruja_body', 20, y, 'o'); put('bruja_body', 21, y, 'b');
-  put('bruja_body', 6, y, 'b');  put('bruja_body', 7, y, 'o');
-}
+// Robe fold accent line — vertical stripe, suggests fabric drape
+for (let y = 12; y <= 20; y++) put('bruja_body', cx - 2, y, 'a');
+// Gold/accent sash at waist (y=20)
+for (let x = cx - 4; x <= cx + 4; x++) put('bruja_body', x, 20, 'a');
 
-// --- Robe billowing hem (y 18..31) — fans left, wide windswept silhouette ---
-// The hem fans from the torso bottom (center ~x=13) outward LEFT to x=0 at y=31
-for (let y = 18; y <= 31; y++) {
-  const t = (y - 18) / 13; // 0..1
-  // Right edge: stays near torso right side (wind pushes everything left)
-  const Rx = Rd(18 - t * 4);
-  // Left edge: fans dramatically to the left
-  const Lx = Rd(12 - t * 12);
-  // Ensure bounds
+// --- Arms: left arm (cx-6..cx-5, y=12..21) and right arm extended to hold staff (cx+5..cx+6, y=12..19) ---
+for (let y = 12; y <= 21; y++) {
+  put('bruja_body', cx - 6, y, 'o'); put('bruja_body', cx - 5, y, y >= 16 ? 's' : 'b');
+}
+for (let y = 12; y <= 19; y++) {
+  put('bruja_body', cx + 5, y, y >= 16 ? 's' : 'b'); put('bruja_body', cx + 6, y, 'o');
+}
+// Left hand (small skin sphere replaced by robe sleeve cuff at y=21..22)
+put('bruja_body', cx - 6, 21, 'o'); put('bruja_body', cx - 5, 21, 's');
+put('bruja_body', cx - 5, 22, 's'); put('bruja_body', cx - 6, 22, 'o');
+// Right hand at staff grip (y=19..20)
+put('bruja_body', cx + 5, 19, 's'); put('bruja_body', cx + 6, 19, 'o');
+put('bruja_body', cx + 5, 20, 's'); put('bruja_body', cx + 6, 20, 'o');
+
+// --- Skirt / robe hem (y=20..31): A-line flare, slight left billow for wind effect ---
+// Right edge near cx+5, left edge fans moderately LEFT (not amorphous — keeps human form readable)
+for (let y = 20; y <= 31; y++) {
+  const t = (y - 20) / 11;            // 0..1
+  const Rx = Rd(cx + 5 - t * 1.5);   // right edge very slightly in
+  const Lx = Rd(cx - 5 - t * 6);     // left fans out (wind), max spread = cx-11 = x=5 at y=31
   const lx = Math.max(0, Lx), rx = Math.min(31, Rx);
   for (let x = lx; x <= rx; x++) {
     let r = 'b';
     if (x === lx || x === rx) r = 'o';
-    else if (x === lx + 1 || x === lx + 2) r = 'h'; // left edge highlight (catches wind light)
+    else if (x === lx + 1) r = 'h';   // left edge catch-light (wind-side brightness)
     else if (x === rx - 1) r = 's';
-    // Flowing fabric fold lines: diagonal shading suggesting wind-blown folds
-    if ((x + y) % 5 === 0 && r === 'b') r = 's';
-    if ((x + y) % 7 === 3 && r === 'b') r = 'h';
+    // Gentle diagonal fold lines — fabric creases, NOT noise
+    if ((x - lx) % 4 === 2 && r === 'b') r = 's';
     put('bruja_body', x, y, r);
   }
-  // Hem outline top at y=18 separately
-  if (y === 18) {
-    for (let x = lx; x <= rx; x++) put('bruja_body', x, y, 'o');
-  }
 }
-// Legs visible just above hem (y=18..22 at center) — slight outline suggesting limbs
-for (let y = 20; y <= 26; y++) {
-  put('bruja_body', 13, y, 'o');
-  put('bruja_body', 15, y, 'o');
+// Hem scallop bottom row (y=31) — slight wavy hem
+for (const xOff of [-4, -1, 2, 5]) {
+  const xp = cx + xOff;
+  if (layers['bruja_body'][`${xp},31`]) put('bruja_body', xp, 31, '.');
 }
 
-// ============================ BRUJA_HAIR (streaming hair blowing LEFT) ============================
-// Long streaming tendrils flowing from head area (y=0..12) far left (x=0..14)
-// Multiple tendrils, dramatic windswept look. silverhair palette via recipe.
+// ============================ BRUJA_HEAD (skin face — rendered on top of body/hair) ============================
+// Head oval centered at cx=16, y=2..10. Princess-style face: eyes, nose, mouth.
+// 'b' = skin mid, 'h' = lit cheek, 's' = jaw/cheek shade, 'o' = outline
+// (Palette 'skin' drives these to real flesh tones.)
 
-// Main mass at head top (y=0..3, x=10..17) — hair anchored at head
-for (let y = 0; y <= 3; y++) {
-  const Lx = 10 - y, Rx = 17;
+const inHead = (x, y) => ((x - cx) / 3.5) ** 2 + ((y - 6.0) / 4.2) ** 2 <= 1;
+for (let y = 2; y <= 10; y++) for (let x = 11; x <= 21; x++) {
+  if (!inHead(x, y)) continue;
+  let r = 'b';
+  if (x <= 13) r = 'h';                      // lit left cheek
+  else if (x >= 19 || y >= 9) r = 's';       // right cheek / jaw shadow
+  put('bruja_head', x, y, r);
+}
+// Eyes: dark dots with socket shade (classic princess eyes, slightly narrower set)
+put('bruja_head', 14, 5, 'o'); put('bruja_head', 18, 5, 'o');  // eye pupils
+put('bruja_head', 13, 5, 's'); put('bruja_head', 19, 5, 's');  // eye sockets
+// Nose bridge highlight
+put('bruja_head', cx, 6, 'h'); put('bruja_head', cx, 7, 'h');
+// Mouth (thin dark line)
+for (let x = 15; x <= 17; x++) put('bruja_head', x, 8, 's');
+// Slight forehead outline implied by hair (no extra line needed — outline 'o' from oval boundary)
+
+// ============================ BRUJA_HAIR (silver, frames head + streams LEFT for wind) ============================
+// Crown cap (y=2..5) frames the head at the top and sides.
+// Side curtains fall to shoulders (y=5..14): left side streams LEFT (wind), right side kept tighter.
+// Palette: 'silverhair' (b=silver base, h=bright silver, s=shadow, o=outline)
+
+// Rounded crown cap (y=2..5) — hair on top of head, same as mage_hair pattern
+for (let y = 2; y <= 5; y++) {
+  const half = 2.6 + (y - 2) * 0.9;
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
   for (let x = Lx; x <= Rx; x++) {
     let r = 'b';
     if (x === Lx || x === Rx) r = 'o';
     else if (x <= Lx + 1) r = 'h';
+    else if (x >= Rx - 1) r = 's';
     put('bruja_hair', x, y, r);
   }
 }
-// Primary tendril sweeping far left (y=1..9, curves from x=10 to x=0)
-for (let y = 1; y <= 9; y++) {
-  const tx = Rd(10 - y * 1.1);
-  const x0 = Math.max(0, tx - 1), x1 = Math.max(0, tx + 1);
-  for (let x = x0; x <= x1; x++) {
-    put('bruja_hair', x, y, x === x0 || x === x1 ? 'o' : 'h');
-  }
+// Right side curtain (y=5..13, x=19..21) — tight, stays near face, slight taper
+for (let y = 5; y <= 13; y++) {
+  const cols = y >= 10 ? [19, 20] : [20, 21];
+  cols.forEach((x, i, a) => put('bruja_hair', x, y, i === a.length - 1 ? 'o' : (y % 5 === 0 ? 's' : 'b')));
 }
-// Secondary tendril (slightly lower, less far left)
-for (let y = 2; y <= 10; y++) {
-  const tx = Rd(13 - y * 0.9);
-  const x0 = Math.max(0, tx - 1), x1 = Math.max(1, tx);
-  for (let x = x0; x <= x1; x++) {
-    put('bruja_hair', x, y, 'b');
-  }
+// Left side: hair anchored at temple (x=12..13, y=5..6), then streams LEFT as wind tendril
+for (let y = 5; y <= 6; y++) {
+  put('bruja_hair', 11, y, 'o'); put('bruja_hair', 12, y, 'b'); put('bruja_hair', 13, y, 'b');
 }
-// Third wispy tendril (y=3..12, ends at x=2..4)
-for (let y = 3; y <= 12; y++) {
-  const tx = Rd(14 - y * 0.95);
+// Primary wind tendril — sweeps from x=11 at y=6 far left, reaching x=2 by y=12
+for (let y = 6; y <= 12; y++) {
+  const tx = Rd(11 - (y - 6) * 1.3);
+  const x0 = Math.max(0, tx - 1), x1 = Math.max(1, tx + 1);
+  for (let x = x0; x <= x1; x++) put('bruja_hair', x, y, x === x0 || x === x1 ? 'o' : 'h');
+}
+// Secondary, thinner tendril just below (y=7..14, slightly more vertical)
+for (let y = 7; y <= 14; y++) {
+  const tx = Rd(12 - (y - 7) * 0.8);
   const x = Math.max(0, tx);
-  put('bruja_hair', x, y, y % 2 === 0 ? 'b' : 's');
-  if (x + 1 <= 14) put('bruja_hair', x + 1, y, 's');
+  put('bruja_hair', x, y, y % 3 === 0 ? 's' : 'b');
+  if (x + 1 <= 15 && x + 1 !== x) put('bruja_hair', x + 1, y, 'b');
 }
-// Back-of-head hair (top right, y=0..4, x=14..18)
-for (let y = 0; y <= 4; y++) {
-  for (let x = 14; x <= 17 - y; x++) put('bruja_hair', x, y, x === 14 ? 'o' : 'b');
+// Tip ends (y=12..13 left tendril, y=14 secondary)
+for (const x of [0, 1, 2]) if (layers['bruja_hair'][`${x},12`]) put('bruja_hair', x, 12, 's');
+
+// ============================ BRUJA_STAFF (wood staff with wind-orb finial, right side) ============================
+// Shaft at x=22..23, y=9..31. Storm-wind orb finial at top (y=0..8, center x=23,y=4).
+// Palette 'wood': o=outline, b=wood base, h=light grain, s=dark grain, a=accent (storm-cyan wisps).
+
+// Wind orb finial (y=0..8, center cx=23, cy=4, r=4)
+disk('bruja_staff', 23, 4, 4, 'b');
+disk('bruja_staff', 22, 3, 1.8, 'h');   // inner glow highlight
+// Orb outline ring
+for (let y = 0; y <= 8; y++) for (let x = 18; x <= 28; x++) {
+  const d2 = ((x - 23) ** 2 + (y - 4) ** 2);
+  if (d2 >= 13 && d2 <= 17) put('bruja_staff', x, y, 'o');
 }
+// Wind swirl accent pixels inside orb
+for (const [sx, sy] of [[22, 2], [24, 2], [21, 4], [25, 5], [23, 6]]) put('bruja_staff', sx, sy, 'a');
 
-// ============================ BRUJA_STAFF (gnarled staff with storm orb, right side) ============================
-// Staff on right side: shaft at x=22..23, orb at top (y=0..7 centered x=23)
-// wood palette via recipe; orb swirling wisps use 'b' base role (orbblue via accent or palette)
-
-// Storm orb (circular, y=0..7, center x=23, cy=3.5, r=3.5)
-disk('bruja_staff', 23, 3, 3.5, 'b');
-// Orb highlight (inner glow)
-disk('bruja_staff', 22, 2, 1.5, 'h');
-// Orb outline
-for (let y = 0; y <= 7; y++) {
-  for (let x = 19; x <= 27; x++) {
-    const dx = x - 23, dy = y - 3;
-    const dist2 = dx * dx + dy * dy;
-    if (dist2 >= 11 && dist2 <= 14) put('bruja_staff', x, y, 'o');
-  }
-}
-// Swirling wisps inside orb (accent pixels suggesting wind swirl)
-put('bruja_staff', 22, 2, 'a'); put('bruja_staff', 24, 2, 'a');
-put('bruja_staff', 21, 4, 'a'); put('bruja_staff', 25, 4, 'a');
-put('bruja_staff', 23, 5, 'a');
-
-// Gnarled staff shaft (y=7..31, x=22..23 with slight gnarls)
-for (let y = 7; y <= 31; y++) {
-  const gnarl = (y % 6 < 2) ? 1 : 0; // slight width variation for gnarled look
+// Staff shaft (y=8..31): 2px wide, wood grain every 3 rows
+for (let y = 8; y <= 31; y++) {
   put('bruja_staff', 22, y, 'o');
   put('bruja_staff', 23, y, y % 3 === 0 ? 'h' : 'b');
-  if (gnarl && y >= 12 && y <= 28) put('bruja_staff', 24, y, 's');
-  // Knot bumps
-  if (y % 8 === 4) {
+  // Knot bump every 8 rows
+  if (y % 8 === 4 && y >= 12 && y <= 28) {
     put('bruja_staff', 21, y, 'o');
-    put('bruja_staff', 24, y, 'o');
+    put('bruja_staff', 24, y, 's');
   }
 }
 
-// ============================ BRUJA_WIND (gust/wind crescent shapes) ============================
-// Scattered small crescent/arc shapes suggesting wind swirling around the figure.
-// Sparse, orbblue palette via recipe. Positioned to frame the left/flowing side.
+// ============================ BRUJA_WIND (subtle cyan gust accents — NOT a mass) ============================
+// Three small crescent/arc glyphs as accents around the figure.
+// Kept SPARSE and small so they frame her without obscuring the body.
+// Palette 'orbblue' (b=cyan base, h=bright cyan, o=outline).
 
-// Wind crescent 1 (left, y=8..11, x=1..5) — half-arc
+// Gust accent 1 — upper left, beside face (y=3..5, x=7..10)
 for (const [x, y, r] of [
-  [2, 8, 'o'], [3, 8, 'b'], [4, 8, 'o'],
-  [1, 9, 'b'], [5, 9, 'h'],
-  [1, 10, 'o'], [5, 10, 'b'],
-  [2, 11, 'o'], [3, 11, 'b'], [4, 11, 'o'],
+  [8, 3, 'o'], [9, 3, 'b'],
+  [7, 4, 'b'], [10, 4, 'h'],
+  [8, 5, 'o'], [9, 5, 'b'],
 ]) put('bruja_wind', x, y, r);
 
-// Wind crescent 2 (lower-left, y=16..19, x=0..4)
+// Gust accent 2 — left of torso (y=14..17, x=2..5)
 for (const [x, y, r] of [
-  [1, 16, 'o'], [2, 16, 'b'], [3, 16, 'o'],
-  [0, 17, 'b'], [4, 17, 'h'],
-  [0, 18, 'o'], [4, 18, 'b'],
-  [1, 19, 'o'], [2, 19, 'b'], [3, 19, 'o'],
+  [3, 14, 'o'], [4, 14, 'b'],
+  [2, 15, 'b'], [5, 15, 'h'],
+  [2, 16, 'o'], [5, 16, 'b'],
+  [3, 17, 'o'], [4, 17, 'b'],
 ]) put('bruja_wind', x, y, r);
 
-// Wind crescent 3 (upper area between head and staff, y=2..5, x=6..10)
+// Gust accent 3 — lower hem area (y=25..28, x=4..7)
 for (const [x, y, r] of [
-  [7, 2, 'o'], [8, 2, 'b'], [9, 2, 'o'],
-  [6, 3, 'b'], [10, 3, 'h'],
-  [7, 4, 'o'], [9, 4, 'b'],
+  [5, 25, 'o'], [6, 25, 'b'],
+  [4, 26, 'b'], [7, 26, 'h'],
+  [5, 27, 'o'], [6, 27, 'b'],
 ]) put('bruja_wind', x, y, r);
 
-// Wind swirl dots (sparse wisps, y=22..28 in lower-left robe area)
-for (const [x, y] of [[2, 22], [0, 25], [3, 27], [5, 24], [1, 29]]) {
-  put('bruja_wind', x, y, 'b');
-}
-// Small arc fragment top-right (near staff orb, y=0..2, x=18..20)
-for (const [x, y, r] of [
-  [18, 0, 'o'], [19, 0, 'b'],
-  [18, 1, 'b'], [20, 1, 'h'],
-  [19, 2, 'o'],
-]) put('bruja_wind', x, y, r);
+// Sparse wisp dots — very minimal, tucked near robe hem
+for (const [x, y] of [[3, 22], [1, 28], [6, 30]]) put('bruja_wind', x, y, 'b');
 
 emit('bruja_body');
+emit('bruja_head');
 emit('bruja_hair');
 emit('bruja_staff');
 emit('bruja_wind');
