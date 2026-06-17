@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeMovement, MOVEMENTS, summonSlots } from '../src/systems/EnemyBrain.js';
+import { computeMovement, MOVEMENTS, summonSlots, isFlying } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
 import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS, EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL } from '../src/data/tuning.js';
 
@@ -463,5 +463,12 @@ test('evade: every movement type still returns finite velocity (regression)', ()
     const v = MOVEMENTS[type]({ self: { x: 0, y: 0 }, target: { x: 100, y: 0 }, speed: 60, dt: 16, params: {}, state: {} });
     assert.ok(Number.isFinite(v.x) && Number.isFinite(v.y), `${type} produced NaN`);
   }
+});
+
+test('isFlying reads the flying flag', () => {
+  assert.equal(isFlying({ flying: true }), true);
+  assert.equal(isFlying({ flying: false }), false);
+  assert.equal(isFlying({}), false);
+  assert.equal(isFlying(null), false);
 });
 

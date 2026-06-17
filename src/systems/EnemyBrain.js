@@ -365,3 +365,8 @@ export function sisterFormation(live, anchors) {
   }
   return live.map((s) => s.baseMovement);
 }
+
+// PURE. True if the enemy def is a flyer (immune to ground hazards like the tornado).
+export function isFlying(def) {
+  return !!(def && def.flying);
+}
