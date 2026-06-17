@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG, spriteKey } from '../config.js';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, TEX, DEBUG, spriteKey, ENEMY_MARGIN } from '../config.js';
 import { t, tLines } from '../i18n/index.js';
 import { REGIONS } from '../data/regions.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
@@ -18,6 +18,7 @@ import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
 import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE } from '../systems/EnemyBrain.js';
+import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
 import { lavaPulse, lavaRimAlpha, lavaSpots, lavaEmbers, lavaEdgeEmbers, lerpColor, LAVA } from '../systems/LavaField.js';
@@ -301,8 +302,11 @@ export default class GameScene extends Phaser.Scene {
   // clamp EVERY enemy to the bounds every frame (no entered-latch). Enemies spawned
   // just outside snap to the edge on their first frame — a negligible visual change.
   containEnemy(e) {
-    e.x = Phaser.Math.Clamp(e.x, 0, GAME_WIDTH);
-    e.y = Phaser.Math.Clamp(e.y, 0, GAME_HEIGHT);
+    const halfW = (e.displayWidth  || (e.def.radius || 16) * 2) / 2;
+    const halfH = (e.displayHeight || (e.def.radius || 16) * 2) / 2;
+    const { x, y } = clampBodyInside(e.x, e.y, halfW, halfH, GAME_WIDTH, GAME_HEIGHT, ENEMY_MARGIN);
+    e.x = x;
+    e.y = y;
   }
 
   // Opens the pause overlay. Pauses both Game and its UI overlay so nothing ticks or
