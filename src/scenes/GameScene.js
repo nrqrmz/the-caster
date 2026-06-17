@@ -5,6 +5,7 @@ import { ENEMY_TYPES } from '../data/enemies.js';
 import {
   CONCURRENCY_CAP, ENEMY_SHOT_POOL, HOMING_TTL_MS,
   WHIRLPOOL_RADIUS, WHIRLPOOL_ACTIVE_MS, WHIRLPOOL_COOLDOWN_MS, WHIRLPOOL_TELEGRAPH_MS,
+  LAVA_RIVER_COOLDOWN_MS, LAVA_RIVER_TELEGRAPH_MS, LAVA_RIVER_ACTIVE_MS, LAVA_RIVER_DPS,
 } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
@@ -19,7 +20,7 @@ import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
 import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
-import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
+import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
 import { lavaPulse, lavaRimAlpha, lavaSpots, lavaEmbers, lavaEdgeEmbers, lerpColor, LAVA } from '../systems/LavaField.js';
 import { FormSequencer } from '../systems/FormSequencer.js';
@@ -74,6 +75,8 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
     this.triangle = null; // { mode, t } while a trio fight is active
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
+    this.lavaRiver = null;
+    this.lavaRiverGfx = null;
     this.casterBurnRemaining = 0;
     this.casterBurnDps = 0;
     this.casterPoisonRemaining = 0;
@@ -462,6 +465,8 @@ export default class GameScene extends Phaser.Scene {
         if (this.triangleGfx) this.triangleGfx.clear();
         this.whirlpool = null;
         if (this.whirlpoolGfx) this.whirlpoolGfx.clear();
+        this.lavaRiver = null;
+        if (this.lavaRiverGfx) this.lavaRiverGfx.clear();
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
         if (dialogue && dialogue.length) {
           this.scene.pause();
@@ -736,6 +741,7 @@ export default class GameScene extends Phaser.Scene {
     if (this.bossMechanics) this.bossMechanics.update(delta);
     this.updateZones(delta);
     this.updateTriangle(delta);
+    this.updateLavaRiver(delta);
     this.updateWhirlpool(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
@@ -774,6 +780,13 @@ export default class GameScene extends Phaser.Scene {
         mode: 'telegraph',
         t: WHIRLPOOL_TELEGRAPH_MS,
       };
+    }
+    if (hook === 'startLavaRiver') {
+      // Arranca el río en cooldown; se auto-activa periódicamente mientras Ignatius
+      // siga en esta fase. Idempotente: no reinicia si ya está activo.
+      if (!this.lavaRiver) {
+        this.lavaRiver = { orientation: 'horizontal', mode: 'cooldown', t: LAVA_RIVER_COOLDOWN_MS };
+      }
     }
   }
 
@@ -853,10 +866,20 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  drawTriangleEdges(edges, color, alpha, width) {
-    const g = this.triangleGfx;
+  _strokeEdgesOn(g, edges, color, alpha, width) {
     g.lineStyle(width, color, alpha);
     for (const [a, b] of edges) { g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.strokePath(); }
+  }
+  _drawLavaEdgesOn(g, edges) {
+    const t = this.lavaTime;
+    const stroke = (w, col, a) => { g.lineStyle(w, col, a); for (const [p, q] of edges) { g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.strokePath(); } };
+    stroke(40, LAVA.dark, 0.4);
+    stroke(32, lerpColor(LAVA.mid, LAVA.hot, lavaPulse(t)), 0.9);
+    stroke(10, LAVA.bright, lavaRimAlpha(t));
+    for (const [p, q] of edges) for (const e of lavaEdgeEmbers(p, q, t, 7)) { g.fillStyle(LAVA.bright, e.alpha * 0.9); g.fillCircle(e.x, e.y, e.r); }
+  }
+  drawTriangleEdges(edges, color, alpha, width) {
+    this._strokeEdgesOn(this.triangleGfx, edges, color, alpha, width);
   }
 
   updateZones(delta) {
@@ -900,12 +923,32 @@ export default class GameScene extends Phaser.Scene {
   // The sisters' active lava triangle edges, drawn as a WIDE animated lava band
   // (outer glow + molten body + bright flickering core + embers) on triangleGfx.
   drawLavaEdges(edges) {
-    const g = this.triangleGfx, t = this.lavaTime;
-    const stroke = (w, col, a) => { g.lineStyle(w, col, a); for (const [p, q] of edges) { g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.strokePath(); } };
-    stroke(40, LAVA.dark, 0.4);                                  // soft outer glow
-    stroke(32, lerpColor(LAVA.mid, LAVA.hot, lavaPulse(t)), 0.9); // molten body (~princess-wide, covers the 28px damage corridor)
-    stroke(10, LAVA.bright, lavaRimAlpha(t));                    // bright flickering core
-    for (const [p, q] of edges) for (const e of lavaEdgeEmbers(p, q, t, 7)) { g.fillStyle(LAVA.bright, e.alpha * 0.9); g.fillCircle(e.x, e.y, e.r); }
+    this._drawLavaEdgesOn(this.triangleGfx, edges);
+  }
+
+  updateLavaRiver(delta) {
+    if (!this.lavaRiver) return;
+    if (!this.lavaRiverGfx) this.lavaRiverGfx = this.add.graphics().setDepth(6);
+    this.lavaRiverGfx.clear();
+    const lr = this.lavaRiver;
+    lr.t -= delta;
+    if (lr.mode === 'cooldown') {
+      if (lr.t <= 0) {
+        lr.mode = 'telegraph'; lr.t = LAVA_RIVER_TELEGRAPH_MS;
+        const orient = ['horizontal', 'vertical', 'diag1', 'diag2'];
+        lr.orientation = orient[Phaser.Math.Between(0, orient.length - 1)];
+      }
+    } else if (lr.mode === 'telegraph') {
+      this._strokeEdgesOn(this.lavaRiverGfx, riverEdges(lr.orientation, GAME_WIDTH, GAME_HEIGHT), 0xffffff, 0.5, 2);
+      if (lr.t <= 0) { lr.mode = 'active'; lr.t = LAVA_RIVER_ACTIVE_MS; }
+    } else if (lr.mode === 'active') {
+      this._drawLavaEdgesOn(this.lavaRiverGfx, riverEdges(lr.orientation, GAME_WIDTH, GAME_HEIGHT));
+      if (onAnyEdge(this.caster.x, this.caster.y, riverEdges(lr.orientation, GAME_WIDTH, GAME_HEIGHT), 16)) {
+        this.damageCaster(LAVA_RIVER_DPS * (delta / 1000));
+        this.applyCasterBurn(8, 1200);
+      }
+      if (lr.t <= 0) { lr.mode = 'cooldown'; lr.t = LAVA_RIVER_COOLDOWN_MS; }
+    }
   }
 
   updateAuras(delta) {

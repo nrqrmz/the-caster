@@ -56,3 +56,9 @@ export const BURROW_RECOVER_MS = 600;         // (legacy; ya no usado por el nue
 // Frog lifecycle (generational summon).
 export const EGG_HATCH_MS = 2500;             // egg → tadpole (antes 3500)
 export const TADPOLE_GROW_MS = 4000;          // tadpole → adult frog (antes 6000)
+
+// Río de lava de Ignatius (hazard de línea a pantalla completa).
+export const LAVA_RIVER_COOLDOWN_MS = 13000;  // espera entre activaciones (fases 2-3)
+export const LAVA_RIVER_TELEGRAPH_MS = 1000;  // aviso antes de encenderse
+export const LAVA_RIVER_ACTIVE_MS = 2500;     // dura encendido
+export const LAVA_RIVER_DPS = 18;             // menos letal que el triángulo (~28)
