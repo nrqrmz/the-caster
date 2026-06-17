@@ -189,6 +189,9 @@ const HARPY = [
 ];
 // Torbellino Errante — spinning wind vortex (ambient hazard, no face).
 const WHIRL = [{ name: 'whirl_body' }];
+// Elemental de Tormenta — nv6 setpiece. Roiling storm cloud: dark body, lightning veins
+// (wispglow = electric yellow), and a single glaring glow eye (sentient elemental).
+const STORM_ELEM = [{ name: 'storm_body' }, { name: 'storm_bolts', palette: 'wispglow' }, { name: 'storm_eye', palette: 'glow' }];
 
 export const RECIPES = {
   hero: {
@@ -331,6 +334,9 @@ export const RECIPES = {
   // snarling fanged jaws, clawed forelimbs. Electric glowing eyes (glow palette). Distinct
   // from centinela_piedra (which keeps TOTEM_FIRE). Layer order: wings → body → head → eyes.
   gargola_pararrayos: { archetype: 'floating', size: 64, baseColor: 0x546e7a, parts: GARGOLA },
+
+  // --- Air boss (nv6 setpiece) ---
+  elemental_tormenta: { archetype: 'boss', size: 96, baseColor: 0x37474f, parts: STORM_ELEM },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
