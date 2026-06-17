@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeMovement, MOVEMENTS, summonSlots } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
-import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS } from '../src/data/tuning.js';
+import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS, EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL } from '../src/data/tuning.js';
 
 const mag = (v) => Math.hypot(v.x, v.y);
 const ctx = (overrides = {}) => ({
@@ -429,5 +429,39 @@ test('burrow: tras submergeMs pasa a emerge (anillo de aviso, sigue invuln)', ()
   const v = computeMovement({ movement: { type: 'burrow' } }, state, { ...ctxB, dt: 16 });
   assert.equal(v.submerged, true);
   assert.equal(v.surfacing, true);
+});
+
+const evadeCtx = () => ({ self: { x: 0, y: 0 }, target: { x: 200, y: 0 }, speed: 80, dt: 16 });
+
+test('evade: approaches the target when out of range and not dodging', () => {
+  const state = {};
+  const v = MOVEMENTS.evade({ ...evadeCtx(), params: { range: 60 }, state });
+  assert.ok(v.x > 0, 'should move toward target on +x');
+  assert.ok(Math.abs(v.y) < 1e-6, 'no lateral component when not dodging');
+});
+
+test('evade: triggers a perpendicular dash after EVADE_DODGE_EVERY ms', () => {
+  const state = {};
+  // Accumulate just past the dodge interval in one step.
+  const v = MOVEMENTS.evade({ ...evadeCtx(), params: { range: 60 }, state, dt: EVADE_DODGE_EVERY + 1 });
+  assert.equal(state.mode, 'dodge');
+  // During a dodge the velocity is mostly lateral (perpendicular to the target heading, which is +x → lateral is ±y).
+  assert.ok(Math.abs(v.y) > Math.abs(v.x), 'dodge is lateral');
+  const mag = Math.hypot(v.x, v.y);
+  assert.ok(mag > 80 * (EVADE_DODGE_MUL - 1), `dodge is fast, got ${mag}`);
+});
+
+test('evade: returns to approach after the dodge window elapses', () => {
+  const state = {};
+  MOVEMENTS.evade({ ...evadeCtx(), params: { range: 60 }, state, dt: EVADE_DODGE_EVERY + 1 }); // enter dodge
+  MOVEMENTS.evade({ ...evadeCtx(), params: { range: 60 }, state, dt: EVADE_DODGE_MS + 1 });     // dodge ends
+  assert.equal(state.mode, 'approach');
+});
+
+test('evade: every movement type still returns finite velocity (regression)', () => {
+  for (const type of Object.keys(MOVEMENTS)) {
+    const v = MOVEMENTS[type]({ self: { x: 0, y: 0 }, target: { x: 100, y: 0 }, speed: 60, dt: 16, params: {}, state: {} });
+    assert.ok(Number.isFinite(v.x) && Number.isFinite(v.y), `${type} produced NaN`);
+  }
 });
 
