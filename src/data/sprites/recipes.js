@@ -32,6 +32,7 @@ const KNIGHT_WATER = [
   { name: 'knight_sword' }, { name: 'knight_body' }, { name: 'knight_shield' }, { name: 'knight_helm' },
   { name: 'knight_visor', palette: 'shadow' }, { name: 'knight_eyes', palette: 'orbblue' },
 ];
+const KNIGHT_VAMP = [...KNIGHT.slice(0, 5), { name: 'knight_eyes', palette: 'vampglow' }];
 const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
@@ -230,6 +231,10 @@ export const RECIPES = {
     ...CULT_HOODED,
     { name: 'lider_staff', palette: 'wood' },
   ] },
+
+  // --- Air knights (vampiric) ---
+  guardia_nocturno: { archetype: 'humanoid', size: 64, baseColor: 0x37474f, parts: KNIGHT_VAMP },
+  caballero_sangre: { archetype: 'boss',     size: 96, baseColor: 0xb71c1c, parts: KNIGHT_VAMP },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }

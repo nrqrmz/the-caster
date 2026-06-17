@@ -37,6 +37,7 @@ export const NAMED_PALETTES = {
   // eyes, and a staff ember. Body/hood take the creature's own type color.
   shadow: derivePalette(0x241018, { base: 0x2a1320, outline: 0x0a0408, shade: 0x140a10, highlight: 0x3a1c2c }),
   glow: derivePalette(0xffe27a, { highlight: 0xfff7cc, base: 0xffd54f, shade: 0xffb300, outline: 0xc79a2b }),
+  vampglow: derivePalette(0xff5252, { highlight: 0xffcdd2, base: 0xff5252, shade: 0xc62828, outline: 0x7f1d1d }),
   ember: derivePalette(0xff8a50, { highlight: 0xffe082, base: 0xff7043, shade: 0xd84315, outline: 0x7a2a10 }),
   // Bare-headed mage/acolyte accents. The robe takes the creature's type color;
   // these dress the visible face. A living set (skin/hair/eyes) and a drowned set.
