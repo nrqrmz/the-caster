@@ -162,7 +162,7 @@ export const LIDER_CULTISTA = {
 const GALAHAD_HUMANO = {
   key: 'galahad_humano', tex: TEX.boss, color: COLORS.boss,
   hp: 340, speed: 80, damage: 14, radius: 26, resist: 0,
-  elite: true, geometric: true,
+  elite: true,
   movement: { type: 'evade', range: 240 }, // dodges your orbs — teaches his rhythm
   phases: [
     { from: 1.0, sequence: [
@@ -181,7 +181,7 @@ const GALAHAD_HUMANO = {
 const GALAHAD_RAGE = {
   key: 'galahad_rage', tex: TEX.boss, color: COLORS.boss,
   hp: 460, speed: 110, damage: 20, radius: 26, resist: 0.10,
-  elite: true, geometric: true,
+  elite: true,
   movement: { type: 'charge', windup: 450, dash: 340, recover: 500, dashMul: 3.2 },
   modifiers: [
     { type: 'drain', heal: 10 },
@@ -208,7 +208,7 @@ const GALAHAD_RAGE = {
 const GALAHAD_RAGE2 = {
   key: 'galahad_rage2', tex: TEX.boss, color: COLORS.boss,
   hp: 560, speed: 150, damage: 22, radius: 26, resist: 0.20,
-  elite: true, geometric: true,
+  elite: true,
   movement: { type: 'charge', windup: 225, dash: 170, recover: 250, dashMul: 3.2 },
   modifiers: [
     { type: 'drain', heal: 10 },
@@ -233,7 +233,7 @@ const GALAHAD_RAGE2 = {
 const GALAHAD_MURCIELAGO = {
   key: 'galahad_murcielago', tex: TEX.boss, color: COLORS.miniboss,
   hp: 700, speed: 100, damage: 24, radius: 48, resist: 0.30,
-  elite: true, geometric: true,
+  elite: true,
   flying: true,                                       // immune to ground hazards
   movement: { type: 'charge', windup: 400, dash: 360, recover: 550, dashMul: 3.0 }, // dive-bombs
   phases: [
@@ -259,7 +259,7 @@ const GALAHAD_MURCIELAGO = {
 const GALAHAD_FINAL = {
   key: 'galahad_final', tex: TEX.boss, color: COLORS.boss,
   hp: 90, speed: 55, damage: 10, radius: 24, resist: 0,
-  elite: true, geometric: true,
+  elite: true,
   movement: { type: 'flee' },
   phases: [
     { from: 1.0, sequence: [
@@ -276,7 +276,7 @@ const GALAHAD_FINAL = {
 export const GALAHAD = {
   key: 'galahad', tex: TEX.boss, color: COLORS.boss,
   hp: 340, speed: 80, damage: 14, radius: 26,
-  elite: true, geometric: true,
+  elite: true,
   deathFeint: true,
   movement: { type: 'evade', range: 240 },
   forms: [GALAHAD_HUMANO, GALAHAD_RAGE, GALAHAD_RAGE2, GALAHAD_MURCIELAGO, GALAHAD_FINAL],
