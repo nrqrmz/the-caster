@@ -215,7 +215,7 @@ const DAMA_BALLENA = {
   ],
 };
 
-// maga_final: ~20 HP, minimal kit. Death fires onClear (the closing dialogue).
+// maga_final: 320 HP, kite movement. A real final fight. Death fires onClear (the closing dialogue).
 // FormSequencer revert-to-maga on ballena death produces this form.
 const DAMA_MAGA_FINAL = {
   key: 'dama_maga_final', tex: TEX.boss, color: COLORS.ice,

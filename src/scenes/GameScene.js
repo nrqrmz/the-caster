@@ -592,7 +592,7 @@ export default class GameScene extends Phaser.Scene {
       shot.setTint(spec.tint); // disparos enemigos distinguibles del orbe cian del jugador
       if (p.big) {
         shot.setDisplaySize(60, 60);                 // bola enorme reusando TEX.fireball (32px)
-        if (shot.body) shot.body.setCircle(28, shot.width / 2 - 28, shot.height / 2 - 28); // hitbox grande
+        if (shot.body) shot.body.setCircle(28); // hitbox grande
       }
       if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; shot.homingLife = HOMING_TTL_MS; }
       if (eff && eff.kind === 'burn') { shot.burnDps = burnMod?.dps ?? eff.dps; shot.burnMs = burnMod?.ms ?? eff.ms; }
