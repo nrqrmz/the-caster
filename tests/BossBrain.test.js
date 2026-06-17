@@ -64,3 +64,25 @@ test('stepBoss falls back to def.movement when the phase omits one, and speedMul
   assert.deepEqual(out.movement, { type: 'chase' });
   assert.equal(out.speedMul, 1);
 });
+
+test('stepBoss: rt.forcedPhase overrides the hp-fraction phase pick', () => {
+  const def = { movement: { type: 'static' }, phases: [
+    { from: 1.0, sequence: [{ do: 'wait', dur: 100 }] },
+    { from: 0.0, sequence: [{ do: 'shootStraight', dur: 100 }] },
+  ] };
+  // hpFrac is full (1.0) → without an override this picks phase 0.
+  const rt = { phaseIndex: -1, stepIndex: 0, stepTimer: 0, fired: false, forcedPhase: 1 };
+  const out = stepBoss(def, rt, 1.0, 16);
+  assert.equal(out.phaseIndex, 1, 'forcedPhase wins over hpFrac');
+});
+
+test('stepBoss: forcedPhase null/undefined falls back to hp-fraction pick (regression)', () => {
+  const def = { movement: { type: 'static' }, phases: [
+    { from: 1.0, sequence: [{ do: 'wait', dur: 100 }] },
+    { from: 0.5, sequence: [{ do: 'wait', dur: 100 }] },
+  ] };
+  const rt = { phaseIndex: -1, stepIndex: 0, stepTimer: 0, fired: false };
+  assert.equal(stepBoss(def, rt, 1.0, 16).phaseIndex, 0);
+  const rt2 = { phaseIndex: -1, stepIndex: 0, stepTimer: 0, fired: false };
+  assert.equal(stepBoss(def, rt2, 0.4, 16).phaseIndex, 1);
+});
