@@ -161,7 +161,7 @@ const DAMA_MAGA = {
 
 const DAMA_TIBURON = {
   key: 'dama_tiburon', tex: TEX.boss, color: COLORS.caster,
-  hp: 460, speed: 90, damage: 20, radius: 28, resist: 0.10,
+  hp: 460, speed: 90, damage: 20, radius: 38, resist: 0.10,
   elite: true, iceImmune: true,
   movement: { type: 'burrow', submergeMs: 1400, emergeMs: 450, surfaceMs: 2200 },
   phases: [
