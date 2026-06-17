@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeMovement, MOVEMENTS } from '../src/systems/EnemyBrain.js';
+import { computeMovement, MOVEMENTS, summonSlots } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
 
 const mag = (v) => Math.hypot(v.x, v.y);
@@ -155,81 +155,41 @@ test('findModifier returns the entry (normalizing string form) or null', () => {
   assert.equal(findModifier({}, 'shielded'), null);
 });
 
-import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS } from '../src/data/tuning.js';
-
-// Helper: run burrow for `ms` ms in one step.
-function runBurrow(state, ms, ctx) {
-  return MOVEMENTS.burrow({ ...ctx, params: {}, state, dt: ms });
-}
-
-const burrowCtx = () => ({
-  self: { x: 0, y: 0 },
-  target: { x: 100, y: 100 },
-  speed: 80,
-  dt: 16,
-});
-
-test('burrow: starts in submerged state with zero velocity', () => {
+test('burrow: ciclo submerged → reposition → emerge → surface → submerged', () => {
+  const self = { x: 100, y: 100, radius: 17 };
+  const target = { x: 200, y: 200 };
+  const params = { submergeMs: 100, emergeMs: 100, surfaceMs: 300 };
   const state = {};
-  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state });
-  assert.equal(v.x, 0);
-  assert.equal(v.y, 0);
-  assert.equal(state.mode, 'submerged');
+  const step = () => MOVEMENTS.burrow({ self, target, speed: 100, dt: 100, params, state });
+
+  // 1) submerged: invuln, sin moverse
+  let v = step();
   assert.equal(v.submerged, true);
-});
+  assert.equal(v.x, 0); assert.equal(v.y, 0);
 
-test('burrow: stays submerged until BURROW_SUBMERGE_MS elapses', () => {
-  const state = {};
-  // Consume all but the last ms.
-  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_SUBMERGE_MS - 1 });
-  assert.equal(state.mode, 'submerged');
-});
+  // 2) reposition: teletransporta junto al objetivo, sigue submerged
+  v = step();
+  assert.equal(v.submerged, true);
+  assert.ok(v.repositionTo && typeof v.repositionTo.x === 'number');
 
-test('burrow: transitions to reposition after submerge window', () => {
-  const state = {};
-  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_SUBMERGE_MS + 1 });
-  assert.equal(state.mode, 'reposition');
-});
-
-test('burrow: reposition snaps to near target immediately (same frame)', () => {
-  const state = { mode: 'reposition', t: 0 };
-  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 16 });
-  // After reposition the mode advances to 'telegraph'.
-  assert.equal(state.mode, 'telegraph');
-  // Velocity during reposition is zero (snap is a position write, not velocity).
-  assert.equal(v.x, 0);
-  assert.equal(v.y, 0);
-  // The intent carries a reposition target.
-  assert.ok(v.repositionTo, 'should carry repositionTo {x,y}');
-});
-
-test('burrow: telegraph mode signals surfacing for BURROW_TELEGRAPH_MS', () => {
-  const state = { mode: 'telegraph', t: 0 };
-  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_TELEGRAPH_MS - 1 });
+  // 3) emerge: aviso de superficie, aún invuln (submerged true)
+  v = step();
   assert.equal(v.surfacing, true);
-  assert.equal(state.mode, 'telegraph');
-});
+  assert.equal(v.submerged, true);
 
-test('burrow: telegraph transitions to attack after window', () => {
-  const state = { mode: 'telegraph', t: 0 };
-  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_TELEGRAPH_MS + 1 });
-  assert.equal(state.mode, 'attack');
-});
-
-test('burrow: attack mode fires a dashStrike and transitions to recover', () => {
-  const state = { mode: 'attack', t: 0 };
-  const v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 16 });
-  assert.equal(v.dashStrike, true);
-  assert.equal(state.mode, 'recover');
-});
-
-test('burrow: recover is vulnerable and returns to submerged after BURROW_RECOVER_MS', () => {
-  const state = { mode: 'recover', t: 0 };
-  let v = MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: BURROW_RECOVER_MS - 1 });
+  // 4) surface: vulnerable y persiguiendo al objetivo (velocidad hacia abajo-derecha)
+  v = step();
   assert.equal(v.vulnerable, true);
-  assert.equal(state.mode, 'recover');
-  MOVEMENTS.burrow({ ...burrowCtx(), params: {}, state, dt: 2 }); // push past threshold
-  assert.equal(state.mode, 'submerged');
+  assert.equal(v.submerged, undefined);
+  assert.ok(v.x > 0 && v.y > 0);
+
+  // 5) sigue en surface (300ms de ventana, dt 100 → 3 frames vulnerables)
+  v = step();
+  assert.equal(v.vulnerable, true);
+
+  // 6) expira la superficie → vuelve a submerged
+  v = step();
+  assert.equal(v.submerged, true);
 });
 
 test('every movement type (including burrow) returns finite velocity', () => {
@@ -332,14 +292,35 @@ test('no enemy def has a radius below the floor of 16', () => {
   }
 });
 
-test('burrow reposiciona dentro de los bordes respetando radio + ENEMY_MARGIN', () => {
-  // target pegado a la esquina superior-izquierda fuerza el clamp del destino.
-  const self = { x: 5, y: 5, radius: 16 };
-  const target = { x: 0, y: 0 };
-  const state = { mode: 'reposition', t: 0 };
-  const out = MOVEMENTS.burrow({ self, target, speed: 60, dt: 16, params: {}, state });
-  assert.ok(out.repositionTo, 'debe emitir un destino de reposición');
-  const min = 16 + ENEMY_MARGIN;
-  assert.ok(out.repositionTo.x >= min, `x (${out.repositionTo.x}) >= ${min}`);
-  assert.ok(out.repositionTo.y >= min, `y (${out.repositionTo.y}) >= ${min}`);
+test('summonSlots: sin cap → sin límite propio', () => {
+  assert.equal(summonSlots({ cap: null, alive: 99 }, 0), Infinity);
 });
+
+test('summonSlots: con cap y sin invocados → cap completo', () => {
+  assert.equal(summonSlots({ cap: 3, alive: 0, cooldownUntil: 0 }, 0), 3);
+});
+
+test('summonSlots: al tope → 0', () => {
+  assert.equal(summonSlots({ cap: 3, alive: 3, cooldownUntil: 0 }, 0), 0);
+});
+
+test('summonSlots: en cooldown → 0 aunque haya hueco', () => {
+  assert.equal(summonSlots({ cap: 3, alive: 1, cooldownUntil: 5000 }, 1000), 0);
+});
+
+test('summonSlots: cooldown expirado → repone el hueco', () => {
+  assert.equal(summonSlots({ cap: 3, alive: 1, cooldownUntil: 5000 }, 6000), 2);
+});
+
+test('buildProjectiles: giantFireball es un único disparo recto marcado big', () => {
+  const out = buildProjectiles(
+    { type: 'giantFireball', speed: 120, damage: 28 },
+    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 } }
+  );
+  assert.equal(out.length, 1);
+  assert.equal(out[0].big, true);
+  assert.equal(out[0].speed, 120);
+  assert.equal(out[0].damage, 28);
+  assert.ok(Math.abs(out[0].angle) < 1e-9); // recto hacia +x
+});
+

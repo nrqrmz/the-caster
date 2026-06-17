@@ -49,9 +49,16 @@ export const WHIRLPOOL_COOLDOWN_MS = 5000;    // gap before the boss can trigger
 
 // Burrow movement.
 export const BURROW_SUBMERGE_MS = 1500;       // invuln + hidden window
-export const BURROW_TELEGRAPH_MS = 400;       // surface-warning ring duration
-export const BURROW_RECOVER_MS = 600;         // vulnerable window after the dash
+export const BURROW_TELEGRAPH_MS = 450;       // surface-warning ring duration (antes 400)
+export const BURROW_SURFACE_MS = 2500;        // ventana de superficie/persecución vulnerable
+export const BURROW_RECOVER_MS = 600;         // (legacy; ya no usado por el nuevo flujo)
 
 // Frog lifecycle (generational summon).
-export const EGG_HATCH_MS = 3500;             // egg → tadpole
-export const TADPOLE_GROW_MS = 6000;          // tadpole → adult frog
+export const EGG_HATCH_MS = 2500;             // egg → tadpole (antes 3500)
+export const TADPOLE_GROW_MS = 4000;          // tadpole → adult frog (antes 6000)
+
+// Río de lava de Ignatius (hazard de línea a pantalla completa).
+export const LAVA_RIVER_COOLDOWN_MS = 13000;  // espera entre activaciones (fases 2-3)
+export const LAVA_RIVER_TELEGRAPH_MS = 1000;  // aviso antes de encenderse
+export const LAVA_RIVER_ACTIVE_MS = 2500;     // dura encendido
+export const LAVA_RIVER_DPS = 18;             // menos letal que el triángulo (~28)

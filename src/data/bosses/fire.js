@@ -6,7 +6,7 @@ import { COLORS, TEX } from '../../config.js';
 
 // Pyra — daño: ráfagas en cono + el suelo se llena de lava. Kite a media distancia.
 export const PYRA = {
-  key: 'pyra', tex: TEX.boss, color: COLORS.emberDeep, hp: 420, speed: 55, damage: 14, radius: 24,
+  key: 'pyra', tex: TEX.boss, color: COLORS.emberDeep, hp: 500, speed: 55, damage: 20, radius: 24,
   elite: true, movement: { type: 'kite', range: 240 },
   phases: [
     { from: 1.0, sequence: [
@@ -24,7 +24,7 @@ export const PYRA = {
 
 // Vesta — tanque/melee: embiste (charge), su contacto quema (onHitBurn), escudo.
 export const VESTA = {
-  key: 'vesta', tex: TEX.boss, color: COLORS.magma, hp: 520, speed: 80, damage: 18, radius: 26,
+  key: 'vesta', tex: TEX.boss, color: COLORS.magma, hp: 680, speed: 80, damage: 36, radius: 26,
   elite: true, movement: { type: 'charge', windup: 600, dash: 420, recover: 700, dashMul: 3 },
   modifiers: [{ type: 'onHitBurn', dps: 10, ms: 2500 }, { type: 'shielded', reduce: 0.3 }],
   phases: [
@@ -41,8 +41,8 @@ export const VESTA = {
 
 // Favilla — summoner/healer: invoca adds y cura (healAllies); huye, protegida.
 export const FAVILLA = {
-  key: 'favilla', tex: TEX.boss, color: COLORS.totemFire, hp: 480, speed: 70, damage: 10, radius: 24,
-  elite: true, movement: { type: 'flee' },
+  key: 'favilla', tex: TEX.boss, color: COLORS.totemFire, hp: 500, speed: 70, damage: 10, radius: 24,
+  elite: true, movement: { type: 'erratic' },
   modifiers: [{ type: 'healAllies', hps: 14, radius: 160 }],
   phases: [
     { from: 1.0, sequence: [
@@ -64,12 +64,26 @@ export const FAVILLA = {
 // trio showcase. Favilla's phase-1 is all summons + lobAoe (it would be empty
 // after stripping), so she runs her phase-2 nova instead; she keeps healAllies
 // so "kill the healer first" stays the tactical hook.
+// When only ONE sister remains the triangle is cancelled and she adopts her
+// soloSequence (which restores lobAoe so the survivor drops lava pools again).
 const stripFloorAndAdds = (seq) => seq.filter((s) => s.do !== 'lobAoe' && s.do !== 'summon');
-const trio = (def, hp, seq) => ({ ...def, hp, phases: [{ from: 1.0, sequence: seq }] });
+// soloSeq: lo que hace la hermana cuando queda SOLA (recupera sus charcos de lava).
+const trio = (def, hp, movement, seq, soloSequence) => ({
+  ...def, hp, movement,
+  phases: [{ from: 1.0, sequence: seq }],
+  soloSequence,
+});
+const SOLO_LAVA = { do: 'lobAoe', radius: 64, dps: 22, duration: 3500, telegraph: 500, dur: 900 };
 export const SISTERS_TRIO = [
-  trio(PYRA,    280, stripFloorAndAdds(PYRA.phases[0].sequence)),    // cono de proyectiles
-  trio(VESTA,   320, stripFloorAndAdds(VESTA.phases[0].sequence)),   // embiste + disparo recto
-  trio(FAVILLA, 300, stripFloorAndAdds(FAVILLA.phases[1].sequence)), // nova (sin summons); conserva healAllies
+  trio(PYRA, 360, { type: 'kite', range: 240 },
+    stripFloorAndAdds(PYRA.phases[0].sequence),
+    [SOLO_LAVA, { do: 'shootSpread', count: 6, arc: 90, speed: 240, damage: 14, telegraph: 320, dur: 700 }]),
+  trio(VESTA, 480, { type: 'chase' },
+    stripFloorAndAdds(VESTA.phases[0].sequence),
+    [SOLO_LAVA, { do: 'shootStraight', speed: 260, damage: 12, telegraph: 250, dur: 600 }]),
+  trio(FAVILLA, 300, { type: 'kite', range: 240 },
+    stripFloorAndAdds(FAVILLA.phases[1].sequence),
+    [SOLO_LAVA, { do: 'nova', count: 12, speed: 200, damage: 10, telegraph: 400, dur: 800 }]),
 ];
 
 // Ignatius — el padre, mago de templo (nv7). Setpiece de 3 fases. Reusa el
@@ -82,18 +96,21 @@ export const IGNATIUS = {
   phases: [
     { from: 1.0, sequence: [
       { do: 'shootSpread', count: 6, arc: 90, speed: 240, damage: 14, telegraph: 320, dur: 700 },
+      { do: 'giantFireball', projectile: 'fire', speed: 120, damage: 28, telegraph: 600, dur: 900 },
       { do: 'shootHoming', speed: 130, damage: 12, telegraph: 350, dur: 900 },
       { do: 'wait', dur: 400 },
     ] },
-    { from: 0.66, enter: ['spawnLavaFloor'], sequence: [
+    { from: 0.66, enter: ['spawnLavaFloor', 'startLavaRiver'], sequence: [
       { do: 'nova', count: 12, speed: 220, damage: 13, telegraph: 350, dur: 700 },
-      { do: 'lobAoe', radius: 70, dps: 26, duration: 3500, telegraph: 450, dur: 800 },
+      { do: 'summon', spawnTypes: ['brasa_errante', 'elemental_fuego', 'espiritu_ceniza'], count: 1, cap: 3, respawnMs: 20000, capKey: 'ignatius_adds', dur: 900 },
+      { do: 'giantFireball', projectile: 'fire', speed: 120, damage: 30, telegraph: 550, dur: 900 },
       { do: 'shootSpread', count: 8, arc: 120, speed: 250, damage: 14, telegraph: 300, dur: 700 },
     ] },
-    { from: 0.33, speedMul: 1.35, enter: ['spawnLavaFloor'], sequence: [
+    { from: 0.33, speedMul: 1.35, enter: ['spawnLavaFloor', 'startLavaRiver'], sequence: [
       { do: 'nova', count: 16, speed: 240, damage: 14, telegraph: 280, dur: 600 },
+      { do: 'summon', spawnTypes: ['brasa_errante', 'elemental_fuego', 'espiritu_ceniza'], count: 1, cap: 3, respawnMs: 20000, capKey: 'ignatius_adds', dur: 800 },
+      { do: 'giantFireball', projectile: 'fire', speed: 130, damage: 32, telegraph: 450, dur: 800 },
       { do: 'shootHoming', speed: 150, damage: 13, telegraph: 250, dur: 600 },
-      { do: 'lobAoe', radius: 80, dps: 30, duration: 4000, telegraph: 380, dur: 700 },
     ] },
   ],
 };

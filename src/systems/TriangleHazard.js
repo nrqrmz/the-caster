@@ -38,3 +38,12 @@ export function pointInTriangle(px, py, a, b, c) {
   const hasPos = d1 > 0 || d2 > 0 || d3 > 0;
   return !(hasNeg && hasPos);
 }
+
+// PURE. Una arista que parte la pantalla según la orientación.
+// orientation: 'horizontal' | 'vertical' | 'diag1' (↘) | 'diag2' (↙).
+export function riverEdges(orientation, w, h) {
+  if (orientation === 'vertical') return [[{ x: w / 2, y: 0 }, { x: w / 2, y: h }]];
+  if (orientation === 'diag1')    return [[{ x: 0, y: 0 }, { x: w, y: h }]];
+  if (orientation === 'diag2')    return [[{ x: w, y: 0 }, { x: 0, y: h }]];
+  return [[{ x: 0, y: h / 2 }, { x: w, y: h / 2 }]]; // horizontal (default)
+}

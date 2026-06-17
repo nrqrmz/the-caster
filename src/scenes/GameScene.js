@@ -5,6 +5,7 @@ import { ENEMY_TYPES } from '../data/enemies.js';
 import {
   CONCURRENCY_CAP, ENEMY_SHOT_POOL, HOMING_TTL_MS,
   WHIRLPOOL_RADIUS, WHIRLPOOL_ACTIVE_MS, WHIRLPOOL_COOLDOWN_MS, WHIRLPOOL_TELEGRAPH_MS,
+  LAVA_RIVER_COOLDOWN_MS, LAVA_RIVER_TELEGRAPH_MS, LAVA_RIVER_ACTIVE_MS, LAVA_RIVER_DPS,
 } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
@@ -17,9 +18,9 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
-import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
+import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
 import { lavaPulse, lavaRimAlpha, lavaSpots, lavaEmbers, lavaEdgeEmbers, lerpColor, LAVA } from '../systems/LavaField.js';
 import { FormSequencer } from '../systems/FormSequencer.js';
@@ -74,6 +75,8 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
     this.triangle = null; // { mode, t } while a trio fight is active
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
+    this.lavaRiver = null;
+    this.lavaRiverGfx = null;
     this.casterBurnRemaining = 0;
     this.casterBurnDps = 0;
     this.casterPoisonRemaining = 0;
@@ -372,17 +375,32 @@ export default class GameScene extends Phaser.Scene {
   }
 
   onEnemyDeath(enemy) {
+    // Si era un invocado con tope, libera su slot e inicia el cooldown del padre.
+    if (enemy._summonedBy && enemy._summonedBy.active && enemy._summonCapKey) {
+      const tr = enemy._summonedBy._summonTrackers && enemy._summonedBy._summonTrackers[enemy._summonCapKey];
+      if (tr) {
+        tr.alive = Math.max(0, tr.alive - 1);
+        tr.cooldownUntil = this.time.now + (enemy._summonRespawnMs ?? 15000);
+      }
+    }
     const boom = findModifier(enemy.def, 'explodesOnDeath');
     if (boom) {
       const n = boom.count ?? 8;
       const speed = boom.speed ?? 200;
       const dmg = boom.damage ?? Math.round(enemy.def.damage * 0.8);
+      const type = resolveProjectile(boom, this.regionElement);
+      const spec = PROJECTILES[type] || PROJECTILES.arrow;
+      const eff = spec.effect;
       for (let i = 0; i < n; i++) {
         const a = (Math.PI * 2 * i) / n;
         const tx = enemy.x + Math.cos(a) * 50;
         const ty = enemy.y + Math.sin(a) * 50;
-        const shot = this.enemyShots.fire(TEX.arrow, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
-        if (shot) shot.setTint(COLORS.fireball);
+        const shot = this.enemyShots.fire(spec.tex, enemy.x, enemy.y, tx, ty, speed, dmg, 0);
+        if (!shot) continue;
+        shot.setTint(spec.tint);
+        if (eff && eff.kind === 'burn') { shot.burnDps = eff.dps; shot.burnMs = eff.ms; }
+        else if (eff && eff.kind === 'slow') { shot.slowFactor = eff.factor; shot.slowMs = eff.ms; }
+        else if (eff && eff.kind === 'dot') { shot.poisonDps = eff.dps; shot.poisonMs = eff.ms; }
       }
     }
     const split = buildSplitChildren(enemy.def);
@@ -437,12 +455,18 @@ export default class GameScene extends Phaser.Scene {
       const stillSpawning = this.spawnEvent !== null && this.spawnEvent !== undefined;
       if (alive === 0 && !stillSpawning) { this.runner.onCleared(); this.beginPhase(); }
     } else if (phase === 'miniboss' || phase === 'levelBoss' || phase === 'templeBoss') {
-      if (this.enemies.countActive(true) === 0) {
+      if (this.bosses.length === 0) {
+        // El boss murió: el nivel está concluido aunque queden minions. Despawnear
+        // los enemigos no-boss restantes para que no persistan al diálogo/siguiente fase.
+        const leftovers = this.enemies.getChildren().filter((e) => e && e.active);
+        for (const e of leftovers) e.destroy();
         this.bossMechanics = null;
         this.triangle = null;
         if (this.triangleGfx) this.triangleGfx.clear();
         this.whirlpool = null;
         if (this.whirlpoolGfx) this.whirlpoolGfx.clear();
+        this.lavaRiver = null;
+        if (this.lavaRiverGfx) this.lavaRiverGfx.clear();
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
         if (dialogue && dialogue.length) {
           this.scene.pause();
@@ -512,17 +536,40 @@ export default class GameScene extends Phaser.Scene {
   executeAttack(enemy, att) {
     if (att.type === 'melee') return; // contact damage via the caster/enemies overlap
     if (att.type === 'lobAoe') {
-      // Telegraphed fire pool dropped on the caster's current position.
+      const water = this.regionElement === 'water';
       this.spawnZone({
         x: this.caster.x, y: this.caster.y,
         radius: att.radius ?? 60, duration: att.duration ?? 3000,
-        casterDps: att.dps ?? 18, color: COLORS.fireball,
+        casterDps: att.dps ?? 18,
+        color: water ? COLORS.water : COLORS.fireball,
+        style: water ? 'water' : 'fire',
       });
       return;
     }
     if (att.type === 'summon') {
-      const def = ENEMY_TYPES[att.spawnType];
-      if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
+      const types = att.spawnTypes || [att.spawnType];
+      if (att.cap != null) {
+        // Summon con tope (opt-in): respeta cap + cooldown por instancia de ataque.
+        const key = att.capKey || att.spawnType || types[0];
+        enemy._summonTrackers = enemy._summonTrackers || {};
+        const tr = enemy._summonTrackers[key] || (enemy._summonTrackers[key] = { alive: 0, cooldownUntil: 0 });
+        const slots = summonSlots({ cap: att.cap, alive: tr.alive, cooldownUntil: tr.cooldownUntil }, this.time.now);
+        const n = Math.min(att.count ?? 1, slots);
+        for (let i = 0; i < n; i++) {
+          const t = types[Phaser.Math.Between(0, types.length - 1)];
+          const def = ENEMY_TYPES[t];
+          if (!def) continue;
+          const child = this.spawnEnemy(def);
+          child._summonedBy = enemy;
+          child._summonCapKey = key;
+          child._summonRespawnMs = att.respawnMs ?? 15000;
+          tr.alive += 1;
+        }
+      } else {
+        // Sin tope: comportamiento histórico (acotado solo por CONCURRENCY_CAP).
+        const def = ENEMY_TYPES[att.spawnType];
+        if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
+      }
       return;
     }
     const type = resolveProjectile(att, this.regionElement);
@@ -543,6 +590,10 @@ export default class GameScene extends Phaser.Scene {
       const shot = this.enemyShots.fire(spec.tex, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
       if (!shot) continue;
       shot.setTint(spec.tint); // disparos enemigos distinguibles del orbe cian del jugador
+      if (p.big) {
+        shot.setDisplaySize(60, 60);                 // bola enorme reusando TEX.fireball (32px)
+        if (shot.body) shot.body.setCircle(28); // hitbox grande
+      }
       if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; shot.homingLife = HOMING_TTL_MS; }
       if (eff && eff.kind === 'burn') { shot.burnDps = burnMod?.dps ?? eff.dps; shot.burnMs = burnMod?.ms ?? eff.ms; }
       else if (eff && eff.kind === 'slow') { shot.slowFactor = slowMod?.factor ?? eff.factor; shot.slowMs = slowMod?.ms ?? eff.ms; }
@@ -690,6 +741,7 @@ export default class GameScene extends Phaser.Scene {
     if (this.bossMechanics) this.bossMechanics.update(delta);
     this.updateZones(delta);
     this.updateTriangle(delta);
+    this.updateLavaRiver(delta);
     this.updateWhirlpool(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
@@ -698,12 +750,33 @@ export default class GameScene extends Phaser.Scene {
 
   // Generic ground zone. opts: { x, y, radius, duration, color?, fire?, casterDps?, casterHeal?, enemyDps? }
   // Fire-colored zones (or opts.fire) render as animated lava on the shared lavaGfx; others keep a flat disk.
+  // Water-style zones (style:'water') render as a tentacle sprite that grows from the floor and retracts.
   spawnZone(opts) {
     const color = opts.color != null ? opts.color : COLORS.poison;
-    const fire = opts.fire ?? (color === COLORS.fireball || color === COLORS.magma);
-    const gfx = fire ? null : this.add.circle(opts.x, opts.y, opts.radius, color, 0.30).setDepth(5);
+    const style = opts.style || (color === COLORS.fireball || color === COLORS.magma ? 'fire' : 'flat');
+    const fire = style === 'fire' || opts.fire === true;
+    // Water lobAoe zones: replace the flat disk with a tentacle sprite.
+    let gfx = null;
+    let tentacle = null;
+    if (style === 'water') {
+      const r = opts.radius ?? 60;
+      // Scale the 32-px texture to radius × 2 (width) and radius × 3 (full height).
+      const tsx = (r * 2) / 32;
+      const tsy = (r * 3) / 32;
+      tentacle = this.add.sprite(opts.x, opts.y, spriteKey('tentacle'))
+        .setOrigin(0.5, 1)   // anchor at bottom-center so it grows upward
+        .setAlpha(0.85)
+        .setDepth(5);
+      tentacle.scaleX = tsx;
+      tentacle.scaleY = 0;   // start collapsed; updateZones animates scaleY 0→tsy→0
+      tentacle._tsyFull = tsy; // target full scaleY stored on the sprite for updateZones
+    } else if (!fire) {
+      gfx = this.add.circle(opts.x, opts.y, opts.radius, color, 0.30).setDepth(5);
+    }
     this.zones.push({
-      x: opts.x, y: opts.y, radius: opts.radius, remaining: opts.duration, gfx, fire,
+      x: opts.x, y: opts.y, radius: opts.radius,
+      remaining: opts.duration, duration0: opts.duration,
+      gfx, fire, style, tentacle,
       casterDps: opts.casterDps || 0,
       casterHeal: opts.casterHeal || 0,
       enemyDps: opts.enemyDps || 0,
@@ -712,10 +785,10 @@ export default class GameScene extends Phaser.Scene {
 
   runBossHook(boss, hook) {
     if (hook === 'spawnLavaFloor') {
-      const lanes = 4;
+      const lanes = 2;                                  // antes 4: menos saturación
       for (let i = 0; i < lanes; i++) {
         const x = GAME_WIDTH * (i + 0.5) / lanes;
-        this.spawnZone({ x, y: GAME_HEIGHT / 2, radius: 46, duration: 6000, casterDps: 20, color: COLORS.fireball });
+        this.spawnZone({ x, y: GAME_HEIGHT / 2, radius: 46, duration: 7000, casterDps: 20, color: COLORS.fireball });
       }
     }
     if (hook === 'spawnWhirlpool') {
@@ -727,6 +800,13 @@ export default class GameScene extends Phaser.Scene {
         mode: 'telegraph',
         t: WHIRLPOOL_TELEGRAPH_MS,
       };
+    }
+    if (hook === 'startLavaRiver') {
+      // Arranca el río en cooldown; se auto-activa periódicamente mientras Ignatius
+      // siga en esta fase. Idempotente: no reinicia si ya está activo.
+      if (!this.lavaRiver) {
+        this.lavaRiver = { orientation: 'horizontal', mode: 'cooldown', t: LAVA_RIVER_COOLDOWN_MS };
+      }
     }
   }
 
@@ -740,21 +820,33 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpoolGfx.clear();
 
     if (w.mode === 'telegraph') {
-      // Draw dashed warning circle.
-      this.whirlpoolGfx.lineStyle(2, COLORS.water, 0.5);
+      // Pulsing warning ring.
+      const pulse = 0.4 + 0.4 * Math.abs(Math.sin(this.lavaTime * 4));
+      this.whirlpoolGfx.lineStyle(3, COLORS.water, pulse);
       this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, w.radius);
       if (w.t <= 0) { w.mode = 'active'; w.t = WHIRLPOOL_ACTIVE_MS; }
       return;
     }
 
     if (w.mode === 'active') {
-      // Draw animated spiral (approximate with concentric arcs).
+      // Rotating multi-arm spiral converging to the center.
       const phaseMul = scaleForPhase(w.phase);
       const activeRadius = w.radius * phaseMul;
-      this.whirlpoolGfx.lineStyle(3, COLORS.waterDeep, 0.75);
-      this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, activeRadius);
-      this.whirlpoolGfx.lineStyle(1, COLORS.waterDeep, 0.4);
-      this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, activeRadius * 0.5);
+      const arms = 3, turns = 2.4, steps = 40;
+      const rot = this.lavaTime * 2;
+      for (let a = 0; a < arms; a++) {
+        this.whirlpoolGfx.lineStyle(2, COLORS.waterDeep, 0.8);
+        this.whirlpoolGfx.beginPath();
+        for (let s = 0; s <= steps; s++) {
+          const f = s / steps;
+          const ang = rot + a * (Math.PI * 2 / arms) + f * turns * Math.PI * 2;
+          const rad = activeRadius * (1 - f);
+          const px = w.center.x + Math.cos(ang) * rad;
+          const py = w.center.y + Math.sin(ang) * rad;
+          if (s === 0) this.whirlpoolGfx.moveTo(px, py); else this.whirlpoolGfx.lineTo(px, py);
+        }
+        this.whirlpoolGfx.strokePath();
+      }
 
       // Apply force to caster.
       if (this.caster && this.caster.hp > 0 && isInside(w.center, activeRadius, this.caster)) {
@@ -785,6 +877,13 @@ export default class GameScene extends Phaser.Scene {
   updateTriangle(delta) {
     if (!this.triangle) return;
     const live = this.bosses.filter((b) => b && b.active);
+    // Última hermana viva: cancela el triángulo y recupera sus charcos de lava.
+    if (live.length === 1 && live[0].def.soloSequence && !live[0]._wentSolo) {
+      const b = live[0];
+      b.def = { ...b.def, phases: [{ from: 1.0, sequence: b.def.soloSequence }] };
+      b.brainState.boss = {};   // reinicia el sequencer a la nueva fase
+      b._wentSolo = true;
+    }
     this.triangleGfx.clear();
     if (live.length < 2) return; // degraded to nothing; the sisters' own kits remain
     const edges = hazardEdges(live.map((b) => ({ x: b.x, y: b.y })));
@@ -806,10 +905,20 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  drawTriangleEdges(edges, color, alpha, width) {
-    const g = this.triangleGfx;
+  _strokeEdgesOn(g, edges, color, alpha, width) {
     g.lineStyle(width, color, alpha);
     for (const [a, b] of edges) { g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.strokePath(); }
+  }
+  _drawLavaEdgesOn(g, edges) {
+    const t = this.lavaTime;
+    const stroke = (w, col, a) => { g.lineStyle(w, col, a); for (const [p, q] of edges) { g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.strokePath(); } };
+    stroke(40, LAVA.dark, 0.4);
+    stroke(32, lerpColor(LAVA.mid, LAVA.hot, lavaPulse(t)), 0.9);
+    stroke(10, LAVA.bright, lavaRimAlpha(t));
+    for (const [p, q] of edges) for (const e of lavaEdgeEmbers(p, q, t, 7)) { g.fillStyle(LAVA.bright, e.alpha * 0.9); g.fillCircle(e.x, e.y, e.r); }
+  }
+  drawTriangleEdges(edges, color, alpha, width) {
+    this._strokeEdgesOn(this.triangleGfx, edges, color, alpha, width);
   }
 
   updateZones(delta) {
@@ -832,10 +941,19 @@ export default class GameScene extends Phaser.Scene {
         }
       }
       if (z.fire) this.drawLavaZone(z);
+      // Tentáculo de agua: animar scaleY según la fracción de vida de la zona.
+      // Brota (0→fullScale) en el primer 30%; se retrae en el último 30%.
+      if (z.tentacle) {
+        const lifeFrac = 1 - z.remaining / z.duration0; // 0→1 durante la vida
+        const grow    = Math.min(1, lifeFrac / 0.3);
+        const retract = Math.min(1, Math.max(0, (lifeFrac - 0.7) / 0.3));
+        z.tentacle.scaleY = (z.tentacle._tsyFull ?? 1) * Math.max(0, grow - retract);
+      }
     }
     this.zones = this.zones.filter((z) => {
       if (z.remaining > 0) return true;
       if (z.gfx) z.gfx.destroy(); // fire zones have no flat disk (drawn on the shared lavaGfx)
+      if (z.tentacle) z.tentacle.destroy();
       return false;
     });
   }
@@ -853,12 +971,32 @@ export default class GameScene extends Phaser.Scene {
   // The sisters' active lava triangle edges, drawn as a WIDE animated lava band
   // (outer glow + molten body + bright flickering core + embers) on triangleGfx.
   drawLavaEdges(edges) {
-    const g = this.triangleGfx, t = this.lavaTime;
-    const stroke = (w, col, a) => { g.lineStyle(w, col, a); for (const [p, q] of edges) { g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.strokePath(); } };
-    stroke(40, LAVA.dark, 0.4);                                  // soft outer glow
-    stroke(32, lerpColor(LAVA.mid, LAVA.hot, lavaPulse(t)), 0.9); // molten body (~princess-wide, covers the 28px damage corridor)
-    stroke(10, LAVA.bright, lavaRimAlpha(t));                    // bright flickering core
-    for (const [p, q] of edges) for (const e of lavaEdgeEmbers(p, q, t, 7)) { g.fillStyle(LAVA.bright, e.alpha * 0.9); g.fillCircle(e.x, e.y, e.r); }
+    this._drawLavaEdgesOn(this.triangleGfx, edges);
+  }
+
+  updateLavaRiver(delta) {
+    if (!this.lavaRiver) return;
+    if (!this.lavaRiverGfx) this.lavaRiverGfx = this.add.graphics().setDepth(6);
+    this.lavaRiverGfx.clear();
+    const lr = this.lavaRiver;
+    lr.t -= delta;
+    if (lr.mode === 'cooldown') {
+      if (lr.t <= 0) {
+        lr.mode = 'telegraph'; lr.t = LAVA_RIVER_TELEGRAPH_MS;
+        const orient = ['horizontal', 'vertical', 'diag1', 'diag2'];
+        lr.orientation = orient[Phaser.Math.Between(0, orient.length - 1)];
+      }
+    } else if (lr.mode === 'telegraph') {
+      this._strokeEdgesOn(this.lavaRiverGfx, riverEdges(lr.orientation, GAME_WIDTH, GAME_HEIGHT), 0xffffff, 0.5, 2);
+      if (lr.t <= 0) { lr.mode = 'active'; lr.t = LAVA_RIVER_ACTIVE_MS; }
+    } else if (lr.mode === 'active') {
+      this._drawLavaEdgesOn(this.lavaRiverGfx, riverEdges(lr.orientation, GAME_WIDTH, GAME_HEIGHT));
+      if (onAnyEdge(this.caster.x, this.caster.y, riverEdges(lr.orientation, GAME_WIDTH, GAME_HEIGHT), 16)) {
+        this.damageCaster(LAVA_RIVER_DPS * (delta / 1000));
+        this.applyCasterBurn(8, 1200);
+      }
+      if (lr.t <= 0) { lr.mode = 'cooldown'; lr.t = LAVA_RIVER_COOLDOWN_MS; }
+    }
   }
 
   updateAuras(delta) {

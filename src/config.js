@@ -70,6 +70,7 @@ export const TEX = {
   miniboss: 'tex_miniboss',
   boss: 'tex_boss',
   temple: 'tex_temple',
+  tentacle: 'tex_tentacle',
 };
 
 // Per-creature sprite texture keys. Base texture = idle-down frame 0.

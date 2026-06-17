@@ -21,6 +21,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       const px = def.radius * 2;
       this.setDisplaySize(px, px); // visual footprint ~ old circle diameter; physics body unchanged
       this.facing = new FacingController(this, visualKey);
+      this.facing.facePlayer = !!def.facePlayer;
     } else {
       if (def.color) this.setTint(def.color);
       this.facing = null;
@@ -90,18 +91,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     };
     const velocity = computeMovement(movementDef, this.brainState.move, ctx);
 
-    // Burrow side-effects: write the _burrowed / _surfacing flags that GameScene reads.
-    if (velocity.submerged !== undefined) {
+    // Burrow side-effects. El nuevo flujo: `submerged` controla la invulnerabilidad;
+    // `surfacing` solo enciende el anillo de aviso (sigue invuln durante el emerge).
+    // En `surface` el enemigo es vulnerable (no emite `submerged`).
+    if (velocity.submerged !== undefined || velocity.surfacing || velocity.vulnerable) {
       this._burrowed = !!velocity.submerged;
-      this._surfacing = false;
-    }
-    if (velocity.surfacing) {
-      this._burrowed = false;
-      this._surfacing = true;
-    }
-    if (velocity.vulnerable || velocity.dashStrike) {
-      this._burrowed = false;
-      this._surfacing = false;
+      this._surfacing = !!velocity.surfacing;
     }
     if (velocity.repositionTo) {
       this.x = velocity.repositionTo.x;
@@ -113,6 +108,11 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
-    if (this.facing && this.body) this.facing.update(this.body.velocity.x, this.body.velocity.y);
+    if (this.facing && this.body) {
+      const aim = this.def.facePlayer && this.scene && this.scene.caster
+        ? { x: this.scene.caster.x, y: this.scene.caster.y }
+        : undefined;
+      this.facing.update(this.body.velocity.x, this.body.velocity.y, aim);
+    }
   }
 }

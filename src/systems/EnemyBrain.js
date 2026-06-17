@@ -4,7 +4,7 @@
 // so they can be unit-tested under `node --test`.
 
 import {
-  BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_RECOVER_MS,
+  BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS,
   EGG_HATCH_MS, TADPOLE_GROW_MS,
 } from '../data/tuning.js';
 import { GAME_WIDTH, GAME_HEIGHT, ENEMY_MARGIN } from '../config.js'; // config.js is Phaser-free (constants only)
@@ -97,10 +97,9 @@ export const MOVEMENTS = {
   },
 
   burrow({ self, target, speed, dt, params, state }) {
-    const submergeMs    = params?.submergeMs    ?? BURROW_SUBMERGE_MS;
-    const telegraphMs   = params?.surfaceTelegraphMs ?? params?.emergeMs ?? BURROW_TELEGRAPH_MS;
-    const recoverMs     = params?.recoverMs     ?? BURROW_RECOVER_MS;
-    const dashSpeed     = speed * (params?.dashMul ?? 3.5);
+    const submergeMs = params?.submergeMs ?? BURROW_SUBMERGE_MS;
+    const emergeMs   = params?.emergeMs ?? params?.surfaceTelegraphMs ?? BURROW_TELEGRAPH_MS;
+    const surfaceMs  = params?.surfaceMs ?? BURROW_SURFACE_MS;
 
     state.mode = state.mode || 'submerged';
     state.t    = (state.t || 0) + dt;
@@ -111,35 +110,28 @@ export const MOVEMENTS = {
     }
 
     if (state.mode === 'reposition') {
-      // Teleport to a spot near the target (caller handles the position write).
-      state.mode = 'telegraph';
+      // Teletransporta a un punto cercano al objetivo (invuln, aún oculto).
+      state.mode = 'emerge';
       state.t = 0;
-      // Offset so the enemy doesn't land exactly on the caster.
       const a = angleBetween(target.x, target.y, self.x, self.y);
       const dist = 80;
       const r = (self.radius || 16) + ENEMY_MARGIN;
       const rx = clamp(target.x + Math.cos(a) * dist, r, GAME_WIDTH - r);
       const ry = clamp(target.y + Math.sin(a) * dist, r, GAME_HEIGHT - r);
-      return { x: 0, y: 0, repositionTo: { x: rx, y: ry } };
+      return { x: 0, y: 0, submerged: true, repositionTo: { x: rx, y: ry } };
     }
 
-    if (state.mode === 'telegraph') {
-      if (state.t >= telegraphMs) { state.mode = 'attack'; state.t = 0; }
-      return { x: 0, y: 0, surfacing: true };
+    if (state.mode === 'emerge') {
+      // Anillo de aviso; sigue invulnerable (submerged) durante el telegraph.
+      if (state.t >= emergeMs) { state.mode = 'surface'; state.t = 0; }
+      return { x: 0, y: 0, submerged: true, surfacing: true };
     }
 
-    if (state.mode === 'attack') {
-      // Fire once, immediately transition to recover.
-      state.mode = 'recover';
-      state.t = 0;
-      const heading = angleBetween(self.x, self.y, target.x, target.y);
-      state.dashHeading = heading;
-      return { x: Math.cos(heading) * dashSpeed, y: Math.sin(heading) * dashSpeed, dashStrike: true };
-    }
-
-    if (state.mode === 'recover') {
-      if (state.t >= recoverMs) { state.mode = 'submerged'; state.t = 0; }
-      return { x: 0, y: 0, vulnerable: true };
+    if (state.mode === 'surface') {
+      // Nada hacia la princesa, VULNERABLE toda la ventana.
+      if (state.t >= surfaceMs) { state.mode = 'submerged'; state.t = 0; return { x: 0, y: 0, submerged: true }; }
+      const a = angleBetween(self.x, self.y, target.x, target.y);
+      return { x: Math.cos(a) * speed, y: Math.sin(a) * speed, vulnerable: true };
     }
 
     return { x: 0, y: 0 }; // fallback
@@ -223,6 +215,8 @@ export function buildProjectiles(att, ctx) {
     out.push({ angle: base, speed, damage, homing: true });
   } else if (att.type === 'shootBurst') {
     out.push({ angle: base, speed, damage });
+  } else if (att.type === 'giantFireball') {
+    out.push({ angle: base, speed, damage, big: true });
   }
   // melee and not-yet-implemented types produce no projectiles.
   return out;
@@ -293,4 +287,14 @@ export function tickLifecycle(state, delta) {
 
   // ADULT: no further promotion.
   return { promote: false };
+}
+
+// --- Summoning mechanics -------------------------------------------------------
+// PURE. Cuántos enemigos puede invocar una instancia de ataque con tope ahora.
+// cap == null → sin tope (Infinity). En cooldown (now < cooldownUntil) → 0.
+// Si no, los huecos libres: max(0, cap - alive).
+export function summonSlots({ cap, alive, cooldownUntil = 0 }, now = 0) {
+  if (cap == null) return Infinity;
+  if (now < cooldownUntil) return 0;
+  return Math.max(0, cap - alive);
 }
