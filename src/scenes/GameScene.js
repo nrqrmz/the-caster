@@ -17,7 +17,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
@@ -372,6 +372,14 @@ export default class GameScene extends Phaser.Scene {
   }
 
   onEnemyDeath(enemy) {
+    // Si era un invocado con tope, libera su slot e inicia el cooldown del padre.
+    if (enemy._summonedBy && enemy._summonedBy.active && enemy._summonCapKey) {
+      const tr = enemy._summonedBy._summonTrackers && enemy._summonedBy._summonTrackers[enemy._summonCapKey];
+      if (tr) {
+        tr.alive = Math.max(0, tr.alive - 1);
+        tr.cooldownUntil = this.time.now + (enemy._summonRespawnMs ?? 15000);
+      }
+    }
     const boom = findModifier(enemy.def, 'explodesOnDeath');
     if (boom) {
       const n = boom.count ?? 8;
@@ -532,8 +540,29 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
     if (att.type === 'summon') {
-      const def = ENEMY_TYPES[att.spawnType];
-      if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
+      const types = att.spawnTypes || [att.spawnType];
+      if (att.cap != null) {
+        // Summon con tope (opt-in): respeta cap + cooldown por instancia de ataque.
+        const key = att.capKey || att.spawnType || types[0];
+        enemy._summonTrackers = enemy._summonTrackers || {};
+        const tr = enemy._summonTrackers[key] || (enemy._summonTrackers[key] = { alive: 0, cooldownUntil: 0 });
+        const slots = summonSlots({ cap: att.cap, alive: tr.alive, cooldownUntil: tr.cooldownUntil }, this.time.now);
+        const n = Math.min(att.count ?? 1, slots);
+        for (let i = 0; i < n; i++) {
+          const t = types[Phaser.Math.Between(0, types.length - 1)];
+          const def = ENEMY_TYPES[t];
+          if (!def) continue;
+          const child = this.spawnEnemy(def);
+          child._summonedBy = enemy;
+          child._summonCapKey = key;
+          child._summonRespawnMs = att.respawnMs ?? 15000;
+          tr.alive += 1;
+        }
+      } else {
+        // Sin tope: comportamiento histórico (acotado solo por CONCURRENCY_CAP).
+        const def = ENEMY_TYPES[att.spawnType];
+        if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
+      }
       return;
     }
     const type = resolveProjectile(att, this.regionElement);
