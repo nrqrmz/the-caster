@@ -142,7 +142,15 @@ export default class GameScene extends Phaser.Scene {
         applyCasterPush(this.caster, Math.cos(a) * (push.force ?? 220), Math.sin(a) * (push.force ?? 220), push.ms ?? 250);
       }
       const drain = findModifier(enemy.def, 'drain');
-      if (drain) applyDrain(enemy, drain.heal ?? 4);
+      if (drain) {
+        if (enemy._formSeq) {
+          const cap = enemy._formSeq.activeForm().hp;
+          enemy._formSeq.currentHp = Math.min(cap, enemy._formSeq.currentHp + (drain.heal ?? 4));
+          enemy.hp = enemy._formSeq.currentHp;
+        } else {
+          applyDrain(enemy, drain.heal ?? 4);
+        }
+      }
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
@@ -611,6 +619,8 @@ export default class GameScene extends Phaser.Scene {
         casterDps: att.dps ?? 18,
         color: water ? COLORS.water : COLORS.fireball,
         style: water ? 'water' : 'fire',
+        casterLiftMs: att.lift ? CASTER_LIFT_MS : 0,
+        casterStunMs: att.stun ? CASTER_STUN_MS : 0,
       });
       return;
     }
@@ -899,6 +909,8 @@ export default class GameScene extends Phaser.Scene {
       gfx, fire, style, tentacle,
       casterDps: opts.casterDps || 0,
       casterHeal: opts.casterHeal || 0,
+      casterLiftMs: opts.casterLiftMs || 0,
+      casterStunMs: opts.casterStunMs || 0,
       enemyDps: opts.enemyDps || 0,
     });
   }
@@ -1175,6 +1187,8 @@ export default class GameScene extends Phaser.Scene {
       if (casterIn && z.casterHeal) {
         this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + z.casterHeal * dt);
       }
+      if (casterIn && z.casterLiftMs) applyCasterCc(this.caster, 'lift', z.casterLiftMs);
+      if (casterIn && z.casterStunMs) applyCasterCc(this.caster, 'stun', z.casterStunMs);
       if (z.enemyDps) {
         // Snapshot (filter returns a new array) so a kill mid-loop can't skip an enemy.
         const live = this.enemies.getChildren().filter((e) => e.active);
