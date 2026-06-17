@@ -126,7 +126,7 @@ export const WATER_ENEMIES = {
   // #14 — Tiburón Joven: burrow movement (submerge → reposition → emerge → dashStrike).
   // While submerged: invulnerable + hidden. Emerges with telegraphed ring (~400 ms).
   tiburon_joven: { key: 'tiburon_joven', tex: TEX.archer, color: COLORS.sharkYoung,
-    hp: 55, speed: 110, damage: 18, radius: 17,
+    hp: 180, speed: 110, damage: 18, radius: 17,
     movement: { type: 'burrow', submergeMs: 1500, repositionMs: 200, emergeMs: 400, attackMs: 600, recoverMs: 700 },
     attacks: [{ type: 'dashStrike' }] },
 
