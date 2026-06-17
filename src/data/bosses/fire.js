@@ -82,18 +82,21 @@ export const IGNATIUS = {
   phases: [
     { from: 1.0, sequence: [
       { do: 'shootSpread', count: 6, arc: 90, speed: 240, damage: 14, telegraph: 320, dur: 700 },
+      { do: 'giantFireball', projectile: 'fire', speed: 120, damage: 28, telegraph: 600, dur: 900 },
       { do: 'shootHoming', speed: 130, damage: 12, telegraph: 350, dur: 900 },
       { do: 'wait', dur: 400 },
     ] },
-    { from: 0.66, enter: ['spawnLavaFloor'], sequence: [
+    { from: 0.66, enter: ['spawnLavaFloor', 'startLavaRiver'], sequence: [
       { do: 'nova', count: 12, speed: 220, damage: 13, telegraph: 350, dur: 700 },
-      { do: 'lobAoe', radius: 70, dps: 26, duration: 3500, telegraph: 450, dur: 800 },
+      { do: 'summon', spawnTypes: ['brasa_errante', 'elemental_fuego', 'espiritu_ceniza'], count: 1, cap: 3, respawnMs: 20000, capKey: 'ignatius_adds', dur: 900 },
+      { do: 'giantFireball', projectile: 'fire', speed: 120, damage: 30, telegraph: 550, dur: 900 },
       { do: 'shootSpread', count: 8, arc: 120, speed: 250, damage: 14, telegraph: 300, dur: 700 },
     ] },
-    { from: 0.33, speedMul: 1.35, enter: ['spawnLavaFloor'], sequence: [
+    { from: 0.33, speedMul: 1.35, enter: ['spawnLavaFloor', 'startLavaRiver'], sequence: [
       { do: 'nova', count: 16, speed: 240, damage: 14, telegraph: 280, dur: 600 },
+      { do: 'summon', spawnTypes: ['brasa_errante', 'elemental_fuego', 'espiritu_ceniza'], count: 1, cap: 3, respawnMs: 20000, capKey: 'ignatius_adds', dur: 800 },
+      { do: 'giantFireball', projectile: 'fire', speed: 130, damage: 32, telegraph: 450, dur: 800 },
       { do: 'shootHoming', speed: 150, damage: 13, telegraph: 250, dur: 600 },
-      { do: 'lobAoe', radius: 80, dps: 30, duration: 4000, telegraph: 380, dur: 700 },
     ] },
   ],
 };
