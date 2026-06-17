@@ -34,6 +34,14 @@ const KNIGHT_WATER = [
 ];
 const KNIGHT_VAMP = [...KNIGHT.slice(0, 5), { name: 'knight_eyes', palette: 'vampglow' }];
 const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
+// Bespoke blood-knight lord for caballero_sangre (air nv4 boss). Full-height (h32)
+// imposing armored vampire-lord: crown+helm+spiked pauldrons+breastplate+greaves.
+// Distinctly different from the plain fodder KNIGHT_VAMP used by guardia_nocturno.
+const BLOOD_KNIGHT = [
+  { name: 'bk_sword', palette: 'steel' },
+  { name: 'bk_body' },
+  { name: 'bk_eyes', palette: 'vampglow' },
+];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
 const JELLY = [
@@ -234,7 +242,7 @@ export const RECIPES = {
 
   // --- Air knights (vampiric) ---
   guardia_nocturno: { archetype: 'humanoid', size: 64, baseColor: 0x37474f, parts: KNIGHT_VAMP },
-  caballero_sangre: { archetype: 'boss',     size: 96, baseColor: 0xb71c1c, parts: KNIGHT_VAMP },
+  caballero_sangre: { archetype: 'boss',     size: 96, baseColor: 0xb71c1c, parts: BLOOD_KNIGHT },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
