@@ -48,6 +48,7 @@ Edición directa de los defs en `src/data/enemies/fire.js`, `src/data/enemies/wa
 | `renacuajo` | hp | 12 | 20 |
 | `rana_saltarina` | hp | 18 | 20 |
 | `serpiente_marina` | hp | 28 | 40 |
+| `tiburon_joven` | hp | 55 | 180 |
 | `nayade` | hp | 30 | 100 |
 | `nayade` | damage | 0 | 10 |
 | `medusa` | hp | 38 | 80 |
@@ -86,7 +87,7 @@ Edición directa de los defs en `src/data/enemies/fire.js`, `src/data/enemies/wa
 | `tiburon_abisal` | damage | 18 | 30 |
 | `dama_maga_final` | hp | 20 | 320 |
 
-> `medusa` / `medusa_cria`: la medusa pasa de aura pura (damage 0) a **chaser con daño de contacto 10** (movimiento `chase`, ver §2). **Importante:** `buildSplitChildren` (en `EnemyBrain`) deriva las crías **de la def madre** (copia `medusa` con `hpMul`/`radiusMul` y le quita `splitsOnDeath`), no de la def `medusa_cria`. Por tanto, con `medusa.hp = 80` y `splitsOnDeath.hpMul = 0.75` la cría sale automáticamente con 60 HP, daño 10 y `chase` heredados — sin tocar lógica. La def `medusa_cria` se actualiza a 60/10/chase solo por consistencia documental (su uso como `spawnType` no alimenta los stats del split en SP-1; unificar esa ruta sería SP-2). **Decisión abierta (ver §5):** ¿la medusa conserva su `auraDamage` además del daño de contacto, o pasa a ser solo melee? Lo que herede la madre lo heredan las crías.
+> `medusa` / `medusa_cria`: la medusa pasa de aura pura (damage 0) a **chaser con daño de contacto 10** (movimiento `chase`, ver §2). **Importante:** `buildSplitChildren` (en `EnemyBrain`) deriva las crías **de la def madre** (copia `medusa` con `hpMul`/`radiusMul` y le quita `splitsOnDeath`), no de la def `medusa_cria`. Por tanto, con `medusa.hp = 80` y `splitsOnDeath.hpMul = 0.75` la cría sale automáticamente con 60 HP, daño 10 y `chase` heredados — sin tocar lógica. La def `medusa_cria` se actualiza a 60/10/chase solo por consistencia documental (su uso como `spawnType` no alimenta los stats del split en SP-1; unificar esa ruta sería SP-2). **Resuelto:** la medusa **conserva su `auraDamage` (dps 14) además** del daño de contacto melee. Las crías lo heredan de la madre.
 
 ### 2. Swaps de movimiento (solo datos, salvo nota)
 
@@ -99,7 +100,7 @@ Edición directa de los defs en `src/data/enemies/fire.js`, `src/data/enemies/wa
 | `dama_maga_final` (agua) | `flee` | `kite` range 240 | Forma final: mantiene distancia y dispara, en vez de huir. |
 | `medusa` (agua) | `erratic` | `chase` | Persigue a la princesa (daño de contacto nuevo). |
 | `medusa_cria` (agua) | `erratic` | `chase` | Igual que la madre. |
-| `sacerdote_llama` (fuego) | `flee` | `kite` range 200 | **Recomendado, no pedido explícitamente** — healer+summoner que cae bajo la regla global "healer con flee → kite". Ver §5. |
+| `sacerdote_llama` (fuego) | `flee` | `kite` range 200 | Healer+summoner bajo la regla global "healer con flee → kite". **Confirmado.** |
 
 **Náyade — tasas de summon/heal** (datos): subir frecuencia del summon de renacuajos (`every: 3500 → 2400`) y del heal (`healAllies.hps: 10 → 14`).
 
@@ -148,7 +149,7 @@ Nota: el trío de hermanas (`bosses.length >= 2`) ya rastrea muertes individuale
 - **Unit (`node --test`):** los datos no rompen tests existentes; añadir test de `resolveProjectile` para el caso `explodesOnDeath`. La lógica de `checkPhaseCleared` vive en la escena (Phaser) → se valida en playtest, no en unit.
 - **Playtest manual** (mobile viewport): verificar que (a) los enemigos reforzados aguantan más, (b) ningún `flee` manda al enemigo al borde, (c) la larva/pez globo explotan en su elemento, (d) matar al boss termina el nivel aunque queden adds.
 
-## Decisiones abiertas (para revisión del usuario)
+## Decisiones cerradas
 
-1. **`sacerdote_llama` → kite:** swap derivado de la regla global, no pedido explícitamente. ¿Se aplica o se deja en `flee`?
-2. **`medusa` con aura:** al volverse chaser con daño de contacto 10, ¿conserva su `auraDamage` (dps 14) o pasa a ser solo melee? Una medusa que persigue + aura + contacto es muy castigadora.
+1. **`sacerdote_llama` → kite:** ✅ confirmado (se aplica el swap).
+2. **`medusa`:** ✅ conserva `auraDamage` (dps 14) **+** daño de contacto melee 10; movimiento `chase`. Las crías heredan ambos.
