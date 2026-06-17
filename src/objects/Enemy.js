@@ -99,10 +99,6 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       this._burrowed = !!velocity.submerged;
       this._surfacing = !!velocity.surfacing;
     }
-    if (velocity.repositionTo) {
-      this.x = velocity.repositionTo.x;
-      this.y = velocity.repositionTo.y;
-    }
 
     return { velocity, fires, telegraphs, enters };
   }
