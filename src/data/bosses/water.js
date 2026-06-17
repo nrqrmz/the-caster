@@ -10,7 +10,7 @@ import { COLORS, TEX } from '../../config.js';
 // punish the recovery; slow-on-hit makes repositioning expensive.
 export const SOLDADO_HIELO = {
   key: 'soldado_hielo', tex: TEX.miniboss, color: COLORS.ice,
-  hp: 380, speed: 75, damage: 16, radius: 24,
+  hp: 480, speed: 80, damage: 20, radius: 24,
   elite: true,
   movement: { type: 'charge', windup: 700, dash: 440, recover: 800, dashMul: 2.8 },
   modifiers: [
@@ -40,7 +40,7 @@ export const SOLDADO_HIELO = {
 // passivity. Kill eggs before they mature; CONCURRENCY_CAP (16) is the ceiling.
 export const SAPO_DESOVADOR = {
   key: 'sapo_desovador', tex: TEX.miniboss, color: COLORS.poison,
-  hp: 440, speed: 60, damage: 14, radius: 26,
+  hp: 440, speed: 80, damage: 20, radius: 26,
   elite: true,
   movement: { type: 'strafe', range: 280, strafeSpeed: 55 },
   phases: [
@@ -63,7 +63,7 @@ export const SAPO_DESOVADOR = {
 // the recovery.
 export const TIBURON_ABISAL = {
   key: 'tiburon_abisal', tex: TEX.miniboss, color: COLORS.caster,
-  hp: 520, speed: 85, damage: 18, radius: 28,
+  hp: 520, speed: 85, damage: 30, radius: 28,
   elite: true,
   movement: { type: 'burrow', submergeMs: 1600, repositionMs: 400, emergeMs: 400, recoverMs: 700, dashMul: 3.2 },
   phases: [
@@ -215,9 +215,9 @@ const DAMA_BALLENA = {
 // FormSequencer revert-to-maga on ballena death produces this form.
 const DAMA_MAGA_FINAL = {
   key: 'dama_maga_final', tex: TEX.boss, color: COLORS.ice,
-  hp: 20, speed: 55, damage: 10, radius: 24, resist: 0,
+  hp: 320, speed: 55, damage: 10, radius: 24, resist: 0,
   elite: true,
-  movement: { type: 'flee' },
+  movement: { type: 'kite', range: 240 },
   phases: [
     { from: 1.0, sequence: [
       { do: 'shootSpread', count: 3, arc: 60, speed: 200, damage: 8, telegraph: 300, dur: 600 },
