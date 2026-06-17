@@ -19,7 +19,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
@@ -224,6 +224,7 @@ export default class GameScene extends Phaser.Scene {
     this.bosses = defs.map((def, i) => {
       const x = GAME_WIDTH * (i + 1) / (defs.length + 1);
       const b = new Boss(this, x, -40, scaleEnemyDef(def, this.diff));
+      b._baseMovement = b.def.movement; // para restaurar su kit cuando quede sola
       this.enemies.add(b);
       return b;
     });
@@ -882,9 +883,26 @@ export default class GameScene extends Phaser.Scene {
     this.spawnZone({ x, y, radius, duration, casterDps: dps, color: COLORS.poison });
   }
 
+  // Setpiece de las tres hermanas: asigna el movimiento de cada hermana viva según
+  // cuántas quedan (3 → Vesta persigue + flancos en anchors; 2 → kite separadas;
+  // 1 → su propio kit). La geometría está en sisterFormation (pura/testeable).
+  updateSisterFormation(live) {
+    if (!live.length) return;
+    const anchors = [
+      { x: GAME_WIDTH * 0.18, y: GAME_HEIGHT * 0.28 },
+      { x: GAME_WIDTH * 0.82, y: GAME_HEIGHT * 0.28 },
+    ];
+    const moves = sisterFormation(
+      live.map((b) => ({ isChaser: b.def.key === 'vesta', baseMovement: b._baseMovement })),
+      anchors,
+    );
+    for (let i = 0; i < live.length; i++) live[i].def.movement = moves[i];
+  }
+
   updateTriangle(delta) {
     if (!this.triangle) return;
     const live = this.bosses.filter((b) => b && b.active);
+    this.updateSisterFormation(live);
     // Última hermana viva: cancela el triángulo y recupera sus charcos de lava.
     if (live.length === 1 && live[0].def.soloSequence && !live[0]._wentSolo) {
       const b = live[0];

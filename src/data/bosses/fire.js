@@ -67,6 +67,15 @@ export const FAVILLA = {
 // When only ONE sister remains the triangle is cancelled and she adopts her
 // soloSequence (which restores lobAoe so the survivor drops lava pools again).
 const stripFloorAndAdds = (seq) => seq.filter((s) => s.do !== 'lobAoe' && s.do !== 'summon');
+// Amortiguador de cadencia SOLO para el trío (nv7): alarga el hold tras disparar y
+// recorta los patrones más densos, para que el volumen combinado sea esquivable.
+// Las peleas solo (nv4-6) conservan su cadencia original.
+const calmTrio = (seq) => seq.map((s) => {
+  const step = { ...s, dur: (s.dur ?? 500) + 600 };
+  if (step.do === 'nova' && (step.count ?? 0) > 8) step.count = 8;
+  if (step.do === 'shootSpread' && (step.count ?? 0) > 4) step.count = 4;
+  return step;
+});
 // soloSeq: lo que hace la hermana cuando queda SOLA (recupera sus charcos de lava).
 const trio = (def, hp, movement, seq, soloSequence) => ({
   ...def, hp, movement,
@@ -76,13 +85,13 @@ const trio = (def, hp, movement, seq, soloSequence) => ({
 const SOLO_LAVA = { do: 'lobAoe', radius: 64, dps: 22, duration: 3500, telegraph: 500, dur: 900 };
 export const SISTERS_TRIO = [
   trio(PYRA, 360, { type: 'kite', range: 240 },
-    stripFloorAndAdds(PYRA.phases[0].sequence),
+    calmTrio(stripFloorAndAdds(PYRA.phases[0].sequence)),
     [SOLO_LAVA, { do: 'shootSpread', count: 6, arc: 90, speed: 240, damage: 14, telegraph: 320, dur: 700 }]),
   trio(VESTA, 480, { type: 'chase' },
-    stripFloorAndAdds(VESTA.phases[0].sequence),
+    calmTrio(stripFloorAndAdds(VESTA.phases[0].sequence)),
     [SOLO_LAVA, { do: 'shootStraight', speed: 260, damage: 12, telegraph: 250, dur: 600 }]),
   trio(FAVILLA, 300, { type: 'kite', range: 240 },
-    stripFloorAndAdds(FAVILLA.phases[1].sequence),
+    calmTrio(stripFloorAndAdds(FAVILLA.phases[1].sequence)),
     [SOLO_LAVA, { do: 'nova', count: 12, speed: 200, damage: 10, telegraph: 400, dur: 800 }]),
 ];
 
