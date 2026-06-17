@@ -15,6 +15,7 @@ const layers = {
   bk_cape: {}, bk_sword: {}, bk_body: {}, bk_pauldrons: {}, bk_eyes: {},
   bruja_body: {}, bruja_head: {}, bruja_hair: {}, bruja_staff: {}, bruja_wind: {},
   duelist_blade: {}, duelist_cape: {},
+  gar_wings: {}, gar_body: {}, gar_head: {}, gar_eyes: {},
 };
 const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
 const Rd = (v) => Math.round(v);
@@ -541,3 +542,217 @@ for (let x = cx - 2; x <= cx + 2; x++) {
 }
 
 emit('duelist_cape');
+
+// ============================ GÁRGOLA PARARRAYOS (stone gargoyle — ambient lightning-rod turret) ============================
+// A perched/crouching stone GARGOYLE. It's a static floating turret that casts a lightning nova.
+// Design: hunched stone beast body, horned grotesque head with a snarling fanged face,
+//         bat-like stone wings (folded, spread behind body), clawed forelimbs.
+// Palette roles (stone base color 0x546e7a via recipe baseColor, derivePalette):
+//   o=outline (very dark blue-grey), b=base (mid stone blue-grey), s=shade (darker stone),
+//   h=highlight (lighter stone), a=accent (type color accent — kept minimal).
+// Electric eyes rendered as separate gar_eyes part (glow palette).
+// Layer order back-to-front: gar_wings → gar_body → gar_head → gar_eyes.
+// All on a 32×32 canvas. The gargoyle crouches: head top at y≈4, body y≈12..26, wings y≈6..28.
+
+// ============================ GAR_WINGS (bat-like stone wings, folded behind body) ============================
+// Two large folded bat wings symmetrically spread. Each wing has a spine + membrane.
+// Left wing: center spine from (cx-5,8) curving out-left to (cx-13,20).
+//            membrane fills between spine and body edge.
+// Right wing: mirror.
+// Stone tone — outline 'o', base 'b', shade 's', highlight 'h'.
+
+// Left wing primary spine: 4 segments arcing out-down
+const LW_SPINE = [[11,7],[10,9],[9,11],[8,13],[7,15],[7,17],[8,19],[9,21]];
+for (const [x,y] of LW_SPINE) { put('gar_wings',x,y,'o'); if (x+1<N) put('gar_wings',x+1,y,'b'); }
+// Left wing membrane: fill between spine and center body
+for (const [x,y] of LW_SPINE) {
+  for (let fx = x+2; fx <= cx-2; fx++) {
+    const r = (fx === cx-2) ? 'o' : ((fx - (x+2)) % 3 === 1 ? 's' : 'b');
+    put('gar_wings', fx, y, r);
+  }
+}
+// Left wing leading edge outline (outer edge of membrane)
+for (const [x,y] of LW_SPINE) put('gar_wings', x, y, 'o');
+// Left tip claw spurs (wing finger tips)
+for (const [dx,dy] of [[-1,0],[0,-1]]) {
+  const [tx,ty] = LW_SPINE[0]; put('gar_wings', tx+dx, ty+dy, 'o');
+}
+// Bottom wing claw tip
+const [lwbx,lwby] = LW_SPINE[LW_SPINE.length-1];
+put('gar_wings', lwbx, lwby+1, 'o'); put('gar_wings', lwbx-1, lwby, 'o');
+
+// Right wing (mirror of left)
+const RW_SPINE = LW_SPINE.map(([x,y]) => [31-x, y]);
+for (const [x,y] of RW_SPINE) { put('gar_wings',x,y,'o'); if (x-1>=0) put('gar_wings',x-1,y,'b'); }
+// Right wing membrane
+for (const [x,y] of RW_SPINE) {
+  for (let fx = cx+2; fx <= x-2; fx++) {
+    const r = (fx === cx+2) ? 'o' : ((fx - (cx+2)) % 3 === 1 ? 's' : 'b');
+    put('gar_wings', fx, y, r);
+  }
+}
+for (const [x,y] of RW_SPINE) put('gar_wings', x, y, 'o');
+// Right tip claw spurs
+const [rwtx,rwty] = RW_SPINE[0];
+put('gar_wings', rwtx+1, rwty, 'o'); put('gar_wings', rwtx, rwty-1, 'o');
+const [rwbx,rwby] = RW_SPINE[RW_SPINE.length-1];
+put('gar_wings', rwbx, rwby+1, 'o'); put('gar_wings', rwbx+1, rwby, 'o');
+
+// Wing fold crease lines (horizontal shade bands across membrane to suggest folded-wing ribs)
+for (let y = 8; y <= 20; y += 3) {
+  for (let x = 8; x <= cx - 3; x++) {
+    if (layers['gar_wings'][`${x},${y}`] === 'b') put('gar_wings', x, y, 's');
+  }
+  for (let x = cx+3; x <= 23; x++) {
+    if (layers['gar_wings'][`${x},${y}`] === 'b') put('gar_wings', x, y, 's');
+  }
+}
+
+// ============================ GAR_BODY (hunched stone beast — crouching torso + clawed forelimbs) ============================
+// The body is a hunched mass, wider at the shoulders (y≈12..16) and narrowing to a squat haunched
+// lower body (y≈17..26). Clawed forelimbs extend from shoulder level down-outward.
+// 'b' = stone base, 's' = shade (underside/shadow), 'h' = highlight (top/rim catch), 'o' = outline.
+
+// Torso mass (hunched, wider at top — the gargoyle crouches on its perch)
+for (let y = 11; y <= 25; y++) {
+  // Width: broadest at y=11..14 (hunchback shoulders), narrowing at waist y≈19..22
+  const half = (y <= 13) ? 6.5 : (y <= 16) ? 6.0 : (y <= 19) ? 5.2 : (y <= 22) ? 4.5 : 3.8;
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
+  for (let x = Lx; x <= Rx; x++) {
+    let r = 'b';
+    if (x === Lx || x === Rx) r = 'o';
+    else if (x === Lx+1) r = 'h';   // catch-light on left face
+    else if (x === Rx-1) r = 's';
+    // Hunchback ridge: central back-spine highlight at top
+    if (x === cx && y <= 15) r = 'h';
+    // Belly shadow on lower torso
+    if (y >= 20 && x > Lx+1 && x < Rx-1) r = 's';
+    if (y >= 20 && x === Lx+2) r = 'b';
+    put('gar_body', x, y, r);
+  }
+}
+// Stone texture: a few shade-band lines across the torso (craggy stone effect)
+for (let x = cx-4; x <= cx+4; x++) {
+  if (layers['gar_body'][`${x},14`] === 'b') put('gar_body', x, 14, 's');
+  if (layers['gar_body'][`${x},18`] === 'b') put('gar_body', x, 18, 's');
+}
+// Central chest ridge (stone crease)
+for (let y = 12; y <= 20; y++) {
+  if (layers['gar_body'][`${cx},${y}`] && layers['gar_body'][`${cx},${y}`] !== 'o')
+    put('gar_body', cx, y, 'h');
+}
+
+// Left forelimb: extends from shoulder (x≈cx-6, y≈12) curving down-left to clawed fist (x≈cx-8, y≈22)
+line('gar_body', cx-6, 12, cx-9, 18, 'o'); // outer edge
+line('gar_body', cx-5, 12, cx-8, 18, 'b'); // inner edge
+// Left forearm continuation
+line('gar_body', cx-9, 18, cx-9, 22, 'o');
+line('gar_body', cx-8, 18, cx-8, 22, 'b');
+// Left clawed hand (splayed claws, 3 prongs)
+for (const [fx,fy] of [[cx-11,23],[cx-9,24],[cx-7,23]]) {
+  put('gar_body',fx,fy,'o'); put('gar_body',fx,fy+1,'o');
+}
+for (let x = cx-10; x <= cx-8; x++) put('gar_body', x, 23, 'b');
+
+// Right forelimb (mirror)
+line('gar_body', cx+6, 12, cx+9, 18, 'o');
+line('gar_body', cx+5, 12, cx+8, 18, 'b');
+line('gar_body', cx+9, 18, cx+9, 22, 'o');
+line('gar_body', cx+8, 18, cx+8, 22, 'b');
+for (const [fx,fy] of [[cx+11,23],[cx+9,24],[cx+7,23]]) {
+  put('gar_body',fx,fy,'o'); put('gar_body',fx,fy+1,'o');
+}
+for (let x = cx+8; x <= cx+10; x++) put('gar_body', x, 23, 'b');
+
+// Haunched lower body / crouched legs (y=24..28): two squat stone legs
+// Left leg: x=11..13
+for (let y = 24; y <= 28; y++) {
+  for (const x of [11,12,13]) put('gar_body',x,y, x===11||x===13 ? 'o' : 'b');
+}
+// Right leg: x=19..21
+for (let y = 24; y <= 28; y++) {
+  for (const x of [19,20,21]) put('gar_body',x,y, x===19||x===21 ? 'o' : 'b');
+}
+// Taloned feet (y=28..29)
+for (const bx of [10,11,12,13,14]) put('gar_body',bx,29, bx===10||bx===14 ? 'o' : 's');
+for (const bx of [18,19,20,21,22]) put('gar_body',bx,29, bx===18||bx===22 ? 'o' : 's');
+// Talon claw tips
+for (const [tx,ty] of [[10,30],[12,30],[14,30],[18,30],[20,30],[22,30]]) put('gar_body',tx,ty,'o');
+
+// ============================ GAR_HEAD (grotesque horned head, snarling fanged mouth) ============================
+// Head placed at top of the hunched body: center cx, y=3..12.
+// Round-ish but angular — a grotesque gargoyle face with:
+//   - two short up-curved horns (top, y=3..5)
+//   - deep-set brow ridge (shadowed, y=6..7)
+//   - wide snarling mouth with exposed fangs (y=9..12)
+// Palette: stone (same as body). Eyes are NOT drawn here — gar_eyes layer sits on top.
+
+// Main head oval: cx, centered at y=7.5, w≈9, h≈9
+for (let y = 4; y <= 12; y++) {
+  const half = (y <= 5) ? 2.5 : (y <= 7) ? 4.0 : (y <= 9) ? 4.5 : (y <= 11) ? 4.0 : 2.5;
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
+  for (let x = Lx; x <= Rx; x++) {
+    let r = 'b';
+    if (x === Lx || x === Rx) r = 'o';
+    else if (x === Lx+1) r = 'h';
+    else if (x === Rx-1) r = 's';
+    put('gar_head', x, y, r);
+  }
+}
+
+// Brow ridge (heavy, overhanging — gargoyle frown): shade band y=6..7
+for (let x = cx-3; x <= cx+3; x++) {
+  if (layers['gar_head'][`${x},6`]) put('gar_head', x, 6, 's');
+  if (layers['gar_head'][`${x},7`]) put('gar_head', x, 7, 's');
+}
+
+// Left horn: two short curving prongs at (cx-3, y=3..5) and (cx-1, y=3..4)
+line('gar_head', cx-3, 5, cx-3, 3, 'o');
+put('gar_head', cx-2, 4, 'b'); put('gar_head', cx-2, 3, 'o');
+put('gar_head', cx-4, 3, 'o'); // horn tip spur
+// Right horn (mirror)
+line('gar_head', cx+3, 5, cx+3, 3, 'o');
+put('gar_head', cx+2, 4, 'b'); put('gar_head', cx+2, 3, 'o');
+put('gar_head', cx+4, 3, 'o');
+
+// Snout/muzzle protrusion: wide low chin at y=10..12 (grotesque jaws)
+for (let y = 10; y <= 12; y++) {
+  const mhalf = (y === 10) ? 4.0 : (y === 11) ? 4.5 : 3.5;
+  const MLx = Rd(cx - mhalf), MRx = Rd(cx + mhalf);
+  for (let x = MLx; x <= MRx; x++) {
+    let r = 'b';
+    if (x === MLx || x === MRx) r = 'o';
+    else if (x === MLx+1) r = 'h';
+    put('gar_head', x, y, r);
+  }
+}
+
+// Fanged snarling mouth: dark crevice at y=10 center, upper fangs at y=9 pointing down
+// Mouth opening (dark line at y=10, center)
+for (let x = cx-3; x <= cx+3; x++) put('gar_head', x, 10, 'o');
+// Upper fangs (short downward triangles from y=9..10)
+for (const fx of [cx-2, cx, cx+2]) {
+  put('gar_head', fx, 9, 'h');   // fang tip highlight (bone-like)
+  put('gar_head', fx, 10, 'o');  // fang merges into mouth opening
+}
+// Lower fangs (upward nubs at y=11)
+for (const fx of [cx-1, cx+1]) put('gar_head', fx, 11, 'h');
+
+// ============================ GAR_EYES (electric glowing eyes — glow palette) ============================
+// Electric, slightly glowing eyes set in deep sockets (brow shadow from gar_head).
+// Two pairs of pixels for each eye for a 2×2 glow spot.
+// Left eye: center (cx-2, 7.5); Right eye: center (cx+2, 7.5)
+// Roles: 'h' = bright electric highlight, 'b' = glow base (mapped to glow palette colors).
+// A tiny 'o' outline pixel per eye to give crispness against the stone face.
+
+// Left eye
+put('gar_eyes', cx-3, 7, 'o'); put('gar_eyes', cx-2, 7, 'h'); put('gar_eyes', cx-1, 7, 'o');
+put('gar_eyes', cx-3, 8, 'o'); put('gar_eyes', cx-2, 8, 'b'); put('gar_eyes', cx-1, 8, 'o');
+// Right eye
+put('gar_eyes', cx+1, 7, 'o'); put('gar_eyes', cx+2, 7, 'h'); put('gar_eyes', cx+3, 7, 'o');
+put('gar_eyes', cx+1, 8, 'o'); put('gar_eyes', cx+2, 8, 'b'); put('gar_eyes', cx+3, 8, 'o');
+
+emit('gar_wings');
+emit('gar_body');
+emit('gar_head');
+emit('gar_eyes');

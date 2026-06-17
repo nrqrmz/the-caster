@@ -167,6 +167,16 @@ const DAMA = [{ name: 'dama_gown' }, { name: 'dama_hair', palette: 'silverhair' 
 // baseColor = COLORS.water (0x00bcd4); derivePalette genera la paleta cyan/teal.
 const TENTACLE = [{ name: 'tentacle_body' }];
 
+// Stone gargoyle (gargola_pararrayos) — perched/crouching grotesque, distinct from the totem.
+// Bat-like stone wings (folded), hunched body, horned grotesque head with fanged snarl,
+// electric glowing eyes (glow palette). Layer order back-to-front: wings → body → head → eyes.
+const GARGOLA = [
+  { name: 'gar_wings' },
+  { name: 'gar_body' },
+  { name: 'gar_head' },
+  { name: 'gar_eyes', palette: 'glow' },
+];
+
 export const RECIPES = {
   hero: {
     // The redheaded princess. Each part composes against its own palette (per-part
@@ -298,7 +308,10 @@ export const RECIPES = {
   fuego_fatuo:        { archetype: 'blob',     size: 32, baseColor: 0xffee58, parts: BRASA },
   espiritu_tormenta:  { archetype: 'blob',     size: 32, baseColor: 0xb0bec5, parts: CENIZA },
   centinela_piedra:   { archetype: 'floating', size: 64, baseColor: 0x78909c, parts: TOTEM_FIRE },
-  gargola_pararrayos: { archetype: 'floating', size: 64, baseColor: 0x546e7a, parts: TOTEM_FIRE },
+  // Bespoke stone gargoyle — perched/crouching grotesque with folded bat-wings, horned head,
+  // snarling fanged jaws, clawed forelimbs. Electric glowing eyes (glow palette). Distinct
+  // from centinela_piedra (which keeps TOTEM_FIRE). Layer order: wings → body → head → eyes.
+  gargola_pararrayos: { archetype: 'floating', size: 64, baseColor: 0x546e7a, parts: GARGOLA },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
