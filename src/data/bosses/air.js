@@ -20,7 +20,7 @@ import { COLORS, TEX } from '../../config.js';
 export const CABALLERO_SANGRE = {
   key: 'caballero_sangre', tex: TEX.miniboss, color: COLORS.boss,
   hp: 440, speed: 110, damage: 20, radius: 24,
-  elite: true, geometric: true,
+  elite: true,
   movement: { type: 'charge', windup: 450, dash: 340, recover: 500, dashMul: 3.2 },
   modifiers: [
     { type: 'drain', heal: 10 }, // heals 10 hp when it lands a contact/dash hit

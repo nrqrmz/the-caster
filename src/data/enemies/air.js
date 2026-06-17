@@ -40,7 +40,7 @@ export const AIR_ENEMIES = {
     modifiers: [{ type: 'healAllies', hps: 12, radius: 140 }] },
 
   // #6 — Guardia Nocturno: fast shielded bruiser; charges, drains, soaks damage.
-  guardia_nocturno: { key: 'guardia_nocturno', geometric: true, tex: TEX.warrior, color: COLORS.stormDark,
+  guardia_nocturno: { key: 'guardia_nocturno', tex: TEX.warrior, color: COLORS.stormDark,
     hp: 150, speed: 90, damage: 16, radius: 20,
     movement: { type: 'charge', windup: 500, dash: 360, recover: 600, dashMul: 3.0 },
     attacks: [{ type: 'melee' }],

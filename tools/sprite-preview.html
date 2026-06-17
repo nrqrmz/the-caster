@@ -13,10 +13,14 @@
 <h1>Air sprite preview — <span id="count"></span></h1>
 <div class="grid" id="grid"></div>
 <script type="module">
-import { composeColorGrid, DESIGN } from '../src/systems/SpriteForge.js';
-import { getRecipe, paletteFor, hasRecipe } from '../src/data/sprites/recipes.js';
-import { PARTS } from '../src/data/sprites/parts.js';
-import { derivePalette, NAMED_PALETTES } from '../src/data/sprites/palettes.js';
+// Cache-busted dynamic imports: this is a dev preview reloaded after every
+// recipe/part edit, so each load must fetch fresh modules (the browser otherwise
+// reuses a stale ES module instance for a bare URL across reloads).
+const _v = '?v=' + Date.now();
+const { composeColorGrid, DESIGN } = await import('../src/systems/SpriteForge.js' + _v);
+const { getRecipe, paletteFor, hasRecipe } = await import('../src/data/sprites/recipes.js' + _v);
+const { PARTS } = await import('../src/data/sprites/parts.js' + _v);
+const { derivePalette, NAMED_PALETTES } = await import('../src/data/sprites/palettes.js' + _v);
 
 // Keys to review. Edit this list per batch; defaults to the full Air roster.
 const KEYS = new URLSearchParams(location.search).get('keys')?.split(',') ?? [
