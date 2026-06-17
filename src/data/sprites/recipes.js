@@ -293,6 +293,12 @@ export const RECIPES = {
   tronador:         { archetype: 'humanoid', size: 32, baseColor: 0x8d6e63, parts: TRONADOR_PARTS },
   sacerdote_sangre: { archetype: 'humanoid', size: 32, baseColor: 0xb71c1c, parts: CULT_STAFF },
   bruja_vendaval:   { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: BRUJA },
+
+  // --- Air blobs + stone sentinels ---
+  fuego_fatuo:        { archetype: 'blob',     size: 32, baseColor: 0xffee58, parts: BRASA },
+  espiritu_tormenta:  { archetype: 'blob',     size: 32, baseColor: 0xb0bec5, parts: CENIZA },
+  centinela_piedra:   { archetype: 'floating', size: 64, baseColor: 0x78909c, parts: TOTEM_FIRE },
+  gargola_pararrayos: { archetype: 'floating', size: 64, baseColor: 0x546e7a, parts: TOTEM_FIRE },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
