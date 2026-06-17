@@ -6,10 +6,14 @@ export function pickFacing(vx, vy, lastDir = 'down') {
   return { dir: vy < 0 ? 'up' : 'down', flipX: false };
 }
 
-// PURE. flipX para un enemigo que siempre mira a la princesa: voltea cuando ella
-// está a la izquierda del sprite. Sin histéresis (banda muerta opcional a futuro).
-export function facePlayerFlip(spriteX, targetX) {
-  return targetX < spriteX;
+// PURE. flipX para un enemigo que siempre mira a la princesa, CON histéresis:
+// solo voltea cuando ella cruza el centro del sprite por más de `deadband` px.
+// Dentro de la banda muerta conserva el flip actual (evita el toggle por jitter
+// cuando la princesa está casi alineada en x con el enemigo).
+export function facePlayerFlip(spriteX, targetX, currentFlip = false, deadband = 12) {
+  if (currentFlip && targetX > spriteX + deadband) return false;  // claramente a la derecha
+  if (!currentFlip && targetX < spriteX - deadband) return true;  // claramente a la izquierda
+  return currentFlip;                                             // dentro de la banda: no cambies
 }
 
 const MOVE_EPS = 6; // px/s below which we treat the entity as idle
@@ -46,7 +50,7 @@ export class FacingController {
     // facePlayer: el flipX se rige por la princesa (aim) cada frame, no por la velocidad.
     // El sprite es de vista lateral: dirección 'side', se voltea al cruzar ella la vertical.
     if (this.facePlayer && aim) {
-      const flipX = facePlayerFlip(this.sprite.x, aim.x);
+      const flipX = facePlayerFlip(this.sprite.x, aim.x, this.sprite.flipX);
       this.lastDir = 'side';
       this.sprite.setFlipX(flipX);
       const state = moving ? 'walk' : 'idle';

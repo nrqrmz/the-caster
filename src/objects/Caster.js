@@ -1,4 +1,4 @@
-import { TEX, spriteKey } from '../config.js';
+import { TEX, spriteKey, ACTOR_DEPTH } from '../config.js';
 import { hasRecipe } from '../data/sprites/recipes.js';
 import { FacingController } from './FacingController.js';
 
@@ -9,6 +9,7 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setCollideWorldBounds(true);
+    this.setDepth(ACTOR_DEPTH);
     this.stats = stats;
     this.hp = stats.maxHealth;
     this.maxHp = stats.maxHealth;

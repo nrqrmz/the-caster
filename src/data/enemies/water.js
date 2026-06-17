@@ -60,7 +60,7 @@ export const WATER_ENEMIES = {
   // Plain summoned renacuajos (Náyade, wave filler) spawn WITHOUT lifecycle state, so
   // they never tick/promote and stay tadpoles — _growType is inert for them.
   renacuajo: { key: 'renacuajo', tex: TEX.villager, color: COLORS.tadpole,
-    hp: 20, speed: 105, damage: 7, radius: 16,
+    hp: 20, speed: 70, damage: 5, radius: 16,
     movement: { type: 'zigzag' },
     attacks: [{ type: 'melee' }],
     _growType: 'sapo_adulto' },

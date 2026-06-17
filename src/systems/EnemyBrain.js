@@ -5,7 +5,7 @@
 
 import {
   BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS,
-  EGG_HATCH_MS, TADPOLE_GROW_MS,
+  EGG_HATCH_MS, TADPOLE_GROW_MS, SPAWN_SAFE_DIST,
 } from '../data/tuning.js';
 import { GAME_WIDTH, GAME_HEIGHT, ENEMY_MARGIN } from '../config.js'; // config.js is Phaser-free (constants only)
 
@@ -105,20 +105,13 @@ export const MOVEMENTS = {
     state.t    = (state.t || 0) + dt;
 
     if (state.mode === 'submerged') {
-      if (state.t >= submergeMs) { state.mode = 'reposition'; state.t = 0; }
-      return { x: 0, y: 0, submerged: true };
-    }
-
-    if (state.mode === 'reposition') {
-      // Teletransporta a un punto cercano al objetivo (invuln, aún oculto).
-      state.mode = 'emerge';
-      state.t = 0;
-      const a = angleBetween(target.x, target.y, self.x, self.y);
-      const dist = 80;
-      const r = (self.radius || 16) + ENEMY_MARGIN;
-      const rx = clamp(target.x + Math.cos(a) * dist, r, GAME_WIDTH - r);
-      const ry = clamp(target.y + Math.sin(a) * dist, r, GAME_HEIGHT - r);
-      return { x: 0, y: 0, submerged: true, repositionTo: { x: rx, y: ry } };
+      // Nada hacia la princesa mostrando solo la aleta (GameScene oculta el cuerpo);
+      // se detiene al alcanzar el anillo seguro para no emerger encima de ella.
+      if (state.t >= submergeMs) { state.mode = 'emerge'; state.t = 0; return { x: 0, y: 0, submerged: true }; }
+      const d = distance(self.x, self.y, target.x, target.y);
+      if (d <= SPAWN_SAFE_DIST + 4) return { x: 0, y: 0, submerged: true };
+      const a = angleBetween(self.x, self.y, target.x, target.y);
+      return { x: Math.cos(a) * speed, y: Math.sin(a) * speed, submerged: true };
     }
 
     if (state.mode === 'emerge') {
@@ -147,6 +140,15 @@ export const MOVEMENTS = {
       state.heading = (state.seed / 0x7fffffff) * Math.PI * 2;
     }
     return { x: Math.cos(state.heading) * speed, y: Math.sin(state.heading) * speed };
+  },
+
+  holdAt({ self, speed, params }) {
+    const p = params?.point;
+    if (!p) return { x: 0, y: 0 };
+    const d = distance(self.x, self.y, p.x, p.y);
+    if (d < 8) return { x: 0, y: 0 }; // llegó al anchor: se queda quieto
+    const a = angleBetween(self.x, self.y, p.x, p.y);
+    return { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
   },
 };
 
@@ -297,4 +299,36 @@ export function summonSlots({ cap, alive, cooldownUntil = 0 }, now = 0) {
   if (cap == null) return Infinity;
   if (now < cooldownUntil) return 0;
   return Math.max(0, cap - alive);
+}
+
+// PURE. Empuja `point` fuera de un anillo seguro de radio `minDist` alrededor de
+// `center`. Si ya está fuera, lo devuelve igual. Si coincide con el centro, empuja
+// en ángulo 0 (+x). Usado por spawnEnemy y el burrow para no aparecer sobre la princesa.
+export function pushOutsideRing(point, center, minDist) {
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+  const d = Math.hypot(dx, dy);
+  if (d >= minDist) return { x: point.x, y: point.y };
+  if (d === 0) return { x: center.x + minDist, y: center.y };
+  const k = minDist / d;
+  return { x: center.x + dx * k, y: center.y + dy * k };
+}
+
+// PURE. Movimiento de cada hermana viva según cuántas quedan (setpiece nv7 fuego).
+// 3+: Vesta (cazadora) persigue; las flanqueadoras sostienen anchors → triángulo amplio.
+// 2:  ambas kitean con rangos distintos para mantenerse separadas → la línea de río se ve.
+// 1:  cada una usa su propio kit (baseMovement); el río degrada solo.
+export function sisterFormation(live, anchors) {
+  const n = live.length;
+  if (n >= 3) {
+    let ai = 0;
+    return live.map((s) => (s.isChaser
+      ? { type: 'chase' }
+      : { type: 'holdAt', point: anchors[ai++] }));
+  }
+  if (n === 2) {
+    const ranges = [200, 290];
+    return live.map((_, i) => ({ type: 'kite', range: ranges[i] }));
+  }
+  return live.map((s) => s.baseMovement);
 }

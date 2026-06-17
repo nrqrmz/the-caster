@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeMovement, MOVEMENTS, summonSlots } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
+import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS } from '../src/data/tuning.js';
 
 const mag = (v) => Math.hypot(v.x, v.y);
 const ctx = (overrides = {}) => ({
@@ -155,41 +156,55 @@ test('findModifier returns the entry (normalizing string form) or null', () => {
   assert.equal(findModifier({}, 'shielded'), null);
 });
 
-test('burrow: ciclo submerged → reposition → emerge → surface → submerged', () => {
-  const self = { x: 100, y: 100, radius: 17 };
-  const target = { x: 200, y: 200 };
+test('burrow: emerge transitions to surface after emergeMs', () => {
+  const self = { x: 0, y: 0, radius: 17 };
+  const target = { x: 500, y: 0 };
   const params = { submergeMs: 100, emergeMs: 100, surfaceMs: 300 };
   const state = {};
-  const step = () => MOVEMENTS.burrow({ self, target, speed: 100, dt: 100, params, state });
 
-  // 1) submerged: invuln, sin moverse
-  let v = step();
-  assert.equal(v.submerged, true);
-  assert.equal(v.x, 0); assert.equal(v.y, 0);
+  // Consume the submerge window (100ms)
+  MOVEMENTS.burrow({ self, target, speed: 100, dt: 100, params, state });
+  assert.equal(state.mode, 'emerge');
 
-  // 2) reposition: teletransporta junto al objetivo, sigue submerged
-  v = step();
-  assert.equal(v.submerged, true);
-  assert.ok(v.repositionTo && typeof v.repositionTo.x === 'number');
-
-  // 3) emerge: aviso de superficie, aún invuln (submerged true)
-  v = step();
+  // Still in emerge (warning ring) after small dt
+  let v = MOVEMENTS.burrow({ self, target, speed: 100, dt: 16, params, state });
   assert.equal(v.surfacing, true);
   assert.equal(v.submerged, true);
 
-  // 4) surface: vulnerable y persiguiendo al objetivo (velocidad hacia abajo-derecha)
-  v = step();
+  // After emergeMs expires, transition to surface (vulnerable)
+  MOVEMENTS.burrow({ self, target, speed: 100, dt: 100, params, state });
+  v = MOVEMENTS.burrow({ self, target, speed: 100, dt: 16, params, state });
   assert.equal(v.vulnerable, true);
-  assert.equal(v.submerged, undefined);
-  assert.ok(v.x > 0 && v.y > 0);
+});
 
-  // 5) sigue en surface (300ms de ventana, dt 100 → 3 frames vulnerables)
-  v = step();
-  assert.equal(v.vulnerable, true);
+test('burrow: full cycle — surface chases target and loops back to submerged', () => {
+  const self = { x: 0, y: 0, radius: 17 };
+  const target = { x: 500, y: 0 }; // Far from self so never triggers safe-ring hold
+  const speed = 100;
+  const state = {};
 
-  // 6) expira la superficie → vuelve a submerged
-  v = step();
-  assert.equal(v.submerged, true);
+  // Phase 1: advance past submerged window (BURROW_SUBMERGE_MS)
+  let v = MOVEMENTS.burrow({ self, target, speed, dt: BURROW_SUBMERGE_MS, params: {}, state });
+  assert.equal(state.mode, 'emerge', 'should transition to emerge after submergeMs');
+  assert.equal(v.submerged, true, 'last submerged frame should return submerged=true');
+
+  // Phase 2: advance past emerge/telegraph window (BURROW_TELEGRAPH_MS)
+  v = MOVEMENTS.burrow({ self, target, speed, dt: BURROW_TELEGRAPH_MS, params: {}, state });
+  assert.equal(state.mode, 'surface', 'should transition to surface after emergeMs');
+  assert.equal(v.surfacing, true, 'last emerge frame should return surfacing=true');
+  assert.equal(v.submerged, true, 'emerge is still submerged');
+
+  // Phase 3: assert surface frame — chase velocity toward target + vulnerable
+  v = MOVEMENTS.burrow({ self, target, speed, dt: 16, params: {}, state });
+  assert.equal(state.mode, 'surface', 'mode stays surface on small dt');
+  assert.equal(v.vulnerable, true, 'surface should be vulnerable');
+  assert.ok(v.x > 0, 'surface should chase toward target (x-component > 0)');
+  assert.ok(Number.isFinite(v.y), 'surface should have finite y velocity');
+
+  // Phase 4: advance past surface window (BURROW_SURFACE_MS) and verify loop-back
+  v = MOVEMENTS.burrow({ self, target, speed, dt: BURROW_SURFACE_MS, params: {}, state });
+  assert.equal(state.mode, 'submerged', 'should loop back to submerged after surfaceMs');
+  assert.equal(v.submerged, true, 'transition frame returns submerged=true');
 });
 
 test('every movement type (including burrow) returns finite velocity', () => {
@@ -322,5 +337,97 @@ test('buildProjectiles: giantFireball es un único disparo recto marcado big', (
   assert.equal(out[0].speed, 120);
   assert.equal(out[0].damage, 28);
   assert.ok(Math.abs(out[0].angle) < 1e-9); // recto hacia +x
+});
+
+import { pushOutsideRing } from '../src/systems/EnemyBrain.js';
+
+test('pushOutsideRing deja el punto igual si ya está fuera del radio', () => {
+  const p = pushOutsideRing({ x: 400, y: 0 }, { x: 0, y: 0 }, 160);
+  assert.equal(p.x, 400);
+  assert.equal(p.y, 0);
+});
+
+test('pushOutsideRing empuja al borde conservando la dirección', () => {
+  const p = pushOutsideRing({ x: 30, y: 40 }, { x: 0, y: 0 }, 160); // dist 50 → 160
+  assert.ok(Math.abs(Math.hypot(p.x, p.y) - 160) < 1e-6);
+  assert.ok(Math.abs(p.x / p.y - 30 / 40) < 1e-6); // misma dirección (3:4)
+});
+
+test('pushOutsideRing usa ángulo 0 cuando el punto coincide con el centro', () => {
+  const p = pushOutsideRing({ x: 100, y: 100 }, { x: 100, y: 100 }, 160);
+  assert.equal(p.x, 260);
+  assert.equal(p.y, 100);
+});
+
+import { sisterFormation } from '../src/systems/EnemyBrain.js';
+
+test('holdAt avanza hacia el punto y se detiene al llegar', () => {
+  const far = computeMovement(
+    { movement: { type: 'holdAt', point: { x: 100, y: 0 } } }, {},
+    { self: { x: 0, y: 0 }, target: { x: 999, y: 999 }, speed: 60, dt: 16 });
+  assert.ok(far.x > 0 && Math.abs(far.y) < 1e-6);            // va hacia el punto, ignora al target
+  const near = computeMovement(
+    { movement: { type: 'holdAt', point: { x: 3, y: 0 } } }, {},
+    { self: { x: 0, y: 0 }, target: { x: 999, y: 0 }, speed: 60, dt: 16 });
+  assert.equal(near.x, 0); assert.equal(near.y, 0);          // dentro de 8px: se queda quieto
+});
+
+test('sisterFormation con 3 vivas: cazadora persigue, flancos a los anchors', () => {
+  const anchors = [{ x: 90, y: 240 }, { x: 390, y: 240 }];
+  const live = [
+    { isChaser: false, baseMovement: { type: 'kite', range: 240 } },
+    { isChaser: true,  baseMovement: { type: 'chase' } },
+    { isChaser: false, baseMovement: { type: 'kite', range: 240 } },
+  ];
+  const out = sisterFormation(live, anchors);
+  assert.deepEqual(out[0], { type: 'holdAt', point: { x: 90, y: 240 } });
+  assert.deepEqual(out[1], { type: 'chase' });
+  assert.deepEqual(out[2], { type: 'holdAt', point: { x: 390, y: 240 } });
+});
+
+test('sisterFormation con 2 vivas: ambas kite con rangos distintos (separadas)', () => {
+  const live = [
+    { isChaser: true, baseMovement: { type: 'chase' } },
+    { isChaser: false, baseMovement: { type: 'kite', range: 240 } },
+  ];
+  const out = sisterFormation(live, []);
+  assert.equal(out[0].type, 'kite');
+  assert.equal(out[1].type, 'kite');
+  assert.notEqual(out[0].range, out[1].range); // rangos distintos → no se enciman
+});
+
+test('sisterFormation con 1 viva: usa su propio kit (baseMovement)', () => {
+  const live = [{ isChaser: false, baseMovement: { type: 'kite', range: 240 } }];
+  const out = sisterFormation(live, []);
+  assert.deepEqual(out[0], { type: 'kite', range: 240 });
+});
+
+test('burrow: sumergido nada HACIA el objetivo (ya no se queda quieto)', () => {
+  const state = {};
+  const v = computeMovement(
+    { movement: { type: 'burrow' } }, state,
+    { self: { x: 0, y: 0 }, target: { x: 500, y: 0 }, speed: 100, dt: 16 });
+  assert.equal(v.submerged, true);
+  assert.ok(v.x > 0);                 // avanza hacia el objetivo (antes era 0)
+  assert.ok(Math.abs(v.y) < 1e-6);
+});
+
+test('burrow: sumergido se DETIENE dentro del anillo seguro', () => {
+  const state = {};
+  const v = computeMovement(
+    { movement: { type: 'burrow' } }, state,
+    { self: { x: 0, y: 0 }, target: { x: 100, y: 0 }, speed: 100, dt: 16 }); // dist 100 < 160
+  assert.equal(v.submerged, true);
+  assert.equal(v.x, 0);
+  assert.equal(v.y, 0);
+});
+
+test('burrow: tras submergeMs pasa a emerge (anillo de aviso, sigue invuln)', () => {
+  const state = {};
+  const ctxB = { self: { x: 0, y: 0 }, target: { x: 500, y: 0 }, speed: 100, dt: BURROW_SUBMERGE_MS };
+  computeMovement({ movement: { type: 'burrow' } }, state, ctxB); // consume la ventana submerged
+  const v = computeMovement({ movement: { type: 'burrow' } }, state, { ...ctxB, dt: 16 });
+  assert.equal(v.submerged, true);
+  assert.equal(v.surfacing, true);
 });
 

@@ -21,6 +21,15 @@ export const ELITE_RESIST_PER_DEPTH = 0.15; // resist per unit of depth bonus
 // Max enemies alive at once; waves keep queuing but the spawner throttles to this.
 export const CONCURRENCY_CAP = 16;
 
+// Contacto melee: un enemigo solo puede asestar UN golpe de contacto cada
+// MELEE_CONTACT_CD ms (i-frames por enemigo). Antes el overlap drenaba vida cada
+// frame (~134 HP/s con un renacuajo); ahora el contacto es un golpe discreto.
+export const MELEE_CONTACT_CD = 600;
+
+// Distancia mínima a la princesa al que puede aparecer/emerger un enemigo invocado
+// (p. ej. tiburones). 160px es el valor más cercano válido; más lejos siempre vale.
+export const SPAWN_SAFE_DIST = 160;
+
 // Enemy projectile pool size (Fire is projectile-dense).
 export const ENEMY_SHOT_POOL = 400;
 

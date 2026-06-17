@@ -6,19 +6,20 @@ import {
   CONCURRENCY_CAP, ENEMY_SHOT_POOL, HOMING_TTL_MS,
   WHIRLPOOL_RADIUS, WHIRLPOOL_ACTIVE_MS, WHIRLPOOL_COOLDOWN_MS, WHIRLPOOL_TELEGRAPH_MS,
   LAVA_RIVER_COOLDOWN_MS, LAVA_RIVER_TELEGRAPH_MS, LAVA_RIVER_ACTIVE_MS, LAVA_RIVER_DPS,
+  MELEE_CONTACT_CD, SPAWN_SAFE_DIST,
 } from '../data/tuning.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
-import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist } from '../systems/CombatSystem.js';
+import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist, tryMeleeContact } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, difficultyContext, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
@@ -114,7 +115,9 @@ export default class GameScene extends Phaser.Scene {
     });
     this.physics.add.overlap(this.caster, this.enemies, (caster, enemy) => {
       if (!enemy.active) return;
-      this.damageCaster(enemy.def.damage * 0.02 * 16);
+      // Golpe de contacto discreto con i-frames por enemigo (antes drenaba cada frame).
+      if (!tryMeleeContact(enemy, this.time.now, MELEE_CONTACT_CD)) return;
+      this.damageCaster(enemy.def.damage);
       const burn = findModifier(enemy.def, 'onHitBurn');
       if (burn) this.applyCasterBurn(burn.dps ?? 6, burn.ms ?? 2000);
       const slow = findModifier(enemy.def, 'onHitSlow');
@@ -221,6 +224,7 @@ export default class GameScene extends Phaser.Scene {
     this.bosses = defs.map((def, i) => {
       const x = GAME_WIDTH * (i + 1) / (defs.length + 1);
       const b = new Boss(this, x, -40, scaleEnemyDef(def, this.diff));
+      b._baseMovement = b.def.movement; // para restaurar su kit cuando quede sola
       this.enemies.add(b);
       return b;
     });
@@ -273,6 +277,11 @@ export default class GameScene extends Phaser.Scene {
     else if (edge === 1) { x = GAME_WIDTH + 20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
     else if (edge === 2) { x = Phaser.Math.Between(0, GAME_WIDTH); y = GAME_HEIGHT + 20; }
     else { x = -20; y = Phaser.Math.Between(0, GAME_HEIGHT); }
+    // No aparecer sobre la princesa: empuja el spawn fuera del anillo seguro.
+    if (this.caster) {
+      const safe = pushOutsideRing({ x, y }, this.caster, SPAWN_SAFE_DIST);
+      x = safe.x; y = safe.y;
+    }
     const e = new Enemy(this, x, y, scaleEnemyDef(def, this.diff));
     // Arm the generational lifecycle on freshly-laid eggs so tickLifecycle (update loop)
     // can hatch them. Without this, an egg's brainState.lifecycle is undefined and it
@@ -611,6 +620,31 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  // Aleta dorsal de un tiburón sumergido: un triángulo en la capa de telegraph que
+  // apunta en su dirección de avance (o hacia la princesa si está quieto en el anillo).
+  drawDorsalFin(e) {
+    const g = this.telegraphGfx;
+    const vx = e.body ? e.body.velocity.x : 0;
+    const vy = e.body ? e.body.velocity.y : 0;
+    const ang = Math.hypot(vx, vy) > 6
+      ? Math.atan2(vy, vx)
+      : Phaser.Math.Angle.Between(e.x, e.y, this.caster.x, this.caster.y);
+    const len = 18, wid = 7;
+    const tipX = e.x + Math.cos(ang) * len;
+    const tipY = e.y + Math.sin(ang) * len;
+    const baseX = e.x - Math.cos(ang) * (len * 0.4);
+    const baseY = e.y - Math.sin(ang) * (len * 0.4);
+    const px = Math.cos(ang + Math.PI / 2);
+    const py = Math.sin(ang + Math.PI / 2);
+    g.fillStyle(COLORS.sharkYoung, 1);
+    g.beginPath();
+    g.moveTo(tipX, tipY);
+    g.lineTo(baseX + px * wid, baseY + py * wid);
+    g.lineTo(baseX - px * wid, baseY - py * wid);
+    g.closePath();
+    g.fillPath();
+  }
+
   steerHomingShots(delta) {
     const turn = 0.006 * delta; // rad per frame budget; gentle so it's dodgeable
     this.enemyShots.group.children.iterate((p) => {
@@ -732,8 +766,11 @@ export default class GameScene extends Phaser.Scene {
         this.telegraphGfx.lineStyle(3, COLORS.water, 0.85);
         this.telegraphGfx.strokeCircle(e.x, e.y, (e.def.radius || 20) + 24);
       }
-      // Hide the sprite while submerged; show it otherwise.
-      if (e._burrowed !== undefined) e.setAlpha(e._burrowed ? 0.15 : 1);
+      // Sumergido: oculta el cuerpo y dibuja solo la aleta dorsal (se ve a dónde va).
+      if (e._burrowed !== undefined) {
+        if (e._burrowed) { e.setAlpha(0); this.drawDorsalFin(e); }
+        else e.setAlpha(1);
+      }
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.steerHomingShots(delta);
@@ -745,7 +782,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateWhirlpool(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
-    for (const b of this.bosses) if (b && b.active) b.drawBar();
+    for (const b of this.bosses) { if (b && b.active && !b._burrowed) b.drawBar(); else if (b && b._burrowed) b.bar.clear(); }
   }
 
   // Generic ground zone. opts: { x, y, radius, duration, color?, fire?, casterDps?, casterHeal?, enemyDps? }
@@ -760,6 +797,10 @@ export default class GameScene extends Phaser.Scene {
     let tentacle = null;
     if (style === 'water') {
       const r = opts.radius ?? 60;
+      // Marca de suelo del MISMO radio que el hitbox: el tentáculo (alto) es cosmético,
+      // el daño es este círculo. Persiste toda la vida de la zona (cleanup destruye z.gfx).
+      gfx = this.add.circle(opts.x, opts.y, r, color, 0.16).setDepth(5);
+      gfx.setStrokeStyle(2, color, 0.7);
       // Scale the 32-px texture to radius × 2 (width) and radius × 3 (full height).
       const tsx = (r * 2) / 32;
       const tsy = (r * 3) / 32;
@@ -874,9 +915,26 @@ export default class GameScene extends Phaser.Scene {
     this.spawnZone({ x, y, radius, duration, casterDps: dps, color: COLORS.poison });
   }
 
+  // Setpiece de las tres hermanas: asigna el movimiento de cada hermana viva según
+  // cuántas quedan (3 → Vesta persigue + flancos en anchors; 2 → kite separadas;
+  // 1 → su propio kit). La geometría está en sisterFormation (pura/testeable).
+  updateSisterFormation(live) {
+    if (!live.length) return;
+    const anchors = [
+      { x: GAME_WIDTH * 0.18, y: GAME_HEIGHT * 0.28 },
+      { x: GAME_WIDTH * 0.82, y: GAME_HEIGHT * 0.28 },
+    ];
+    const moves = sisterFormation(
+      live.map((b) => ({ isChaser: b.def.key === 'vesta', baseMovement: b._baseMovement })),
+      anchors,
+    );
+    for (let i = 0; i < live.length; i++) live[i].def.movement = moves[i];
+  }
+
   updateTriangle(delta) {
     if (!this.triangle) return;
     const live = this.bosses.filter((b) => b && b.active);
+    this.updateSisterFormation(live);
     // Última hermana viva: cancela el triángulo y recupera sus charcos de lava.
     if (live.length === 1 && live[0].def.soloSequence && !live[0]._wentSolo) {
       const b = live[0];

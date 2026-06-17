@@ -1,6 +1,6 @@
 import { computeMovement, stepAttack } from '../systems/EnemyBrain.js';
 import { stepBoss } from '../systems/BossBrain.js';
-import { spriteKey } from '../config.js';
+import { spriteKey, ACTOR_DEPTH } from '../config.js';
 import { hasRecipe } from '../data/sprites/recipes.js';
 import { FacingController } from './FacingController.js';
 
@@ -14,6 +14,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     super(scene, x, y, useSprite ? spriteKey(visualKey) : def.tex);
     scene.add.existing(this);
     scene.physics.add.existing(this);
+    this.setDepth(ACTOR_DEPTH);
     this.def = def;
     this.hp = def.hp;
     this.maxHp = def.hp;
@@ -97,10 +98,6 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     if (velocity.submerged !== undefined || velocity.surfacing || velocity.vulnerable) {
       this._burrowed = !!velocity.submerged;
       this._surfacing = !!velocity.surfacing;
-    }
-    if (velocity.repositionTo) {
-      this.x = velocity.repositionTo.x;
-      this.y = velocity.repositionTo.y;
     }
 
     return { velocity, fires, telegraphs, enters };
