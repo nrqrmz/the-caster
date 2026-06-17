@@ -13,13 +13,15 @@ function emptyGrid() {
 // Each part resolves against its own palette: partPalette(ref) wins, else `palette`.
 // A part authored at res < DESIGN is nearest-neighbor upscaled by DESIGN/res (rows +
 // anchor), so legacy 16-grid art fills the 32 grid unchanged.
-export function composeColorGrid(recipe, parts, dir, palette, partPalette = () => null) {
+export function composeColorGrid(recipe, parts, dir, palette, partPalette = () => null, state = null, frameIndex = 0) {
   const g = emptyGrid();
   for (const ref of recipe.parts) {
     const name = typeof ref === 'string' ? ref : ref.name;
     const part = parts[name];
     if (!part) throw new Error(`SpriteForge: unknown part '${name}'`);
-    const rows = part[dir];
+    // Authored per-state, per-direction frames win; else the static grid.
+    const authored = state && part.anim && part.anim[state] && part.anim[state][dir];
+    const rows = authored ? authored[frameIndex % authored.length] : part[dir];
     if (rows == null) continue;
     const f = DESIGN / (part.res ?? 16);
     const pal = (typeof ref === 'object' ? partPalette(ref) : null) || palette;
@@ -92,15 +94,35 @@ function scaleGrid(grid, f) {
   return out;
 }
 
+// True when some part authors frames for this state+direction.
+function hasAuthored(recipe, parts, state, dir) {
+  return recipe.parts.some((ref) => {
+    const p = parts[typeof ref === 'string' ? ref : ref.name];
+    return !!(p && p.anim && p.anim[state] && p.anim[state][dir]);
+  });
+}
+
 export function forge(recipe, parts, palette, partPalette = () => null) {
   const scale = recipe.scale ?? (recipe.size ? recipe.size / DESIGN : 1);
   const anim = recipe.anim ?? {};
+  const states = ['idle', 'walk', ...(anim.attack ? ['attack'] : [])];
   const anims = {};
   for (const dir of DIRS) {
     const base = composeColorGrid(recipe, parts, dir, palette, partPalette);
-    const sets = { idle: idleFrames(base, anim.idle ?? 2), walk: walkFrames(base, anim.walk ?? 2) };
-    for (const state of ['idle', 'walk']) {
-      anims[`${state}-${dir}`] = sets[state].map((grid) => scaleGrid(grid, scale));
+    for (const state of states) {
+      const count = Math.max(1, anim[state] ?? 2);
+      let frames;
+      if (hasAuthored(recipe, parts, state, dir)) {
+        frames = [];
+        for (let i = 0; i < count; i++) frames.push(composeColorGrid(recipe, parts, dir, palette, partPalette, state, i));
+      } else if (state === 'idle') {
+        frames = idleFrames(base, count);
+      } else if (state === 'walk') {
+        frames = walkFrames(base, count);
+      } else {
+        frames = padFrames([base], count, base);
+      }
+      anims[`${state}-${dir}`] = frames.map((grid) => scaleGrid(grid, scale));
     }
   }
   return { size: DESIGN * scale, fps: recipe.fps ?? 5, anims };

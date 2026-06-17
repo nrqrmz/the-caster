@@ -20,6 +20,7 @@ import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
 import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE } from '../systems/EnemyBrain.js';
 import { hazardEdges, onAnyEdge } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
+import { lavaPulse, lavaRimAlpha, lavaSpots, lavaEmbers, lavaEdgeEmbers, lerpColor, LAVA } from '../systems/LavaField.js';
 import { FormSequencer } from '../systems/FormSequencer.js';
 import { hasRecipe } from '../data/sprites/recipes.js';
 import { FacingController } from '../objects/FacingController.js';
@@ -63,6 +64,8 @@ export default class GameScene extends Phaser.Scene {
     this.bosses = [];
     this.bossMechanics = null;   // set in Phase 3
     this.zones = [];             // active ground zones (poison, freeze, boss hazards)
+    this.lavaTime = 0;           // ms accumulator driving the animated lava/fire VFX
+    this.lavaGfx = this.add.graphics().setDepth(5); // animated fire zones (redrawn each frame)
     this.telegraphGfx = this.add.graphics().setDepth(1400);
     this.triangleGfx = this.add.graphics().setDepth(6);
     this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
@@ -573,6 +576,7 @@ export default class GameScene extends Phaser.Scene {
   cast_fireball() {
     const target = this.caster.nearestEnemy(this.liveEnemies());
     if (!target) return false;
+    if (this.caster.facing) this.caster.facing.playAttack();
     const orb = this.orbs.fire(TEX.fireball, this.caster.x, this.caster.y, target.x, target.y, 320, this.stats.fireballDamage * this.dmgMult(), this.stats.fireballRadius);
     if (orb && this.stats.burnDamage > 0) { orb.burnDps = this.stats.burnDamage; orb.burnMs = this.stats.burnDuration; }
     return true;
@@ -629,6 +633,7 @@ export default class GameScene extends Phaser.Scene {
 
   update(time, delta) {
     if (this.startedAt === null) this.startedAt = time; // valid game time on the first active frame
+    this.lavaTime += delta;      // drives the animated lava/fire VFX (zones + triangle edges)
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
     tickCasterSlow(this.caster, delta);
     if (this.damageBuffRemaining > 0) this.damageBuffRemaining -= delta;
@@ -673,12 +678,14 @@ export default class GameScene extends Phaser.Scene {
     for (const b of this.bosses) if (b && b.active) b.drawBar();
   }
 
-  // Generic ground zone. opts: { x, y, radius, duration, color?, casterDps?, casterHeal?, enemyDps? }
+  // Generic ground zone. opts: { x, y, radius, duration, color?, fire?, casterDps?, casterHeal?, enemyDps? }
+  // Fire-colored zones (or opts.fire) render as animated lava on the shared lavaGfx; others keep a flat disk.
   spawnZone(opts) {
     const color = opts.color != null ? opts.color : COLORS.poison;
-    const gfx = this.add.circle(opts.x, opts.y, opts.radius, color, 0.30).setDepth(5);
+    const fire = opts.fire ?? (color === COLORS.fireball || color === COLORS.magma);
+    const gfx = fire ? null : this.add.circle(opts.x, opts.y, opts.radius, color, 0.30).setDepth(5);
     this.zones.push({
-      x: opts.x, y: opts.y, radius: opts.radius, remaining: opts.duration, gfx,
+      x: opts.x, y: opts.y, radius: opts.radius, remaining: opts.duration, gfx, fire,
       casterDps: opts.casterDps || 0,
       casterHeal: opts.casterHeal || 0,
       enemyDps: opts.enemyDps || 0,
@@ -772,7 +779,7 @@ export default class GameScene extends Phaser.Scene {
       this.drawTriangleEdges(edges, 0xffffff, 0.5, 2);   // warning outline
       if (t.t <= 0) { t.mode = 'active'; t.t = 2600; }
     } else if (t.mode === 'active') {
-      this.drawTriangleEdges(edges, 0xff5722, 0.95, 6);  // lava
+      this.drawLavaEdges(edges);  // animated lava (flicker + embers)
       if (onAnyEdge(this.caster.x, this.caster.y, edges, 14)) {
         this.damageCaster(28 * (delta / 1000));
         this.applyCasterBurn(8, 1200); // crossing the lava self-inflicts burn
@@ -788,6 +795,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   updateZones(delta) {
+    this.lavaGfx.clear(); // fire zones are redrawn animated each frame
     if (!this.zones.length) return;
     const dt = delta / 1000;
     for (const z of this.zones) {
@@ -805,12 +813,34 @@ export default class GameScene extends Phaser.Scene {
           if (Phaser.Math.Distance.Between(e.x, e.y, z.x, z.y) <= z.radius) this.hitEnemy(e, z.enemyDps * dt);
         }
       }
+      if (z.fire) this.drawLavaZone(z);
     }
     this.zones = this.zones.filter((z) => {
       if (z.remaining > 0) return true;
-      z.gfx.destroy();
+      if (z.gfx) z.gfx.destroy(); // fire zones have no flat disk (drawn on the shared lavaGfx)
       return false;
     });
+  }
+
+  // Animated molten lava pool on the shared lavaGfx (cleared each frame in updateZones).
+  drawLavaZone(z) {
+    const g = this.lavaGfx, t = this.lavaTime + z.x * 7 + z.y * 13; // per-zone phase offset
+    g.fillStyle(lerpColor(LAVA.dark, LAVA.hot, lavaPulse(t)), 0.85); g.fillCircle(z.x, z.y, z.radius);
+    g.fillStyle(LAVA.mid, 0.45); g.fillCircle(z.x, z.y, z.radius * 0.92);
+    for (const s of lavaSpots(z.radius, t)) { g.fillStyle(LAVA.bright, 0.3 + 0.5 * s.bright); g.fillCircle(z.x + s.x, z.y + s.y, s.r); }
+    g.lineStyle(2, LAVA.ember, lavaRimAlpha(t)); g.strokeCircle(z.x, z.y, z.radius); // flickering rim
+    for (const e of lavaEmbers(z.radius, t)) { g.fillStyle(LAVA.bright, e.alpha * 0.9); g.fillCircle(z.x + e.x, z.y + e.y, e.r); } // rising embers
+  }
+
+  // The sisters' active lava triangle edges, drawn as a WIDE animated lava band
+  // (outer glow + molten body + bright flickering core + embers) on triangleGfx.
+  drawLavaEdges(edges) {
+    const g = this.triangleGfx, t = this.lavaTime;
+    const stroke = (w, col, a) => { g.lineStyle(w, col, a); for (const [p, q] of edges) { g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.strokePath(); } };
+    stroke(40, LAVA.dark, 0.4);                                  // soft outer glow
+    stroke(32, lerpColor(LAVA.mid, LAVA.hot, lavaPulse(t)), 0.9); // molten body (~princess-wide, covers the 28px damage corridor)
+    stroke(10, LAVA.bright, lavaRimAlpha(t));                    // bright flickering core
+    for (const [p, q] of edges) for (const e of lavaEdgeEmbers(p, q, t, 7)) { g.fillStyle(LAVA.bright, e.alpha * 0.9); g.fillCircle(e.x, e.y, e.r); }
   }
 
   updateAuras(delta) {

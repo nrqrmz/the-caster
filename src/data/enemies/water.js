@@ -70,7 +70,7 @@ export const WATER_ENEMIES = {
   // (bounded by CONCURRENCY_CAP). Not placed in waves directly; only reached
   // via the lifecycle chain. Counter: kill the fragile eggs before they mature.
   sapo_adulto: { key: 'sapo_adulto', tex: TEX.villager, color: COLORS.toadSpit,
-    hp: 34, speed: 60, damage: 10, radius: 17,
+    hp: 34, speed: 60, damage: 10, radius: 23,
     movement: { type: 'strafe', range: 200 },
     attacks: [
       { type: 'shootStraight', every: 1700, speed: 230 },
@@ -85,7 +85,7 @@ export const WATER_ENEMIES = {
 
   // #10 — Sapo Escupidor: strafe ranged. Keeps distance, spits single shots.
   sapo_escupidor: { key: 'sapo_escupidor', tex: TEX.villager, color: COLORS.toadSpit,
-    hp: 26, speed: 62, damage: 9, radius: 16,
+    hp: 26, speed: 62, damage: 9, radius: 19,
     movement: { type: 'strafe', range: 200 },
     attacks: [{ type: 'shootStraight', every: 1600, speed: 230 }] },
 
@@ -97,7 +97,7 @@ export const WATER_ENEMIES = {
     modifiers: [{ type: 'explodesOnDeath', count: 8, speed: 200 }] },
 
   // #12 — Cangrejo Acorazado: very slow shielded tank. Flanks and soaks damage.
-  cangrejo_acorazado: { key: 'cangrejo_acorazado', tex: TEX.warrior, color: COLORS.frozenGray,
+  cangrejo_acorazado: { key: 'cangrejo_acorazado', tex: TEX.warrior, color: COLORS.crabRed,
     hp: 90, speed: 38, damage: 14, radius: 20,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
@@ -172,7 +172,7 @@ export const WATER_ENEMIES = {
 
   // #20 — Tortuga Acorazada: charge + heavy shield + resist (flat damage reduction).
   // resist: 0.35 means incoming damage is multiplied by (1 - 0.35) = 0.65 (Plan 1).
-  tortuga_acorazada: { key: 'tortuga_acorazada', tex: TEX.warrior, color: COLORS.iceGuard,
+  tortuga_acorazada: { key: 'tortuga_acorazada', tex: TEX.warrior, color: COLORS.turtleGreen,
     hp: 110, speed: 60, damage: 15, radius: 21,
     movement: { type: 'charge', windup: 600, dash: 450, recover: 750, dashMul: 2.8 },
     attacks: [{ type: 'melee' }],

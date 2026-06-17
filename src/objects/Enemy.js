@@ -6,8 +6,12 @@ import { FacingController } from './FacingController.js';
 
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, def) {
-    const useSprite = hasRecipe(def.key);
-    super(scene, x, y, useSprite ? spriteKey(def.key) : def.tex);
+    // A def may declare `skins` (alternate recipe keys, e.g. villager hair colors);
+    // pick one at random per-instance for the visuals while def.key drives all logic.
+    const skins = def.skins;
+    const visualKey = (skins && skins.length) ? skins[(Math.random() * skins.length) | 0] : def.key;
+    const useSprite = hasRecipe(visualKey);
+    super(scene, x, y, useSprite ? spriteKey(visualKey) : def.tex);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.def = def;
@@ -16,7 +20,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     if (useSprite) {
       const px = def.radius * 2;
       this.setDisplaySize(px, px); // visual footprint ~ old circle diameter; physics body unchanged
-      this.facing = new FacingController(this, def.key);
+      this.facing = new FacingController(this, visualKey);
     } else {
       if (def.color) this.setTint(def.color);
       this.facing = null;

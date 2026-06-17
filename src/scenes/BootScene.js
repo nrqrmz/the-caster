@@ -62,7 +62,7 @@ export default class BootScene extends Phaser.Scene {
         key: `${key}-${animName}`,
         frames: frameKeys,
         frameRate: out.fps,
-        repeat: -1,
+        repeat: animName.startsWith('attack') ? 0 : -1, // attacks play once
       });
     }
     // Base texture for object constructors.

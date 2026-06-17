@@ -33,9 +33,11 @@ export const COLORS = {
   frostBlue: 0x90caf9,      // Acólito de Escarcha, Vidente de Marea — light cornflower blue
   deepBlue: 0x1565c0,       // Ahogado, Corista del Abismo — dark lake blue (drowned hue)
   lakeGreen: 0x26a69a,      // Sacerdotisa del Lago, Náyade — teal healer
-  iceGuard: 0x80deea,       // Guardia de Hielo, Tortuga Acorazada — pale cyan armored
+  iceGuard: 0x80deea,       // Guardia de Hielo — pale cyan armored
+  turtleGreen: 0x5a9e57,    // Tortuga Acorazada — mossy shell green
   frostSpread: 0xb2ebf2,    // Lanzahielos — very pale ice, area-denial feel
-  frozenGray: 0x78909c,     // Cangrejo Acorazado — armor grey-blue
+  frozenGray: 0x78909c,     // (legacy armor grey-blue)
+  crabRed: 0xcf4436,        // Cangrejo Acorazado — boiled-crab red
   tadpole: 0x558b2f,        // Renacuajo — dark swamp green (frog lineage)
   frogJump: 0x689f38,       // Rana Saltarina — lighter swamp green
   toadSpit: 0x33691e,       // Sapo Escupidor — darker muted toad

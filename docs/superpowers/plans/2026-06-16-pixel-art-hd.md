@@ -497,27 +497,84 @@ git commit -m "feat(sprites): redheaded-princess hero (native 32, per-part palet
 - ✅ **Hooded cultist (water/frost)** — `CULT_HOODED_WATER/_STAFF_WATER` (cyan eyes/orb).
 - ✅ **Armored knight (sword + shield)** — `gen-warrior.mjs`; `KNIGHT/_WATER/_BANNER`.
 - ✅ **Jellyfish / medusa** — `gen-jelly.mjs`; `JELLY` (medusa + medusa_cria).
+- ✅ **Bare-headed mage/acolyte** — `gen-mage.mjs`; part-lists `VILLAGER`/
+  `MAGE_MELEE`/`MAGE_DROWNED`/`MAGE_ARCHER`/`MAGE_CASTER`. Per-role design instead
+  of one generic face: villager = shirt + trousers + short hair (NO robe/mitre),
+  with 3 random hair colors per-instance via `Enemy.def.skins` (`villager`/`_blond`/
+  `_black`); iniciado_veloz = robe+mitre+club; ahogado = drowned palette+mitre+fish;
+  archer = robe+mitre+recurve bow (fires `TEX.arrow`); nayade/sacerdotisa = loose
+  long hair to the waist + staff+orb (sacerdotisa black hair, no mitre). New palettes:
+  `hair/blackhair/blondhair/pants/drownedskin/drownedhair/hollow/deadfish`.
+- ✅ **Fire beasts** — `gen-beast.mjs`; part-lists `LARVA`/`SALAMANDRA`/`CAN_LAVA`/
+  `COLOSO`. Per-creature silhouettes (not shared `body_beast`): larva = segmented
+  molten grub; salamandra = top-down lizard + dorsal flame crest; can_lava =
+  side-profile hound + filled ivory cow-horns; coloso = hunched brute + glowing
+  chest core + bull-horns, `radius` 24→30 (miniboss-tank). New palette `bone`
+  (filled ivory horns); cracks/crest/core reuse `ember`, eyes `glow`.
+  NOTE: `tiburon_joven` is a fish (uses `body_fish`) — moved to the Fish checkpoint.
+- ✅ **Blobs / elementals** — `gen-blob.mjs`; part-lists `CENIZA`/`FUEGO_ELEM`/`IMP`/
+  `PEZ_GLOBO`/`BRASA`/`BURBUJA`. Per-creature (gelatinous-orb family): espiritu_ceniza
+  = ash ghost w/ smoke tendrils RISING + hollow face; elemental_fuego = terrifying
+  flame demon (jagged fire claws, V-scowl, fanged maw over white-hot core), `radius`
+  21→26 (miniboss); imp_brasa = ember imp (horns + fanged grin); pez_globo = SIDE-
+  profile pufferfish (head/eye + spikes + tail fin); brasa_errante = molten coal,
+  no face; burbuja_gelida = ice bubble w/ sheen + frosty face. Body = type color;
+  cores/cracks = `ember`/`glow`; ice sheen `orbblue`; eyes `glow`/`shadow`/`eyes_living`.
+- ✅ **Winged / floating** — `gen-winged.mjs`; part-lists `FENIX`/`AVISPA`/`TOTEM_FIRE`/
+  `TOTEM_FROST`. fenix_menor = phoenix (feathers fanning from shoulders + flame crest
+  & tail); avispa_brasa = wasp (membrane wings + antennae + striped abdomen + stinger);
+  totem_pira/totem_escarcha = a COLUMNAR totem pole (shared `totem_body`) with two
+  stacked sculpted faces (recessed `shadow` cavities + glowing eyes: `glow` fire /
+  `orbblue` frost). Body/wings = type color; crest/tail = `ember`; wasp wings = `bone`.
+- ✅ **Fish / serpent / shelled** — `gen-aqua.mjs`; part-lists `SHARK`/`SERPIENTE`/
+  `TORTUGA`/`CANGREJO`. tiburon_joven = side-profile shark (curved back / flat belly,
+  dorsal swept back, heterocercal tail shorter than the dorsal, toothy jaw);
+  serpiente_marina = S-curve serpent + fanged head; tortuga_acorazada = plated dome
+  shell + head/flippers, recolored GREEN (new `COLORS.turtleGreen`); cangrejo_acorazado
+  = wide carapace + 2 pincers + 4 leg pairs + eyestalks, recolored RED (new
+  `COLORS.crabRed`). Body = type color; teeth/fangs = `bone`; eyes `shadow`/`glow`.
+  (`tiburon_joven` lived here, not in beasts.)
+- ✅ **Frog lineage** — `gen-frog.mjs`; part-lists `HUEVO`/`RENACUAJO`/`RANA`/
+  `SAPO_ESCUPIDOR`/`SAPO_ADULTO`. huevo_sapo = frogspawn clump; renacuajo = fat body +
+  finned paddle tail; rana_saltarina = small agile frog w/ FLEXED hind legs (shared
+  `hindLeg` helper); sapo_escupidor = warty toad, open spitting mouth (own `toad_body`,
+  radius 16→19, size 32→64); sapo_adulto = biggest fat tank toad, heavy brow (own
+  `bigtoad_body`, radius 17→23). Sized/differentiated by stats. Body = type color;
+  embryos/pupils/mouth = `shadow`.
 
 **Remaining archetypes (each = generator + recipes + checkpoint):**
-- **Bare-headed mage/acolyte** (robe + visible head, no hood): iniciado_veloz,
-  ahogado, nayade, sacerdotisa_lago, villager, archer — a young robed mage face.
-- **Beasts** (`larva_magma`, `can_lava`, `coloso_magma`, `salamandra`,
-  `tiburon_joven`): hunched quadruped/lizard, limb + spine shading, fangs/claws.
-- **Blobs / elementals** (`espiritu_ceniza`, `elemental_fuego`, `imp_brasa`,
-  `pez_globo`, `brasa_errante`, `burbuja_gelida`): gelatinous body, rim light,
-  inner glow core, eyes.
-- **Winged / floating** (`fenix_menor`, `avispa_brasa`, `totem_*`): membrane/
-  feather wings, hovering body.
-- **Fish / serpent / shelled** (`tiburon_*`, `serpiente_marina`,
-  `tortuga_acorazada`, `cangrejo_acorazado`): streamlined/coiled/armored aquatic.
-- **Frog lineage** (`huevo_sapo`, `renacuajo`, `rana_saltarina`, `sapo_*`):
-  egg → tadpole → squat frog, eyes + stubby legs.
-- **Bosses** (`favilla/pyra/vesta` sisters, `ignatius`, `soldado_hielo`,
-  `sapo_desovador`, `tiburon_abisal`, `kraken`, `dama_*` forms, `whale`):
-  size 96 — full-grid detail, regal/monstrous silhouettes.
-- **Projectiles** (`orb_body`, `flame_body`, `arrow_body`): glowing orb with a
-  twinkle, teardrop fireball with a hot `a` core, sleek arrow. Confirm on-screen
-  projectile size still reads after the Task 1 size bump.
+- **Bosses** (size 96 — full-grid detail, regal/monstrous silhouettes). Split into
+  sub-batches:
+  - ✅ **Fire sisters** — `gen-sisters.mjs`; part-lists `PYRA`/`VESTA`/`FAVILLA`. Three
+    beautiful humanoid fire queens (princess-level detail: draped folds + GOLD trim via
+    the recipe `accent`), differentiated by role — pyra=light gold plate + flame crown +
+    red hair + fire orb; vesta=heavy banded plate + shield + steel hammer + black hair;
+    favilla=slim gold robe + ornate crown + blonde hair + summoning embers. New `steel`
+    palette; hair red/black/blond; flames/embers `glow`.
+  - ✅ **Ignatius** (Fire King) — `gen-ignatius.mjs`; part-list `IGNATIUS`. Crowned
+    patriarch (father of the sisters): gold crown, central fiery beard (ember), broad
+    gold-trimmed fire armor, armored vambraces, flaming steel scepter, robe. Recipe
+    gained `accent: 0xffd54f`.
+  - ✅ **Water monsters** — `gen-waterboss.mjs`; part-lists `ICE_KNIGHT`/`SAPO_DESOV`/
+    `TIBURON_ABISAL`/`KRAKEN`/`WHALE`. soldado_hielo=armored ice knight; sapo_desovador=
+    giant spawner toad (flexed legs + egg sacs); tiburon_abisal=abyssal shark (gen-aqua
+    model, dorsal swept back, solid peduncle); kraken=big mantle + huge eye + long
+    independent tentacles; whale=hi-res whale (wired to `dama_ballena`; `KRAKEN` also
+    wired to `dama_kraken`).
+  - ✅ **Dama del Lago** — `gen-dama.mjs`; part-list `DAMA`. The Lady of the Lake (ethereal
+    water sorceress: ice gown + gold trim, silver hair, tiara, water orb) shared by her
+    humanoid forms `dama_lago`/`dama_maga`/`dama_maga_final`; `dama_tiburon` reuses
+    `TIBURON_ABISAL`; `dama_kraken`/`dama_ballena` reuse `KRAKEN`/`WHALE`. New `silverhair`
+    palette.
+
+> **Sub-project complete.** Every enemy / boss / hero / projectile recipe now composes
+> from native res:32 art; no recipe references the legacy placeholder parts. (Optional
+> follow-up: delete the now-unreferenced legacy res:16 parts from `parts.js` — dead code,
+> harmless, left in place.)
+- ✅ **Projectiles** — `gen-proj.mjs`; re-authored `orb_body`/`flame_body`/`arrow_body`
+  at res:32 (recipes unchanged): orb = glowing sphere + twinkle; fireball = teardrop
+  comet (head at +x); arrow = sleek arrow (head at +x). fireball & arrow point along
+  +x to match the pool's `setRotation(angle)`. Reads at 1:1 native size.
 
 > Multi-session work. Each archetype lands independently; the game stays runnable
 > throughout (un-migrated parts remain auto-upscaled to 32).
