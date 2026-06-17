@@ -21,6 +21,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       const px = def.radius * 2;
       this.setDisplaySize(px, px); // visual footprint ~ old circle diameter; physics body unchanged
       this.facing = new FacingController(this, visualKey);
+      this.facing.facePlayer = !!def.facePlayer;
     } else {
       if (def.color) this.setTint(def.color);
       this.facing = null;
@@ -113,6 +114,11 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
-    if (this.facing && this.body) this.facing.update(this.body.velocity.x, this.body.velocity.y);
+    if (this.facing && this.body) {
+      const aim = this.def.facePlayer && this.scene && this.scene.caster
+        ? { x: this.scene.caster.x, y: this.scene.caster.y }
+        : undefined;
+      this.facing.update(this.body.velocity.x, this.body.velocity.y, aim);
+    }
   }
 }
