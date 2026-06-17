@@ -65,4 +65,18 @@ export const NAMED_PALETTES = {
   vampskin: derivePalette(0xd7a3a3, { base: 0xcdbfc9, highlight: 0xede0e6, shade: 0x9a8a96, outline: 0x4a3a44 }),
   // Linen white — near-white dress-shirt palette for Sir Galahad's vampire-count human form.
   linen: derivePalette(0xe8e6df, { base: 0xe8e6df, highlight: 0xfbfbf7, shade: 0xb9b6ac, outline: 0x6b6960 }),
+  // Galahad rage — blood-stained shirt (pale crimson wash, first corruption stage).
+  countrage_shirt: derivePalette(0xc97070, { base: 0xc97070, highlight: 0xe8a8a8, shade: 0x8c3a3a, outline: 0x4a1a1a }),
+  // Galahad rage — flushed/reddened skin (fever corruption, veins visible).
+  countrage_skin: derivePalette(0xe8a090, { base: 0xe8a090, highlight: 0xffd0c0, shade: 0xb06050, outline: 0x5c2820 }),
+  // Galahad rage2 — deeply bloodied shirt (darker/gore-soaked, full corruption).
+  countrage2_shirt: derivePalette(0x7a2020, { base: 0x7a2020, highlight: 0xb04040, shade: 0x4a1010, outline: 0x200808 }),
+  // Galahad rage2 — mottled dark-red corrupted skin (necrotic flush, near-monstrous).
+  countrage2_skin: derivePalette(0xb85050, { base: 0xb85050, highlight: 0xd88080, shade: 0x742828, outline: 0x380e0e }),
+  // Galahad final — ashen grey cloth (desaturated, death-pale, crumbling).
+  ashen_cloth: derivePalette(0x9a9590, { base: 0x9a9590, highlight: 0xd0ccc8, shade: 0x5e5c58, outline: 0x2c2a28 }),
+  // Galahad final — ashen pale skin (death pallor, grey-white, sunken).
+  ashen_skin: derivePalette(0xc8c4be, { base: 0xc8c4be, highlight: 0xe8e6e2, shade: 0x8a8882, outline: 0x40403c }),
+  // Galahad final — dim fading eyes (ghost-grey glow, the last light going out).
+  ashen_glow: derivePalette(0x9090a0, { base: 0x9090a0, highlight: 0xc8c8d8, shade: 0x585868, outline: 0x282832 }),
 };

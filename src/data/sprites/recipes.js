@@ -61,19 +61,6 @@ const BLOOD_KNIGHT = [
   { name: 'bk_sword', palette: 'steel' },
   { name: 'bk_eyes', palette: 'vampglow' },
 ];
-// Sir Galahad — nv8 air temple final boss. Bespoke regal grail-knight, GRANDER than
-// the Caballero de Sangre. Key visual distinctions: wide FANNING royal cape (vs straight
-// curtain), CROWN prongs on helm (vs visor beak), grail-chalice emblem on breastplate
-// (vs blood-V mark), cross-shaped longsword crossguard (vs greatsword serrations), gold
-// holy-gleam accent (vs blood-red accent), open face slit with golden eyes (vs vampglow).
-// Layer order back-to-front: cape → body → sword → eyes.
-// Used by galahad_rage, galahad_rage2, galahad_final (knight forms to be redesigned later).
-const GALAHAD_KNIGHT = [
-  { name: 'gal_cape', palette: 'vampblack' },
-  { name: 'gal_body' },
-  { name: 'gal_sword', palette: 'steel' },
-  { name: 'gal_eyes', palette: 'glow' },
-];
 // Galahad Form 1 — Vampire Count (human form).
 // A risen vampire Count: iconic high-collar cape, white dress shirt, black trousers,
 // pale gaunt face with slicked dark hair, gold medallion, red glowing eyes.
@@ -86,6 +73,38 @@ const GALAHAD_COUNT = [
   { name: 'cnt_head',      palette: 'vampskin' },
   { name: 'cnt_medallion', palette: 'glow' },
   { name: 'cnt_eyes',      palette: 'vampglow' },
+];
+// Galahad Rage — same Count silhouette, corrupted red tint (first corruption stage).
+// Blood-stained shirt, flushed reddened skin, cape stays near-black, eyes brighter red.
+// Layer order back-to-front: cape → legs → shirt → head → medallion → eyes.
+const GALAHAD_RAGE = [
+  { name: 'cnt_cape',      palette: 'vampblack' },
+  { name: 'cnt_legs',      palette: 'vampblack' },
+  { name: 'cnt_shirt',     palette: 'countrage_shirt' },
+  { name: 'cnt_head',      palette: 'countrage_skin' },
+  { name: 'cnt_medallion', palette: 'glow' },
+  { name: 'cnt_eyes',      palette: 'vampglow' },
+];
+// Galahad Rage2 — deeper corruption, NO CAPE, darker/bloodier palettes.
+// The cape is dropped so the bloodied shirt is fully exposed. More monstrous.
+// Layer order back-to-front: legs → shirt → head → medallion → eyes.
+const GALAHAD_RAGE2 = [
+  { name: 'cnt_legs',      palette: 'vampblack' },
+  { name: 'cnt_shirt',     palette: 'countrage2_shirt' },
+  { name: 'cnt_head',      palette: 'countrage2_skin' },
+  { name: 'cnt_medallion', palette: 'glow' },
+  { name: 'cnt_eyes',      palette: 'vampglow' },
+];
+// Galahad Final — ashen/dying Count: desaturated grey-white (true death form).
+// Ashen cloth, death-pale skin, dim fading eyes. Cape present (crumbling remnant of dignity).
+// Layer order back-to-front: cape → legs → shirt → head → medallion → eyes.
+const GALAHAD_FINAL = [
+  { name: 'cnt_cape',      palette: 'vampblack' },
+  { name: 'cnt_legs',      palette: 'ashen_cloth' },
+  { name: 'cnt_shirt',     palette: 'ashen_cloth' },
+  { name: 'cnt_head',      palette: 'ashen_skin' },
+  { name: 'cnt_medallion', palette: 'ashen_glow' },
+  { name: 'cnt_eyes',      palette: 'ashen_glow' },
 ];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
@@ -367,13 +386,13 @@ export const RECIPES = {
   elemental_tormenta: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x37474f, anim: { idle: 4 }, parts: STORM_ELEM },
 
   // --- Galahad (nv8 air temple final boss) — 5 shapeshifter forms ---
-  // Holy → blood → dark fury → giant bat → ashen. The 4 human forms use the bespoke
-  // GALAHAD_KNIGHT parts; the bat form reuses the BAT archetype at boss scale (96px).
-  galahad_humano:     { archetype: 'boss', size: 96, baseColor: 0xcdbfc9, parts: GALAHAD_COUNT }, // vampire Count form: pale, caped, white shirt, black trousers, gold medallion, red eyes
-  galahad_rage:       { archetype: 'boss', size: 96, baseColor: 0xb71c1c, accent: 0xffd54f, parts: GALAHAD_KNIGHT }, // blood-red — first corruption
-  galahad_rage2:      { archetype: 'boss', size: 96, baseColor: 0x7f0000, accent: 0xff5252, parts: GALAHAD_KNIGHT }, // dark crimson, scarlet accent — full fury
-  galahad_murcielago: { archetype: 'boss', size: 96, baseColor: 0x4a148c, parts: BAT },                             // deep purple giant bat
-  galahad_final:      { archetype: 'boss', size: 96, baseColor: 0xcdbfc9, accent: 0xffd54f, parts: GALAHAD_KNIGHT }, // ashen — the cursed grail king stripped bare
+  // Count → rage (red tint) → rage2 (no cape, deeper corruption) → giant bat → final (ashen/dying).
+  // All human forms reuse cnt_* Count parts with per-part palette overrides; bat reuses BAT.
+  galahad_humano:     { archetype: 'boss', size: 96, parts: GALAHAD_COUNT },  // vampire Count: pale, caped, white shirt, black trousers, gold medallion, red eyes
+  galahad_rage:       { archetype: 'boss', size: 96, parts: GALAHAD_RAGE },   // Count + red tint: blood-stained shirt, flushed skin, first corruption
+  galahad_rage2:      { archetype: 'boss', size: 96, parts: GALAHAD_RAGE2 },  // Count no cape + dark gore: deeply bloodied, full fury, caped removed
+  galahad_murcielago: { archetype: 'boss', size: 96, baseColor: 0x4a148c, parts: BAT }, // deep purple giant bat
+  galahad_final:      { archetype: 'boss', size: 96, parts: GALAHAD_FINAL },  // Count ashen/dying: grey cloth, death-pale skin, dim eyes (true death)
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
