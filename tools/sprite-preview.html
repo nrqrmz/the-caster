@@ -1,0 +1,62 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Air sprite preview</title>
+<style>
+  body { background:#1a1224; color:#eee; font-family:sans-serif; margin:0; padding:12px; }
+  .grid { display:flex; flex-wrap:wrap; gap:14px; }
+  .cell { background:#241a33; border:1px solid #3a2c52; border-radius:6px; padding:6px; text-align:center; }
+  canvas { image-rendering:pixelated; background:#0e0a16; display:block; margin:0 auto 4px; }
+  .label { font-size:11px; color:#cbb8e6; max-width:160px; word-break:break-word; }
+  .missing { color:#e57373; }
+  h1 { font-size:15px; font-weight:600; }
+</style></head>
+<body>
+<h1>Air sprite preview — <span id="count"></span></h1>
+<div class="grid" id="grid"></div>
+<script type="module">
+import { composeColorGrid, DESIGN } from '../src/systems/SpriteForge.js';
+import { RECIPES, getRecipe, paletteFor, hasRecipe } from '../src/data/sprites/recipes.js';
+import { PARTS } from '../src/data/sprites/parts.js';
+import { NAMED_PALETTES } from '../src/data/sprites/palettes.js';
+
+// Keys to review. Edit this list per batch; defaults to the full Air roster.
+const KEYS = new URLSearchParams(location.search).get('keys')?.split(',') ?? [
+  'siervo_torre','duelista_nocturno','acolito_trueno','heraldo_rayo','sacerdote_sangre',
+  'guardia_nocturno','hechicero_viento','vastago_vampirico','murcielago','arpia',
+  'espiritu_tormenta','fuego_fatuo','vampiro_alado','gargola_pararrayos','centinela_piedra',
+  'torbellino_errante','tronador','cultista','cultista_canalizador','guardian_rito',
+  'caballero_sangre','bruja_vendaval','elemental_tormenta','lider_cultista',
+  'galahad_humano','galahad_rage','galahad_rage2','galahad_murcielago','galahad_final',
+];
+const SCALE = 8;
+const grid = document.getElementById('grid');
+let done = 0;
+// partPalette resolver: a part-ref's own named palette wins, else the recipe palette.
+function makePartPalette(recipeKey) {
+  return (ref) => {
+    const name = typeof ref === 'string' ? null : ref.palette;
+    return name ? NAMED_PALETTES[name] : null;
+  };
+}
+for (const key of KEYS) {
+  const cell = document.createElement('div'); cell.className = 'cell';
+  if (!hasRecipe(key)) {
+    cell.innerHTML = `<canvas width="${DESIGN*SCALE}" height="${DESIGN*SCALE}"></canvas><div class="label missing">${key}<br>(no recipe)</div>`;
+    grid.appendChild(cell); continue;
+  }
+  const recipe = getRecipe(key);
+  const baseColor = recipe.baseColor ?? 0x888888;
+  const palette = paletteFor(key, baseColor);
+  const g = composeColorGrid(recipe, PARTS, 'down', palette, makePartPalette(key), null, 0);
+  const cv = document.createElement('canvas'); cv.width = DESIGN*SCALE; cv.height = DESIGN*SCALE;
+  const ctx = cv.getContext('2d');
+  for (let y=0;y<DESIGN;y++) for (let x=0;x<DESIGN;x++) {
+    const c = g[y][x]; if (c==null) continue;
+    ctx.fillStyle = '#'+(c>>>0).toString(16).padStart(6,'0').slice(-6);
+    ctx.fillRect(x*SCALE,y*SCALE,SCALE,SCALE);
+  }
+  cell.innerHTML = `<div class="label">${key}</div>`;
+  cell.insertBefore(cv, cell.firstChild);
+  grid.appendChild(cell); done++;
+}
+document.getElementById('count').textContent = `${done}/${KEYS.length} forged`;
+</script></body></html>
