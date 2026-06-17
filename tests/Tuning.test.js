@@ -44,6 +44,6 @@ test('Water tuning constants are defined and in-range', () => {
   assert.ok(BURROW_TELEGRAPH_MS > 0);
   assert.ok(BURROW_RECOVER_MS > 0);
 
-  assert.equal(EGG_HATCH_MS, 3500);
-  assert.equal(TADPOLE_GROW_MS, 6000);
+  assert.equal(EGG_HATCH_MS, 2500);
+  assert.equal(TADPOLE_GROW_MS, 4000);
 });

@@ -53,5 +53,5 @@ export const BURROW_TELEGRAPH_MS = 400;       // surface-warning ring duration
 export const BURROW_RECOVER_MS = 600;         // vulnerable window after the dash
 
 // Frog lifecycle (generational summon).
-export const EGG_HATCH_MS = 3500;             // egg → tadpole
-export const TADPOLE_GROW_MS = 6000;          // tadpole → adult frog
+export const EGG_HATCH_MS = 2500;             // egg → tadpole (antes 3500)
+export const TADPOLE_GROW_MS = 4000;          // tadpole → adult frog (antes 6000)
