@@ -4,21 +4,8 @@
 function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
 
 export function clampBodyInside(x, y, halfW, halfH, W, H, margin = 0) {
-  const lo_x = halfW + margin;
-  const hi_x = W - halfW - margin;
-  const lo_y = halfH + margin;
-  const hi_y = H - halfH - margin;
-
-  // If body is too large in any dimension, degrade both to their hi values
-  if (lo_x > hi_x || lo_y > hi_y) {
-    return {
-      x: hi_x,
-      y: hi_y,
-    };
-  }
-
   return {
-    x: clamp(x, lo_x, hi_x),
-    y: clamp(y, lo_y, hi_y),
+    x: clamp(x, halfW + margin, W - halfW - margin),
+    y: clamp(y, halfH + margin, H - halfH - margin),
   };
 }

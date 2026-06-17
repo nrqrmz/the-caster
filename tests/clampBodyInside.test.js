@@ -33,10 +33,10 @@ test('margen 0 clampa justo al borde por halfsize', () => {
   assert.equal(r.y, 16);
 });
 
-test('cuerpo más grande que el área degrada al centro del eje', () => {
-  // halfW (300) + margen excede el medio-ancho => lo > hi; clamp degrada a hi.
+test('cuerpo más ancho que el área se ancla al borde en ese eje; el otro eje clampa normal', () => {
+  // halfW (300) hace que el cuerpo (600) no quepa en el ancho (480) => x se ancla a hi.
+  // halfH (300) sí cabe en el alto (854) => y clampa normal y se queda en 400.
   const r = clampBodyInside(240, 400, 300, 300, W, H, 10);
-  // Math.min(Math.max(x, lo), hi) con lo > hi => devuelve hi.
-  assert.equal(r.x, W - 310);
-  assert.equal(r.y, H - 310);
+  assert.equal(r.x, W - 310); // 170: borde derecho anclado dentro
+  assert.equal(r.y, 400);     // y cabe, clamp normal lo deja igual
 });
