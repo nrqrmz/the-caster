@@ -2,106 +2,146 @@
 // Serves: torbellino_errante (spinning wind vortex hazard, size 32, grey-blue 0xb0bec5).
 //
 // Parts authored:
-//   whirl_body — 2-3 swept spiral arcs forming a funnel/cyclone shape.
-//                Mostly 'b'/'h' fill with 'o' outer edges; faint hollow center.
-//                Drawn as a narrowing funnel: wide at top, pinched at bottom.
-//                Three spiral arms curve inward, suggesting rotation.
+//   whirl_body — UNMISTAKABLE SPIRAL CYCLONE.
+//                Classic cartoon tornado: a funnel silhouette (wide at top, tip at bottom)
+//                with 4 bold SWEPT CURVED BANDS winding around it. Each band is a thick
+//                diagonal arc that sweeps from one side of the funnel to the other as it
+//                descends, alternating direction (L→R, R→L, L→R, R→L).
+//                Clear gaps between bands expose the interior and make the spiral obvious.
+//                Roles: 'h' leading/highlight edge of each band, 'b' body, 's' trailing shade.
+//                Funnel outer edge: 'o'. Debris specks at top: 'h'.
 // Run: node tools/gen-whirlwind.mjs
 
 const N = 32, cx = 16;
-const layers = {
-  whirl_body: {},
+const layers = { whirl_body: {} };
+const put = (L, x, y, r) => {
+  if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r;
 };
-const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
+
+// Bresenham line
 function line(L, x0, y0, x1, y1, r) {
-  const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+  const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+  const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
   let err = dx - dy, x = x0, y = y0;
-  for (;;) { put(L, x, y, r); if (x === x1 && y === y1) break; const e2 = 2 * err; if (e2 > -dy) { err -= dy; x += sx; } if (e2 < dx) { err += dx; y += sy; } }
+  for (;;) {
+    put(L, x, y, r);
+    if (x === x1 && y === y1) break;
+    const e2 = 2 * err;
+    if (e2 > -dy) { err -= dy; x += sx; }
+    if (e2 < dx)  { err += dx; y += sy; }
+  }
 }
 
-// ============================ WHIRL_BODY (cyclone / vortex) ============================
-// A funnel-shaped vortex: wide at the top, narrowing to a point at the bottom.
-// Three swept spiral arcs give the sense of rotation.
+// ============================ WHIRL_BODY (spiral cyclone) ============================
 //
-// Strategy:
-//   - Draw a funnel outline (two converging side lines) to establish the overall shape
-//   - Fill the interior with swept arcs that taper as they descend
-//   - Hollow center (don't fill the very middle of each row)
-//   - Use 'h' near top/edges (lighter — outer gust), 'b' in bulk, 'o' on true outline
+// FUNNEL: top y=1, bottom y=29, max half-width 13, narrows to 0.
+// SPIRAL BANDS: 4 stacked, alternating sweep direction.
+// Each band occupies 5 rows. Gap of 2 rows between bands.
+// Within each band, the center x follows a diagonal arc from one side to the other.
+// Band thickness grows wider near leading edge (h) and narrows at trailing edge (s).
 
-// Funnel dimensions: top at y=2 (wide), tip at y=28 (narrow center point)
-const TOP_Y    = 2;
-const BOT_Y    = 28;
-const TOP_HALF = 13;  // half-width at top row
-const BOT_HALF = 0;   // half-width at tip
+const TOP_Y  = 1;
+const BOT_Y  = 29;
+const TOP_HW = 13;
 
-// Draw the funnel body row by row (tapered, hollow center)
+// Funnel half-width at y
+const hw = y => {
+  if (y <= TOP_Y) return TOP_HW;
+  if (y >= BOT_Y) return 0;
+  return Math.round(TOP_HW * (1 - (y - TOP_Y) / (BOT_Y - TOP_Y)));
+};
+
+// Clamp x within funnel at y
+const clampX = (x, y) => {
+  const h = hw(y);
+  return Math.max(cx - h, Math.min(cx + h, x));
+};
+
+// Draw a single spiral band.
+// yStart, yEnd: row range
+// leftToRight: if true, band sweeps left→right (arc starts on left side at yStart, ends right at yEnd)
+// Returns the center column of the sweep: cx + sweep(t)
+// sweep(t) = lerp from -hw(yStart)*0.6 to +hw(yEnd)*0.6 (or reversed)
+function drawBand(yStart, yEnd, leftToRight) {
+  const h0 = hw(yStart), hN = hw(yEnd);
+  const from = leftToRight ? -h0 * 0.65 : +h0 * 0.65;
+  const to   = leftToRight ? +hN * 0.65 : -hN * 0.65;
+
+  for (let y = yStart; y <= yEnd; y++) {
+    const h = hw(y);
+    if (h <= 0) continue;
+
+    const t = (yEnd > yStart) ? (y - yStart) / (yEnd - yStart) : 0;
+    // Center of this band row
+    const bandCx = Math.round(cx + from + (to - from) * t);
+
+    // Band width at this row: thicker at top of band, thinner at bottom (tapers with funnel)
+    const bw = Math.max(1, Math.round(h * 0.55 * (1 - t * 0.3)));
+
+    // Fill band
+    const xL = Math.max(cx - h, bandCx - bw);
+    const xR = Math.min(cx + h, bandCx + bw);
+
+    for (let x = xL; x <= xR; x++) {
+      const relDist = (x - bandCx) / (bw || 1);  // -1..+1 within band
+      // Leading edge = direction of sweep:
+      //   leftToRight → leading edge is on the RIGHT side of band (high x)
+      //   rightToLeft → leading edge is on the LEFT side (low x)
+      const towardLeading = leftToRight ? relDist : -relDist;  // +1 = leading
+
+      let role;
+      const isEdge = (x === cx - h || x === cx + h);
+      if (isEdge) {
+        role = 'o';
+      } else if (towardLeading >= 0.55) {
+        role = 'h';  // leading highlight
+      } else if (towardLeading <= -0.55) {
+        role = 's';  // trailing shade
+      } else {
+        role = 'b';  // body
+      }
+      put('whirl_body', x, y, role);
+    }
+  }
+}
+
+// 4 Spiral bands — alternating directions creates the unmistakable spiral
+// Band A  y=1..5   L→R  (enters top-left, exits mid-right)
+// Band B  y=8..12  R→L  (enters right, sweeps left)
+// Band C  y=15..19 L→R
+// Band D  y=22..26 R→L
+drawBand( 1,  5, true);
+drawBand( 8, 12, false);
+drawBand(15, 19, true);
+drawBand(22, 26, false);
+
+// ==== Funnel silhouette edges ====
+// Always mark the outer funnel boundary as 'o'
 for (let y = TOP_Y; y <= BOT_Y; y++) {
-  const frac = (y - TOP_Y) / (BOT_Y - TOP_Y);
-  const half = Math.round(TOP_HALF * (1 - frac));      // current half-width
-  const hollowR = Math.max(0, Math.round(half * 0.35)); // hollow center radius
-
-  if (half === 0) {
-    // Tip: single pixel
-    put('whirl_body', cx, y, 'o');
-    continue;
-  }
-
-  for (let x = cx - half; x <= cx + half; x++) {
-    const dist = Math.abs(x - cx);
-    if (dist < hollowR) continue;   // skip hollow center
-
-    let role;
-    if (dist >= half)             role = 'o';    // outer edge
-    else if (dist >= half - 1)    role = 'b';    // near-outer
-    else if (frac < 0.25)         role = 'h';    // upper funnel = lighter
-    else                          role = 'b';    // bulk
-
-    put('whirl_body', x, y, role);
+  const h = hw(y);
+  if (h > 0) {
+    put('whirl_body', cx - h, y, 'o');
+    put('whirl_body', cx + h, y, 'o');
   }
 }
-
-// Three swept spiral arc lines — rotate inward as they descend
-// Arc 1: starts at left outer edge (top) and curves to right-center (mid)
-const arc1 = [
-  [cx - 13, 2],  [cx - 12, 4],  [cx - 9,  6],  [cx - 6,  8],
-  [cx - 3,  10], [cx,      12], [cx + 3,  14], [cx + 4, 16],
-];
-for (let i = 0; i < arc1.length - 1; i++) {
-  const [x0, y0] = arc1[i], [x1, y1] = arc1[i + 1];
-  line('whirl_body', x0, y0, x1, y1, 'h');
-}
-// Arc 2: starts at right outer edge (slightly lower) and curves inward
-const arc2 = [
-  [cx + 11, 5],  [cx + 9,  7],  [cx + 6,  9],  [cx + 3,  11],
-  [cx,      13], [cx - 3,  15], [cx - 2,  18],
-];
-for (let i = 0; i < arc2.length - 1; i++) {
-  const [x0, y0] = arc2[i], [x1, y1] = arc2[i + 1];
-  line('whirl_body', x0, y0, x1, y1, 'b');
-}
-// Arc 3: a third sweeping curl toward the vortex center (lower section)
-const arc3 = [
-  [cx - 8,  14], [cx - 5,  16], [cx - 2,  18],
-  [cx + 1,  20], [cx + 2,  22], [cx,      24],
-];
-for (let i = 0; i < arc3.length - 1; i++) {
-  const [x0, y0] = arc3[i], [x1, y1] = arc3[i + 1];
-  line('whirl_body', x0, y0, x1, y1, 'b');
-}
-
-// Redraw outer funnel edges as 'o' to clean up the silhouette
-for (let y = TOP_Y; y <= BOT_Y; y++) {
-  const frac = (y - TOP_Y) / (BOT_Y - TOP_Y);
-  const half = Math.round(TOP_HALF * (1 - frac));
-  if (half > 0) {
-    put('whirl_body', cx - half, y, 'o');
-    put('whirl_body', cx + half, y, 'o');
-  }
-}
-
-// Tip pixel
+// Tip
 put('whirl_body', cx, BOT_Y, 'o');
+
+// ==== Debris / wind specks ====
+// A handful of 'h' pixels just outside the funnel top and sides
+const debris = [
+  // Top scatter
+  [cx - 14,  0], [cx + 14,  0],
+  [cx - 8,  -1 + 1], // shifted to y=0 (clamped)
+  // Mid scatter — flung outward
+  [cx - 14,  6], [cx + 14,  6],
+  [cx - 13,  13], [cx + 11,  13],
+];
+for (const [x, y] of debris) {
+  if (x >= 0 && x < N && y >= 0 && y < N && !layers.whirl_body[`${x},${y}`]) {
+    put('whirl_body', x, y, 'h');
+  }
+}
 
 // ============================ emit ============================
 function emit(name) {
@@ -110,7 +150,11 @@ function emit(name) {
   const xs = keys.map(k => +k.split(',')[0]), ys = keys.map(k => +k.split(',')[1]);
   const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
   const rows = [];
-  for (let y = miny; y <= maxy; y++) { let row = ''; for (let x = minx; x <= maxx; x++) row += layers[name][`${x},${y}`] ?? '.'; rows.push(row); }
+  for (let y = miny; y <= maxy; y++) {
+    let row = '';
+    for (let x = minx; x <= maxx; x++) row += layers[name][`${x},${y}`] ?? '.';
+    rows.push(row);
+  }
   const block = `[\n${rows.map(r => `      '${r}',`).join('\n')}\n    ]`;
   console.log(`  ${name}: {\n    res: 32, w: ${maxx - minx + 1}, h: ${maxy - miny + 1}, anchor: { x: ${minx}, y: ${miny} },\n    down: ${block}, up: ${block}, side: ${block},\n  },`);
 }
