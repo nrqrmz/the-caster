@@ -95,6 +95,62 @@ function waterInterWaves(tier) {
   ];
 }
 
+// Air waves: velocity + displacement (fast flyers, dueling dashers, gusts).
+// Composition rule (spec §5) — anchor (Hechicero/Sacerdote that defines the puzzle)
+//                  + filler (Siervos/Murciélagos)
+//                  + one mobility threat (a Duelista that dodges or a diving Alado).
+// Tier 1 = only nv1 introductory creatures; tiers 2–3 add dashers + flyers + turret.
+// See spec §3.5 intro calendar.
+function airWaves(tier) {
+  if (tier === 1) {
+    // Nv1: Siervo filler + Murciélago swarm + Acólito (ranged anchor). No threat yet.
+    return [
+      wave(700, [{ type: 'siervo_torre', count: ramp(4, tier) }, { type: 'acolito_trueno', count: ramp(2, tier) }]),
+      wave(650, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'murcielago', count: ramp(3, tier) }]),
+      wave(600, [{ type: 'acolito_trueno', count: ramp(2, tier) }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    ];
+  }
+  if (tier === 2) {
+    // Nv2: introduce Duelista (mobility threat), Heraldo (ranged stun), Espíritu (flyer).
+    return [
+      wave(670, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'heraldo_rayo', count: tier }, { type: 'murcielago', count: ramp(2, tier) }]),
+      wave(630, [{ type: 'duelista_nocturno', count: 1 }, { type: 'acolito_trueno', count: ramp(2, tier) }, { type: 'espiritu_tormenta', count: ramp(2, tier) }]),
+      wave(580, [{ type: 'heraldo_rayo', count: tier }, { type: 'duelista_nocturno', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    ];
+  }
+  // Tier 3: Nv3 — introduce Arpía (dive-bomb), Tronador (area denial), Centinela (homing turret).
+  return [
+    wave(640, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'tronador', count: tier }, { type: 'arpia', count: ramp(2, tier) }]),
+    wave(600, [{ type: 'centinela_piedra', count: 1 }, { type: 'heraldo_rayo', count: tier }, { type: 'murcielago', count: ramp(3, tier) }]),
+    wave(550, [{ type: 'duelista_nocturno', count: 1 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'tronador', count: tier }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+  ];
+}
+
+function airInterWaves(tier) {
+  if (tier <= 2) {
+    // Nv4: introduce Guardia Nocturno (fast bruiser threat), Fuego Fatuo (stun aura flyer),
+    // Gárgola Pararrayos (stun turret). Anchor = Heraldo. Filler = Siervos/Murciélagos.
+    return [
+      wave(580, [{ type: 'heraldo_rayo', count: tier }, { type: 'siervo_torre', count: ramp(3, tier) }, { type: 'guardia_nocturno', count: 1 }, { type: 'murcielago', count: ramp(2, tier) }]),
+      wave(530, [{ type: 'gargola_pararrayos', count: 1 }, { type: 'fuego_fatuo', count: tier }, { type: 'duelista_nocturno', count: 1 }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    ];
+  }
+  if (tier === 3) {
+    // Nv5 (spec §5 example): Hechicero del Viento (anchor: lifts you) + Murciélagos (filler/chain)
+    // + Duelista Nocturno (evasive threat). Also introduce Vástago Vampírico, Torbellino Errante.
+    return [
+      wave(540, [{ type: 'hechicero_viento', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'duelista_nocturno', count: 1 }, { type: 'vastago_vampirico', count: tier }]),
+      wave(490, [{ type: 'sacerdote_sangre', count: 1 }, { type: 'torbellino_errante', count: 1 }, { type: 'heraldo_rayo', count: tier }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    ];
+  }
+  // Tier 4 (inter(4) = Nv6): introduce Vampiro Alado (heavy diver). Anchor = Hechicero + Sacerdote.
+  // Filler = Murciélagos/Siervos. Threat = Vampiro Alado + Duelista.
+  return [
+    wave(510, [{ type: 'hechicero_viento', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'vampiro_alado', count: 1 }, { type: 'vastago_vampirico', count: tier }]),
+    wave(460, [{ type: 'sacerdote_sangre', count: 1 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'duelista_nocturno', count: 1 }, { type: 'torbellino_errante', count: 1 }]),
+  ];
+}
+
 const mb = (hp, dmg) => ({ key: 'miniboss', tex: TEX.miniboss, color: COLORS.miniboss, hp, speed: 70, damage: dmg, radius: 33, behavior: 'chase', elite: true });
 const lb = (hp, dmg) => ({ key: 'levelboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 60, damage: dmg, radius: 42, behavior: 'chase', elite: true });
 const tb = (hp, dmg, mechanics) => ({ key: 'templeboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 55, damage: dmg, radius: 48, behavior: 'chase', elite: true, mechanics });
@@ -189,6 +245,9 @@ export const REGIONS = {
   }),
   air: makeBranch({
     id: 'air', element: 'air', name: 'region.air.name', grantsSkill: 'lightning',
+    basic: airWaves, inter: airInterWaves,
+    // TODO(Plan 3): wire minibosses: [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA],
+    //              levelBoss: LIDER_CULTISTA (ritual, meter-driven), templeBoss: GALAHAD (forms).
     intro: [{ speaker: 'speaker.narrator', text: 'story.air.intro.0' }],
     mageName: 'speaker.mage.air',
     mageLines: [
