@@ -620,6 +620,31 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  // Aleta dorsal de un tiburón sumergido: un triángulo en la capa de telegraph que
+  // apunta en su dirección de avance (o hacia la princesa si está quieto en el anillo).
+  drawDorsalFin(e) {
+    const g = this.telegraphGfx;
+    const vx = e.body ? e.body.velocity.x : 0;
+    const vy = e.body ? e.body.velocity.y : 0;
+    const ang = Math.hypot(vx, vy) > 6
+      ? Math.atan2(vy, vx)
+      : Phaser.Math.Angle.Between(e.x, e.y, this.caster.x, this.caster.y);
+    const len = 18, wid = 7;
+    const tipX = e.x + Math.cos(ang) * len;
+    const tipY = e.y + Math.sin(ang) * len;
+    const baseX = e.x - Math.cos(ang) * (len * 0.4);
+    const baseY = e.y - Math.sin(ang) * (len * 0.4);
+    const px = Math.cos(ang + Math.PI / 2);
+    const py = Math.sin(ang + Math.PI / 2);
+    g.fillStyle(COLORS.sharkYoung, 1);
+    g.beginPath();
+    g.moveTo(tipX, tipY);
+    g.lineTo(baseX + px * wid, baseY + py * wid);
+    g.lineTo(baseX - px * wid, baseY - py * wid);
+    g.closePath();
+    g.fillPath();
+  }
+
   steerHomingShots(delta) {
     const turn = 0.006 * delta; // rad per frame budget; gentle so it's dodgeable
     this.enemyShots.group.children.iterate((p) => {
@@ -741,8 +766,11 @@ export default class GameScene extends Phaser.Scene {
         this.telegraphGfx.lineStyle(3, COLORS.water, 0.85);
         this.telegraphGfx.strokeCircle(e.x, e.y, (e.def.radius || 20) + 24);
       }
-      // Hide the sprite while submerged; show it otherwise.
-      if (e._burrowed !== undefined) e.setAlpha(e._burrowed ? 0.15 : 1);
+      // Sumergido: oculta el cuerpo y dibuja solo la aleta dorsal (se ve a dónde va).
+      if (e._burrowed !== undefined) {
+        if (e._burrowed) { e.setAlpha(0); this.drawDorsalFin(e); }
+        else e.setAlpha(1);
+      }
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.steerHomingShots(delta);
@@ -754,7 +782,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateWhirlpool(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
-    for (const b of this.bosses) if (b && b.active) b.drawBar();
+    for (const b of this.bosses) { if (b && b.active && !b._burrowed) b.drawBar(); else if (b && b._burrowed) b.bar.clear(); }
   }
 
   // Generic ground zone. opts: { x, y, radius, duration, color?, fire?, casterDps?, casterHeal?, enemyDps? }
