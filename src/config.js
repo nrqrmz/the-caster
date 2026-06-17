@@ -7,8 +7,10 @@ export const GAME_HEIGHT = 854;
 export const ENEMY_MARGIN = 10;
 
 // Render order: ground hazards (lava/poison zones, tentacle puddles, triangle/river
-// edges) live at depth 5-7; actors render above them (they stand ON the lava, not
+// edges) live at depth 5-7; projectiles fly over the ground (depth 8) but under the
+// actors that fire them; actors render above them (they stand ON the lava, not
 // under it). Telegraphs (1400) and bars/UI (1500+) stay above actors.
+export const PROJECTILE_DEPTH = 8;
 export const ACTOR_DEPTH = 10;
 
 // Debug helpers (oculta el botón de borrar guardado en release con poner false).
