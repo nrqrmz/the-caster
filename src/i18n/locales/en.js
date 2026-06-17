@@ -14,6 +14,7 @@ export default {
     narrator: 'Narrator',
     caster: 'The Caster',
     unknown: '???',
+    galahad: 'Sir Galahad',
     mage: { fire: 'Fire Mage', water: 'Lady of the Lake', air: 'Air Mage', earth: 'Earth Mage' },
   },
   region: {
@@ -71,6 +72,13 @@ export default {
       intro: { 0: "At the summit, the mage who forged your father's sentence watches you fall and rise." },
       mage: { 0: 'I wrote the lie that condemned your father. The Council only nodded.',
               1: 'Then your lightning will write the truth upon your grave.' },
+      bruja: { death: 'Now you will face the storm itself…' },
+      ritual: { taunt: { 0: 'Almost there, master… just a little more…',
+                         1: 'Your blows only hasten the rite, child.',
+                         2: 'Go on. Every fallen cultist brings his waking closer.' } },
+      galahad: { clear: { 0: 'The Grail gave me no eternal life… it gave me eternal death.',
+                          1: 'At last… the lie I signed burns with me.',
+                          2: 'Rest, knight. Your torment ends where my vengeance begins.' } },
     },
     earth: {
       intro: { 0: "The forest hides the eldest of the Council, the one who poisoned the King's ear." },

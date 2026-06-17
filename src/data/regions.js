@@ -5,6 +5,7 @@ import { TEX, COLORS } from '../config.js';
 import { makeLevel } from './levelBuilder.js';
 import { PYRA, VESTA, FAVILLA, SISTERS_TRIO, IGNATIUS } from './bosses/fire.js';
 import { SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL, KRAKEN, DAMA_LAGO } from './bosses/water.js';
+import { CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, GALAHAD } from './bosses/air.js';
 
 const wave = (spawnDelay, spawns) => ({ spawnDelay, spawns });
 const ramp = (base, tier) => Math.round(base * (1 + 0.4 * (tier - 1)));
@@ -95,6 +96,62 @@ function waterInterWaves(tier) {
   ];
 }
 
+// Air waves: velocity + displacement (fast flyers, dueling dashers, gusts).
+// Composition rule (spec §5) — anchor (Hechicero/Sacerdote that defines the puzzle)
+//                  + filler (Siervos/Murciélagos)
+//                  + one mobility threat (a Duelista that dodges or a diving Alado).
+// Tier 1 = only nv1 introductory creatures; tiers 2–3 add dashers + flyers + turret.
+// See spec §3.5 intro calendar.
+function airWaves(tier) {
+  if (tier === 1) {
+    // Nv1: Siervo filler + Murciélago swarm + Acólito (ranged anchor). No threat yet.
+    return [
+      wave(700, [{ type: 'siervo_torre', count: ramp(4, tier) }, { type: 'acolito_trueno', count: ramp(2, tier) }]),
+      wave(650, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'murcielago', count: ramp(3, tier) }]),
+      wave(600, [{ type: 'acolito_trueno', count: ramp(2, tier) }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    ];
+  }
+  if (tier === 2) {
+    // Nv2: introduce Duelista (mobility threat), Heraldo (ranged stun), Espíritu (flyer).
+    return [
+      wave(670, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'heraldo_rayo', count: tier }, { type: 'murcielago', count: ramp(2, tier) }]),
+      wave(630, [{ type: 'duelista_nocturno', count: 1 }, { type: 'acolito_trueno', count: ramp(2, tier) }, { type: 'espiritu_tormenta', count: ramp(2, tier) }]),
+      wave(580, [{ type: 'heraldo_rayo', count: tier }, { type: 'duelista_nocturno', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    ];
+  }
+  // Tier 3: Nv3 — introduce Arpía (dive-bomb), Tronador (area denial), Centinela (homing turret).
+  return [
+    wave(640, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'tronador', count: tier }, { type: 'arpia', count: ramp(2, tier) }]),
+    wave(600, [{ type: 'centinela_piedra', count: 1 }, { type: 'heraldo_rayo', count: tier }, { type: 'murcielago', count: ramp(3, tier) }]),
+    wave(550, [{ type: 'duelista_nocturno', count: 1 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'tronador', count: tier }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+  ];
+}
+
+function airInterWaves(tier) {
+  if (tier <= 2) {
+    // Nv4: introduce Guardia Nocturno (fast bruiser threat), Fuego Fatuo (stun aura flyer),
+    // Gárgola Pararrayos (stun turret). Anchor = Heraldo. Filler = Siervos/Murciélagos.
+    return [
+      wave(580, [{ type: 'heraldo_rayo', count: tier }, { type: 'siervo_torre', count: ramp(3, tier) }, { type: 'guardia_nocturno', count: 1 }, { type: 'murcielago', count: ramp(2, tier) }]),
+      wave(530, [{ type: 'gargola_pararrayos', count: 1 }, { type: 'fuego_fatuo', count: tier }, { type: 'duelista_nocturno', count: 1 }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    ];
+  }
+  if (tier === 3) {
+    // Nv5 (spec §5 example): Hechicero del Viento (anchor: lifts you) + Murciélagos (filler/chain)
+    // + Duelista Nocturno (evasive threat). Also introduce Vástago Vampírico, Torbellino Errante.
+    return [
+      wave(540, [{ type: 'hechicero_viento', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'duelista_nocturno', count: 1 }, { type: 'vastago_vampirico', count: tier }]),
+      wave(490, [{ type: 'sacerdote_sangre', count: 1 }, { type: 'torbellino_errante', count: 1 }, { type: 'heraldo_rayo', count: tier }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    ];
+  }
+  // Tier 4 (inter(4) = Nv6): introduce Vampiro Alado (heavy diver). Anchor = Hechicero + Sacerdote.
+  // Filler = Murciélagos/Siervos. Threat = Vampiro Alado + Duelista.
+  return [
+    wave(510, [{ type: 'hechicero_viento', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'vampiro_alado', count: 1 }, { type: 'vastago_vampirico', count: tier }]),
+    wave(460, [{ type: 'sacerdote_sangre', count: 1 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'duelista_nocturno', count: 1 }, { type: 'torbellino_errante', count: 1 }]),
+  ];
+}
+
 const mb = (hp, dmg) => ({ key: 'miniboss', tex: TEX.miniboss, color: COLORS.miniboss, hp, speed: 70, damage: dmg, radius: 33, behavior: 'chase', elite: true });
 const lb = (hp, dmg) => ({ key: 'levelboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 60, damage: dmg, radius: 42, behavior: 'chase', elite: true });
 const tb = (hp, dmg, mechanics) => ({ key: 'templeboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 55, damage: dmg, radius: 48, behavior: 'chase', elite: true, mechanics });
@@ -108,7 +165,7 @@ const MECHANICS = {
 };
 
 // Build a standard elemental branch: 8 levels, one boss per level.
-function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, levelBoss = null, templeBoss = null }) {
+function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, levelBoss = null, templeBoss = null, onClear = null }) {
   // nv7 is a dedicated levelboss level (boss only): the trio (multi-boss + lava
   // triangle) when provided, else a single default level-boss blob.
   const levelBossSpec = levelBosses
@@ -127,7 +184,7 @@ function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines
     makeLevel(`${id}_8`, id, 'temple', {
       templeBoss: templeBoss || tb(950, 26, MECHANICS[element]),
       minions: [{ type: 'villager', count: 4 }],
-      dialogue: { onClear: mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'speaker.caster' : mageName, text })) },
+      dialogue: { onClear: onClear || mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'speaker.caster' : mageName, text })) },
     }),
   ];
   return { id, element, name, grantsSkill, locked: false, levels };
@@ -189,11 +246,20 @@ export const REGIONS = {
   }),
   air: makeBranch({
     id: 'air', element: 'air', name: 'region.air.name', grantsSkill: 'lightning',
+    basic: airWaves, inter: airInterWaves,
+    minibosses: [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA],
+    levelBoss: LIDER_CULTISTA,
+    templeBoss: GALAHAD,
     intro: [{ speaker: 'speaker.narrator', text: 'story.air.intro.0' }],
     mageName: 'speaker.mage.air',
     mageLines: [
       'story.air.mage.0',
       'story.air.mage.1',
+    ],
+    onClear: [
+      { speaker: 'speaker.galahad', text: 'story.air.galahad.clear.0' },
+      { speaker: 'speaker.galahad', text: 'story.air.galahad.clear.1' },
+      { speaker: 'speaker.caster',  text: 'story.air.galahad.clear.2' },
     ],
   }),
   earth: makeBranch({

@@ -14,6 +14,7 @@ export default {
     narrator: 'Narrador',
     caster: 'The Caster',
     unknown: '???',
+    galahad: 'Sir Galahad',
     mage: { fire: 'Mago del Fuego', water: 'Dama del Lago', air: 'Mago del Aire', earth: 'Mago de la Tierra' },
   },
   region: {
@@ -71,6 +72,13 @@ export default {
       intro: { 0: 'En la cima, el mago que falsificó la sentencia de tu padre te observa caer y subir.' },
       mage: { 0: 'Yo redacté la mentira que condenó a tu padre. El Consejo solo asintió.',
               1: 'Entonces tu rayo escribirá la verdad sobre tu tumba.' },
+      bruja: { death: 'Ahora te enfrentarás a la tormenta…' },
+      ritual: { taunt: { 0: 'Ya casi, maestro… solo un poco más…',
+                         1: 'Tus golpes solo apresuran el rito, niña.',
+                         2: 'Sigue. Cada cultista caído acerca su despertar.' } },
+      galahad: { clear: { 0: 'El Grial no me dio vida eterna… me dio muerte eterna.',
+                          1: 'Por fin… arde conmigo la mentira que firmé.',
+                          2: 'Descansa, caballero. Tu tormento termina donde empieza mi venganza.' } },
     },
     earth: {
       intro: { 0: 'El bosque esconde al más viejo del Consejo, el que envenenó el oído del Rey.' },

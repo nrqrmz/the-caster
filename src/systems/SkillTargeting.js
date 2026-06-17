@@ -15,6 +15,7 @@ export function chainTargets(casterPos, enemies, jumpRadius, maxTargets) {
     let bestD = Infinity;
     for (let i = 0; i < enemies.length; i++) {
       if (used.has(i)) continue;
+      if (enemies[i].untargetable) continue;
       const d = Math.hypot(enemies[i].x - from.x, enemies[i].y - from.y);
       if (step > 0 && d > jumpRadius) continue; // hops are range-limited; primary is not
       if (d < bestD) { bestD = d; best = i; }

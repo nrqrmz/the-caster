@@ -71,3 +71,31 @@ export const LAVA_RIVER_COOLDOWN_MS = 13000;  // espera entre activaciones (fase
 export const LAVA_RIVER_TELEGRAPH_MS = 1000;  // aviso antes de encenderse
 export const LAVA_RIVER_ACTIVE_MS = 2500;     // dura encendido
 export const LAVA_RIVER_DPS = 18;             // menos letal que el triángulo (~28)
+
+// --- Air world (La Torre Montaña) ---
+
+// Caster control-loss (velocidad + desplazamiento). Brief but consequential.
+export const CASTER_STUN_MS = 300;   // total control loss (electric discharge)
+export const CASTER_LIFT_MS = 500;   // lifted by a small tornado (can't move/dodge)
+export const CC_IMMUNE_MS   = 600;   // anti-chain window after a stun/lift expires
+
+// Directional push (onHitPush / gust). Impulse the caster receives on hit.
+export const PUSH_FORCE = 220;       // px/sec impulse magnitude
+export const PUSH_MS    = 250;       // how long the impulse decays over
+
+// evade movement (dodging duelists). Periodic perpendicular dash.
+export const EVADE_DODGE_EVERY = 1400; // ms between dodges
+export const EVADE_DODGE_MS    = 220;  // dodge dash duration
+export const EVADE_DODGE_MUL   = 3.0;  // dash speed = base speed × this
+
+// Tornado-ojo hazard (the eye is the trap, not the damage — inverse of the whirlpool).
+export const TORNADO_RADIUS          = 130;  // px, influence circle
+export const TORNADO_EYE_PULL        = 0.7;  // fraction of caster speed pulling toward the eye
+export const TORNADO_EYE_RADIUS_FRAC = 0.18; // inner "eye" zone (calm: ~0 pull, no DoT)
+export const TORNADO_ENEMY_PULL      = 0.25; // light pull applied to NON-flying enemies (visual + makes `flying` matter)
+export const TORNADO_TELEGRAPH_MS    = 1100; // warning before the vortex activates
+export const TORNADO_ACTIVE_MS       = 4500; // vortex is live for this long
+export const TORNADO_COOLDOWN_MS     = 4500; // gap before it reforms at a new spot
+
+// Ritual meter (nv7 cultist leader). Fills while the leader channels (untargetable).
+export const RITUAL_FILL_MS = 38000; // time to fill from empty to full

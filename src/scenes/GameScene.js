@@ -7,22 +7,30 @@ import {
   WHIRLPOOL_RADIUS, WHIRLPOOL_ACTIVE_MS, WHIRLPOOL_COOLDOWN_MS, WHIRLPOOL_TELEGRAPH_MS,
   LAVA_RIVER_COOLDOWN_MS, LAVA_RIVER_TELEGRAPH_MS, LAVA_RIVER_ACTIVE_MS, LAVA_RIVER_DPS,
   MELEE_CONTACT_CD, SPAWN_SAFE_DIST,
+  TORNADO_RADIUS, TORNADO_ACTIVE_MS, TORNADO_COOLDOWN_MS, TORNADO_TELEGRAPH_MS, TORNADO_ENEMY_PULL,
+  CASTER_STUN_MS, CASTER_LIFT_MS, PUSH_FORCE, PUSH_MS,
+  RITUAL_FILL_MS,
 } from '../data/tuning.js';
+import { tickRitual, ritualFraction } from '../systems/RitualMeter.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
 import { VirtualJoystick } from '../systems/InputSystem.js';
-import { applyDamage, applyCasterSlow, tickCasterSlow, applyResist, tryMeleeContact } from '../systems/CombatSystem.js';
+import {
+  applyDamage, applyCasterSlow, tickCasterSlow, applyResist, tryMeleeContact,
+  applyCasterCc, tickCasterCc, applyCasterPush, tickCasterPush, applyDrain,
+} from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, difficultyContext, scaleEnemyDef } from '../systems/Difficulty.js';
 import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation, isFlying } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
+import { isInside as inTornado, forceAt as tornadoForce, inEye as inTornadoEye, scaleForPhase as tornadoPhase } from '../systems/TornadoHazard.js';
 import { lavaPulse, lavaRimAlpha, lavaSpots, lavaEmbers, lavaEdgeEmbers, lerpColor, LAVA } from '../systems/LavaField.js';
 import { FormSequencer } from '../systems/FormSequencer.js';
 import { hasRecipe } from '../data/sprites/recipes.js';
@@ -34,6 +42,7 @@ import Enemy from '../objects/Enemy.js';
 import Boss from '../objects/Boss.js';
 
 const ITEM = Object.fromEntries(SHOP_ITEMS.map((i) => [i.key, i]));
+const RITUAL_TAUNT_EVERY = 5200; // ms between the leader's deceiving taunts
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -76,6 +85,9 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpoolGfx = null; // created lazily in updateWhirlpool; reset here so a stale destroyed Graphics doesn't survive a level restart
     this.triangle = null; // { mode, t } while a trio fight is active
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
+    this.tornado = null; // { center, radius, phase, mode, t } while a tornado is active
+    this.tornadoGfx = null; // created lazily in updateTornado
+    this.ritualGfx = null; // created lazily in updateRitual; reset here on level restart
     this.lavaRiver = null;
     this.lavaRiverGfx = null;
     this.casterBurnRemaining = 0;
@@ -122,6 +134,23 @@ export default class GameScene extends Phaser.Scene {
       if (burn) this.applyCasterBurn(burn.dps ?? 6, burn.ms ?? 2000);
       const slow = findModifier(enemy.def, 'onHitSlow');
       if (slow) this.applyCasterSlowFx(slow.factor ?? 0.6, slow.ms ?? 1200);
+      const stun = findModifier(enemy.def, 'onHitStun');
+      if (stun) applyCasterCc(this.caster, stun.kind === 'lift' ? 'lift' : 'stun', stun.ms ?? (stun.kind === 'lift' ? 500 : 300));
+      const push = findModifier(enemy.def, 'onHitPush');
+      if (push) {
+        const a = Math.atan2(this.caster.y - enemy.y, this.caster.x - enemy.x);
+        applyCasterPush(this.caster, Math.cos(a) * (push.force ?? 220), Math.sin(a) * (push.force ?? 220), push.ms ?? 250);
+      }
+      const drain = findModifier(enemy.def, 'drain');
+      if (drain) {
+        if (enemy._formSeq) {
+          const cap = enemy._formSeq.activeForm().hp;
+          enemy._formSeq.currentHp = Math.min(cap, enemy._formSeq.currentHp + (drain.heal ?? 4));
+          enemy.hp = enemy._formSeq.currentHp;
+        } else {
+          applyDrain(enemy, drain.heal ?? 4);
+        }
+      }
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
@@ -129,6 +158,11 @@ export default class GameScene extends Phaser.Scene {
       if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
       if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
       if (shot.poisonDps > 0) this.applyCasterPoison(shot.poisonDps, shot.poisonMs);
+      if (shot.stunMs) applyCasterCc(this.caster, shot.liftKind ? 'lift' : 'stun', shot.stunMs);
+      if (shot.pushForce) {
+        const a = Math.atan2(this.caster.y - shot.y, this.caster.x - shot.x);
+        applyCasterPush(this.caster, Math.cos(a) * shot.pushForce, Math.sin(a) * shot.pushForce, shot.pushMs ?? 250);
+      }
       this.enemyShots.despawn(shot);
     });
   }
@@ -157,6 +191,17 @@ export default class GameScene extends Phaser.Scene {
     this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.diff));
     this.enemies.add(this.boss);
     this.bosses = [this.boss];
+    // Oversized single-def bosses (e.g. Elemental de Tormenta, radius 56) need their
+    // display size set explicitly; the forms path does this in _applyBossForm, but a
+    // plain (no-forms) def is not routed through there.
+    if (def.key === 'elemental_tormenta' && def.radius) this.boss.setDisplaySize(def.radius * 2, def.radius * 2);
+    // Seed the runtime untargetable flag (channeling cultist leader) + start the meter.
+    if (def.untargetable) this.boss._untargetable = true;
+    if (def.ritual) {
+      this.boss._ritual = { filled: 0, total: RITUAL_FILL_MS };
+      this.boss._ritualTauntT = RITUAL_TAUNT_EVERY;
+      this.boss._ritualTaunt = 0;
+    }
     if (def.forms && def.forms.length) {
       this.boss._formSeq = new FormSequencer(def.forms);
       // Bootstrap the boss def to the first form.
@@ -200,14 +245,25 @@ export default class GameScene extends Phaser.Scene {
 
   _beginBossTransform(boss) {
     boss._transforming = true;
-    boss.setAlpha(0.3); // brief dim during transform telegraph
     // Clear this form's adds.
     const live = this.enemies.getChildren().filter((e) => e.active && e !== boss);
     for (const e of live) e.destroy();
+
+    const feint = !!(boss.def && (boss.def.deathFeint || (boss.def.key && String(boss.def.key).startsWith('galahad'))));
+    if (feint) {
+      // "Cae cadáver → resucita": collapse (flatten + dim + sink), hold, then rise.
+      const baseY = boss.y;
+      this.tweens.add({ targets: boss, alpha: 0.2, scaleY: boss.scaleY * 0.3, y: baseY + 14, duration: 420, ease: 'Quad.easeIn' });
+      this.flashCircle(boss.x, boss.y, (boss.def.radius || 26) + 12, COLORS.boss);
+    } else {
+      boss.setAlpha(0.3); // brief dim during transform telegraph (legacy path)
+    }
+
     this.time.delayedCall(1000, () => { // ~1000ms telegraph/invuln window
       if (!boss.active) return;
       boss._transforming = false;
       boss.setAlpha(1);
+      boss.scaleY = boss.scaleX; // undo any collapse flatten before _applyBossForm resizes
       boss._formSeq.completeTransform();
       this._applyBossForm(boss, boss._formSeq.activeFormIndex);
       // _applyBossForm already set the sprite/tint for the new form; only re-tint
@@ -216,6 +272,7 @@ export default class GameScene extends Phaser.Scene {
         boss.clearTint();
         if (boss._formSeq.activeForm().color) boss.setTint(boss._formSeq.activeForm().color);
       }
+      if (feint) this.flashCircle(boss.x, boss.y, (boss.def.radius || 26) + 18, COLORS.lightning); // rise burst
     });
   }
 
@@ -336,6 +393,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   hitEnemy(enemy, damage) {
+    if (enemy._untargetable) return;
     // Burrow invuln gate (set by burrow movement; always falsy on non-burrow enemies).
     if (enemy._burrowed) return;
     // Form sequencer: route damage through FormSequencer and handle transform.
@@ -344,6 +402,12 @@ export default class GameScene extends Phaser.Scene {
       enemy._formSeq.applyDamage(damage);
       enemy.hp = enemy._formSeq.currentHp; // keep hp in sync for BossBrain hpFrac
       if (enemy._formSeq.fightOver) {
+        // Galahad's real death: burn effect ("por fin lo destruiste") before destroy.
+        if (enemy.def && (enemy.def.deathFeint || (enemy.def.key && String(enemy.def.key).startsWith('galahad')))) {
+          this.flashCircle(enemy.x, enemy.y, (enemy.def.radius || 26) + 30, COLORS.fireball);
+          const burn = this.add.circle(enemy.x, enemy.y, (enemy.def.radius || 26) + 10, COLORS.fireball, 0.5).setDepth(8);
+          this.tweens.add({ targets: burn, alpha: 0, scale: 1.8, duration: 600, onComplete: () => burn.destroy() });
+        }
         this.onEnemyDeath(enemy);
         if (enemy === this.boss) this.boss = null;
         this.bosses = this.bosses.filter((b) => b !== enemy);
@@ -474,8 +538,11 @@ export default class GameScene extends Phaser.Scene {
         if (this.triangleGfx) this.triangleGfx.clear();
         this.whirlpool = null;
         if (this.whirlpoolGfx) this.whirlpoolGfx.clear();
+        this.tornado = null;
+        if (this.tornadoGfx) this.tornadoGfx.clear();
         this.lavaRiver = null;
         if (this.lavaRiverGfx) this.lavaRiverGfx.clear();
+        if (this.ritualGfx) this.ritualGfx.clear();
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
         if (dialogue && dialogue.length) {
           this.scene.pause();
@@ -552,6 +619,8 @@ export default class GameScene extends Phaser.Scene {
         casterDps: att.dps ?? 18,
         color: water ? COLORS.water : COLORS.fireball,
         style: water ? 'water' : 'fire',
+        casterLiftMs: att.lift ? CASTER_LIFT_MS : 0,
+        casterStunMs: att.stun ? CASTER_STUN_MS : 0,
       });
       return;
     }
@@ -607,6 +676,11 @@ export default class GameScene extends Phaser.Scene {
       if (eff && eff.kind === 'burn') { shot.burnDps = burnMod?.dps ?? eff.dps; shot.burnMs = burnMod?.ms ?? eff.ms; }
       else if (eff && eff.kind === 'slow') { shot.slowFactor = slowMod?.factor ?? eff.factor; shot.slowMs = slowMod?.ms ?? eff.ms; }
       else if (eff && eff.kind === 'dot') { shot.poisonDps = eff.dps; shot.poisonMs = eff.ms; }
+      // Air: ranged control-loss. Copy the attack's stun/lift/push flags onto the
+      // shot so the caster/enemyShots overlap handler (Plan 1) can apply them.
+      if (att.lift) { shot.stunMs = att.liftMs ?? CASTER_LIFT_MS; shot.liftKind = true; }
+      else if (att.stun) { shot.stunMs = att.stunMs ?? CASTER_STUN_MS; shot.liftKind = false; }
+      if (att.push) { shot.pushForce = att.pushForce ?? PUSH_FORCE; shot.pushMs = att.pushMs ?? PUSH_MS; }
     }
   }
 
@@ -685,7 +759,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   cast_lightning() {
-    const live = this.liveEnemies();
+    const live = this.liveEnemies().map((e) => {
+      e.untargetable = !!e._untargetable; // expose runtime flag to the pure targeter
+      return e;
+    });
     if (!live.length) return false;
     const idx = chainTargets({ x: this.caster.x, y: this.caster.y }, live, this.stats.lightningJumpRadius, this.stats.lightningChain);
     if (!idx.length) return false;
@@ -738,6 +815,8 @@ export default class GameScene extends Phaser.Scene {
     this.lavaTime += delta;      // drives the animated lava/fire VFX (zones + triangle edges)
     for (const k in this.cooldowns) { if (this.cooldowns[k] > 0) this.cooldowns[k] -= delta; }
     tickCasterSlow(this.caster, delta);
+    tickCasterCc(this.caster, delta);
+    tickCasterPush(this.caster, delta);
     if (this.damageBuffRemaining > 0) this.damageBuffRemaining -= delta;
     if (this.stats.healthRegen > 0 && this.caster.hp > 0) {
       this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + this.stats.healthRegen * (delta / 1000));
@@ -746,6 +825,8 @@ export default class GameScene extends Phaser.Scene {
     this.updateCasterBurn(delta);
     this.updateCasterPoison(delta);
     this.caster.moveBy(this.joystick.vector);
+    if (this.caster.liftRemaining > 0 || this.caster.stunRemaining > 0) this.caster.setTint(COLORS.lightning);
+    else if (this.caster.slowRemaining === 0) this.caster.clearTint();
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
     this.telegraphGfx.clear();
@@ -761,6 +842,12 @@ export default class GameScene extends Phaser.Scene {
       for (const att of intent.fires) this.executeAttack(e, att);
       if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
       if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);
+      // Elemental de Tormenta: keep _tornadoPhase in sync with the BossBrain phase
+      // (P1=1, P2=2, P3=3) so the tornado-eye pull/radius escalate per phase.
+      if (e.def && e.def.key === 'elemental_tormenta' && e.brainState && e.brainState.boss) {
+        const pi = e.brainState.boss.phaseIndex;
+        if (typeof pi === 'number' && pi >= 0) e._tornadoPhase = pi + 1;
+      }
       // Burrow surface telegraph: draw warning ring while _surfacing.
       if (e._surfacing) {
         this.telegraphGfx.lineStyle(3, COLORS.water, 0.85);
@@ -780,6 +867,8 @@ export default class GameScene extends Phaser.Scene {
     this.updateTriangle(delta);
     this.updateLavaRiver(delta);
     this.updateWhirlpool(delta);
+    this.updateTornado(delta);
+    this.updateRitual(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     for (const b of this.bosses) { if (b && b.active && !b._burrowed) b.drawBar(); else if (b && b._burrowed) b.bar.clear(); }
@@ -820,6 +909,8 @@ export default class GameScene extends Phaser.Scene {
       gfx, fire, style, tentacle,
       casterDps: opts.casterDps || 0,
       casterHeal: opts.casterHeal || 0,
+      casterLiftMs: opts.casterLiftMs || 0,
+      casterStunMs: opts.casterStunMs || 0,
       enemyDps: opts.enemyDps || 0,
     });
   }
@@ -840,6 +931,16 @@ export default class GameScene extends Phaser.Scene {
         phase,
         mode: 'telegraph',
         t: WHIRLPOOL_TELEGRAPH_MS,
+      };
+    }
+    if (hook === 'spawnTornado') {
+      const phase = typeof boss._tornadoPhase === 'number' ? boss._tornadoPhase : 1;
+      this.tornado = {
+        center: { x: Phaser.Math.Between(80, GAME_WIDTH - 80), y: Phaser.Math.Between(120, GAME_HEIGHT - 160) },
+        radius: TORNADO_RADIUS,
+        phase,
+        mode: 'telegraph',
+        t: TORNADO_TELEGRAPH_MS,
       };
     }
     if (hook === 'startLavaRiver') {
@@ -908,6 +1009,101 @@ export default class GameScene extends Phaser.Scene {
     if (w.mode === 'cooldown') {
       if (w.t <= 0) this.whirlpool = null; // boss will re-trigger via hook
     }
+  }
+
+  updateTornado(delta) {
+    if (!this.tornado) return;
+    const w = this.tornado;
+    w.t -= delta;
+    if (!this.tornadoGfx) this.tornadoGfx = this.add.graphics().setDepth(7);
+    this.tornadoGfx.clear();
+
+    if (w.mode === 'telegraph') {
+      this.tornadoGfx.lineStyle(2, COLORS.ash, 0.5);
+      this.tornadoGfx.strokeCircle(w.center.x, w.center.y, w.radius);
+      if (w.t <= 0) { w.mode = 'active'; w.t = TORNADO_ACTIVE_MS; }
+      return;
+    }
+
+    if (w.mode === 'active') {
+      const r = w.radius * tornadoPhase(w.phase);
+      this.tornadoGfx.lineStyle(3, COLORS.ash, 0.75);
+      this.tornadoGfx.strokeCircle(w.center.x, w.center.y, r);
+      this.tornadoGfx.lineStyle(2, COLORS.lightning, 0.6);
+      this.tornadoGfx.strokeCircle(w.center.x, w.center.y, r * 0.5);
+
+      // Pull the caster toward the eye (full strength).
+      if (this.caster && this.caster.hp > 0 && inTornado(w.center, r, this.caster)) {
+        const f = tornadoForce(w.center, r, this.caster, this.stats.moveSpeed);
+        this.caster.x = Phaser.Math.Clamp(this.caster.x + f.x * (delta / 1000), 0, GAME_WIDTH);
+        this.caster.y = Phaser.Math.Clamp(this.caster.y + f.y * (delta / 1000), 0, GAME_HEIGHT);
+      }
+      // Light pull on NON-flying enemies (debris feel; flyers are immune).
+      for (const e of this.enemies.getChildren()) {
+        if (!e.active || isFlying(e.def)) continue;
+        if (!inTornado(w.center, r, e)) continue;
+        const ef = tornadoForce(w.center, r, e, e.def.speed * TORNADO_ENEMY_PULL);
+        e.x += ef.x * (delta / 1000);
+        e.y += ef.y * (delta / 1000);
+      }
+
+      if (w.t <= 0) { w.mode = 'cooldown'; w.t = TORNADO_COOLDOWN_MS; }
+      return;
+    }
+
+    if (w.mode === 'cooldown') {
+      if (w.t <= 0) this.tornado = null; // boss re-triggers via the spawnTornado hook
+    }
+  }
+
+  // nv7 cultist-leader ritual. While the leader is alive + untargetable, the bar
+  // fills by timer; periodic taunts float. On full: he becomes targetable and is
+  // forced into his fight phase (stops summoning). Killing him then clears the level.
+  updateRitual(delta) {
+    const boss = this.boss;
+    if (!boss || !boss.active || !boss.def || !boss.def.ritual || !boss._ritual) {
+      if (this.ritualGfx) this.ritualGfx.clear();
+      return;
+    }
+
+    if (boss._untargetable) {
+      const r = tickRitual(boss._ritual, delta);
+      // Deceiving taunts ("ya casi, maestro…") — light floating text, no pause.
+      boss._ritualTauntT -= delta;
+      if (boss._ritualTauntT <= 0) {
+        boss._ritualTauntT = RITUAL_TAUNT_EVERY;
+        const key = `story.air.ritual.taunt.${boss._ritualTaunt % 3}`;
+        boss._ritualTaunt += 1;
+        this.floatRitualTaunt(boss, t(key));
+      }
+      if (r.full) {
+        // Rite complete: the leader becomes targetable and stops channeling.
+        boss._untargetable = false;
+        if (boss.brainState && boss.brainState.boss) boss.brainState.boss.forcedPhase = 1;
+        else boss.brainState = { ...(boss.brainState || {}), boss: { forcedPhase: 1 } };
+      }
+    }
+
+    // Render the ritual bar (a thin graphics bar near the top, above the coffin).
+    if (!this.ritualGfx) this.ritualGfx = this.add.graphics().setDepth(950);
+    this.ritualGfx.clear();
+    const frac = ritualFraction(boss._ritual);
+    const bw = GAME_WIDTH - 80, bh = 10, bx = 40, by = 70;
+    this.ritualGfx.fillStyle(COLORS.healthBack, 0.9);
+    this.ritualGfx.fillRect(bx, by, bw, bh);
+    this.ritualGfx.fillStyle(COLORS.lightning, 0.95);
+    this.ritualGfx.fillRect(bx, by, bw * frac, bh);
+    this.ritualGfx.lineStyle(2, COLORS.boss, 0.9);
+    this.ritualGfx.strokeRect(bx, by, bw, bh);
+  }
+
+  // Floating deceiving taunt above the leader; rises and fades.
+  floatRitualTaunt(boss, text) {
+    const label = this.add.text(boss.x, boss.y - 40, text, {
+      fontFamily: 'monospace', fontSize: '12px', color: '#fff176', align: 'center',
+      wordWrap: { width: 200 },
+    }).setOrigin(0.5).setDepth(951);
+    this.tweens.add({ targets: label, y: label.y - 28, alpha: 0, duration: 2200, onComplete: () => label.destroy() });
   }
 
   // Back-compat wrapper used by BossMechanics' poisonFloor (damages the caster).
@@ -991,6 +1187,8 @@ export default class GameScene extends Phaser.Scene {
       if (casterIn && z.casterHeal) {
         this.caster.hp = Math.min(this.caster.maxHp, this.caster.hp + z.casterHeal * dt);
       }
+      if (casterIn && z.casterLiftMs) applyCasterCc(this.caster, 'lift', z.casterLiftMs);
+      if (casterIn && z.casterStunMs) applyCasterCc(this.caster, 'stun', z.casterStunMs);
       if (z.enemyDps) {
         // Snapshot (filter returns a new array) so a kill mid-loop can't skip an enemy.
         const live = this.enemies.getChildren().filter((e) => e.active);

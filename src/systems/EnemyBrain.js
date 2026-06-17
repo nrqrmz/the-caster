@@ -6,6 +6,7 @@
 import {
   BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS,
   EGG_HATCH_MS, TADPOLE_GROW_MS, SPAWN_SAFE_DIST,
+  EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL,
 } from '../data/tuning.js';
 import { GAME_WIDTH, GAME_HEIGHT, ENEMY_MARGIN } from '../config.js'; // config.js is Phaser-free (constants only)
 
@@ -93,6 +94,38 @@ export const MOVEMENTS = {
       return { x: Math.cos(state.heading) * dashSpeed, y: Math.sin(state.heading) * dashSpeed };
     }
     if (state.t >= recover) { state.mode = 'windup'; state.t = 0; }
+    return { x: 0, y: 0 };
+  },
+
+  evade({ self, target, speed, dt, params, state }) {
+    const range = params?.range ?? 120;
+    const every = params?.dodgeEvery ?? EVADE_DODGE_EVERY;
+    const dodgeMs = params?.dodgeMs ?? EVADE_DODGE_MS;
+    const dodgeMul = params?.dodgeMul ?? EVADE_DODGE_MUL;
+    state.mode = state.mode || 'approach';
+    state.t = (state.t || 0) + dt;
+    const a = angleBetween(self.x, self.y, target.x, target.y);
+
+    if (state.mode === 'approach') {
+      if (state.t >= every) {
+        state.mode = 'dodge'; state.t = 0;
+        state.dir = (state.dir === 1 ? -1 : 1); // alternate dodge sides
+      } else {
+        // Hold the kite band: approach if far, back off if close, else strafe slowly.
+        const d = distance(self.x, self.y, target.x, target.y);
+        if (d > range + 20) return { x: Math.cos(a) * speed, y: Math.sin(a) * speed };
+        if (d < range - 20) return { x: -Math.cos(a) * speed, y: -Math.sin(a) * speed };
+        return { x: 0, y: 0 };
+      }
+    }
+
+    if (state.mode === 'dodge') {
+      if (state.t >= dodgeMs) { state.mode = 'approach'; state.t = 0; return { x: 0, y: 0 }; }
+      const perp = a + Math.PI / 2;
+      const dir = state.dir || 1;
+      return { x: Math.cos(perp) * speed * dodgeMul * dir, y: Math.sin(perp) * speed * dodgeMul * dir };
+    }
+
     return { x: 0, y: 0 };
   },
 
@@ -331,4 +364,9 @@ export function sisterFormation(live, anchors) {
     return live.map((_, i) => ({ type: 'kite', range: ranges[i] }));
   }
   return live.map((s) => s.baseMovement);
+}
+
+// PURE. True if the enemy def is a flyer (immune to ground hazards like the tornado).
+export function isFlying(def) {
+  return !!(def && def.flying);
 }

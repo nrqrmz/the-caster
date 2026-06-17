@@ -17,7 +17,9 @@ export function activePhase(phases, hpFrac) {
 // Returns { phaseIndex, entered, enter, movement, speedMul, telegraph, fire }.
 export function stepBoss(def, rt, hpFrac, dt) {
   const phases = def.phases || [];
-  const pi = phases.length ? activePhase(phases, hpFrac) : 0;
+  const pi = (rt.forcedPhase != null)
+    ? Math.max(0, Math.min(rt.forcedPhase, phases.length - 1))
+    : (phases.length ? activePhase(phases, hpFrac) : 0);
   let entered = false;
   if (rt.phaseIndex !== pi) {
     rt.phaseIndex = pi; rt.stepIndex = 0; rt.stepTimer = 0; rt.fired = false;

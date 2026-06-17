@@ -14,6 +14,9 @@ test('four elemental regions each have 8 levels ending in a temple', () => {
     } else if (id === 'water') {
       assert.equal(r.levels[7].phases[0].enemyDef.key, 'dama_lago', 'water temple boss is Dama del Lago');
       assert.ok(Array.isArray(r.levels[7].phases[0].enemyDef.forms), 'Dama runs the form sequencer');
+    } else if (id === 'air') {
+      assert.equal(r.levels[7].phases[0].enemyDef.key, 'galahad', 'air temple boss is Galahad');
+      assert.ok(Array.isArray(r.levels[7].phases[0].enemyDef.forms), 'Galahad runs the form sequencer');
     } else {
       assert.ok(Array.isArray(r.levels[7].phases[0].mechanics), `${id} temple boss has mechanics`);
     }
