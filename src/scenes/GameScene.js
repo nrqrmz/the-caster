@@ -237,14 +237,25 @@ export default class GameScene extends Phaser.Scene {
 
   _beginBossTransform(boss) {
     boss._transforming = true;
-    boss.setAlpha(0.3); // brief dim during transform telegraph
     // Clear this form's adds.
     const live = this.enemies.getChildren().filter((e) => e.active && e !== boss);
     for (const e of live) e.destroy();
+
+    const feint = !!(boss.def && (boss.def.deathFeint || (boss.def.key && String(boss.def.key).startsWith('galahad'))));
+    if (feint) {
+      // "Cae cadáver → resucita": collapse (flatten + dim + sink), hold, then rise.
+      const baseY = boss.y;
+      this.tweens.add({ targets: boss, alpha: 0.2, scaleY: boss.scaleY * 0.3, y: baseY + 14, duration: 420, ease: 'Quad.easeIn' });
+      this.flashCircle(boss.x, boss.y, (boss.def.radius || 26) + 12, COLORS.boss);
+    } else {
+      boss.setAlpha(0.3); // brief dim during transform telegraph (legacy path)
+    }
+
     this.time.delayedCall(1000, () => { // ~1000ms telegraph/invuln window
       if (!boss.active) return;
       boss._transforming = false;
       boss.setAlpha(1);
+      boss.scaleY = boss.scaleX; // undo any collapse flatten before _applyBossForm resizes
       boss._formSeq.completeTransform();
       this._applyBossForm(boss, boss._formSeq.activeFormIndex);
       // _applyBossForm already set the sprite/tint for the new form; only re-tint
@@ -253,6 +264,7 @@ export default class GameScene extends Phaser.Scene {
         boss.clearTint();
         if (boss._formSeq.activeForm().color) boss.setTint(boss._formSeq.activeForm().color);
       }
+      if (feint) this.flashCircle(boss.x, boss.y, (boss.def.radius || 26) + 18, COLORS.lightning); // rise burst
     });
   }
 
@@ -382,6 +394,12 @@ export default class GameScene extends Phaser.Scene {
       enemy._formSeq.applyDamage(damage);
       enemy.hp = enemy._formSeq.currentHp; // keep hp in sync for BossBrain hpFrac
       if (enemy._formSeq.fightOver) {
+        // Galahad's real death: burn effect ("por fin lo destruiste") before destroy.
+        if (enemy.def && (enemy.def.deathFeint || (enemy.def.key && String(enemy.def.key).startsWith('galahad')))) {
+          this.flashCircle(enemy.x, enemy.y, (enemy.def.radius || 26) + 30, COLORS.fireball);
+          const burn = this.add.circle(enemy.x, enemy.y, (enemy.def.radius || 26) + 10, COLORS.fireball, 0.5).setDepth(8);
+          this.tweens.add({ targets: burn, alpha: 0, scale: 1.8, duration: 600, onComplete: () => burn.destroy() });
+        }
         this.onEnemyDeath(enemy);
         if (enemy === this.boss) this.boss = null;
         this.bosses = this.bosses.filter((b) => b !== enemy);
