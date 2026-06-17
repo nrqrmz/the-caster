@@ -103,8 +103,11 @@ test('every water boss + form has a recipe with baseColor and known parts', () =
 // GLOBAL parity: every registered enemy type the game can spawn must have a sprite recipe.
 import { ENEMY_TYPES } from '../../src/data/enemies.js';
 
-test('GLOBAL: every registered enemy type has a sprite recipe', () => {
-  const missing = Object.keys(ENEMY_TYPES).filter((k) => !hasRecipe(k));
+test('GLOBAL: every registered enemy type has a sprite recipe (geometric-flagged enemies exempt)', () => {
+  // Air enemies ship with geometric textures for now; their 32x32 sprite recipes are a
+  // separate, user-reviewed follow-up. They declare `geometric: true` to opt out here.
+  // Any enemy WITHOUT a recipe that is NOT flagged geometric still fails this invariant.
+  const missing = Object.keys(ENEMY_TYPES).filter((k) => !hasRecipe(k) && !ENEMY_TYPES[k].geometric);
   assert.deepEqual(missing, [], `enemy types without recipe: ${missing.join(', ')}`);
 });
 
