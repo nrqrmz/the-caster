@@ -172,15 +172,29 @@ En `src/data/bosses/water.js`:
 
 (No añadir summons ni tocar el burrow — van en SP-2/SP-3.)
 
-- [ ] **Step 2: Verificar sin regresión**
+- [ ] **Step 2: Actualizar el test que asume maga_final con poca vida**
+
+`tests/bosses.water.test.js` tiene un test "last Dama form is maga_final with low hp" que asserta `last.hp <= 20`. Con la nueva vida (320) el rol cambia: maga_final ya no es un remate frágil sino una pelea real. Actualizar esa aserción para reflejar el nuevo diseño (sigue verificando que la última forma es `dama_maga_final`, pero ya no exige hp ≤ 20):
+
+```js
+test('last Dama form is maga_final', () => {
+  const last = DAMA_LAGO.forms[DAMA_LAGO.forms.length - 1];
+  assert.equal(last.key, 'dama_maga_final');
+  assert.equal(last.hp, 320);
+});
+```
+
+(Conservar el resto de los tests del archivo. El test de "ascending hp across the first four forms" no se ve afectado: maga_final está excluido del slice 0..4.)
+
+- [ ] **Step 3: Verificar sin regresión**
 
 Run: `node --test`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add src/data/bosses/water.js
+git add src/data/bosses/water.js tests/bosses.water.test.js
 git commit -m "balance(water-bosses): sube stats de soldado/sapo/abisal y dama_maga_final 320hp+kite"
 ```
 
@@ -200,15 +214,26 @@ export const EGG_HATCH_MS = 2500;             // egg → tadpole (antes 3500)
 export const TADPOLE_GROW_MS = 4000;          // tadpole → adult frog (antes 6000)
 ```
 
-- [ ] **Step 2: Verificar sin regresión**
+- [ ] **Step 2: Actualizar el test de Tuning que fija los valores antiguos**
+
+`tests/Tuning.test.js` (líneas ~47-48) asserta `EGG_HATCH_MS === 3500` y `TADPOLE_GROW_MS === 6000`. Actualizar a los nuevos valores:
+
+```js
+  assert.equal(EGG_HATCH_MS, 2500);
+  assert.equal(TADPOLE_GROW_MS, 4000);
+```
+
+(No tocar las aserciones de `BURROW_*` de ese archivo — SP-1 no cambia el burrow.)
+
+- [ ] **Step 3: Verificar sin regresión**
 
 Run: `node --test`
-Expected: PASS. (Si algún test de `tickLifecycle` asume los valores antiguos, actualizar ese test al nuevo valor — buscar `EGG_HATCH_MS`/`TADPOLE_GROW_MS` en `tests/`.)
+Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add src/data/tuning.js tests/
+git add src/data/tuning.js tests/Tuning.test.js
 git commit -m "balance(water): eclosión y maduración de sapos más rápidas (2.5s / 4s)"
 ```
 
@@ -218,41 +243,19 @@ git commit -m "balance(water): eclosión y maduración de sapos más rápidas (2
 
 **Files:**
 - Modify: `src/scenes/GameScene.js:374-387` (`onEnemyDeath`)
-- Test: `tests/projectiles.test.js` (crear si no existe)
 
 **Interfaces:**
 - Consumes: `resolveProjectile(att, element)` y `PROJECTILES` de `src/data/projectiles.js`; `this.regionElement` (ya presente en GameScene, usado por `executeAttack`).
 - Produces: la metralla de muerte usa `PROJECTILES[type].tex` y `.tint` en vez de `TEX.arrow` + tinte naranja fijo.
 
-- [ ] **Step 1: Escribir el test que falla**
+**NOTA:** `tests/projectiles.test.js` **ya existe** y ya cubre `resolveProjectile` para los casos relevantes (`{}, 'fire' → 'fire'`, `{}, 'water' → 'ice'`, `{projectile:'poison'} → 'poison'`). **No crear tests duplicados.** Esta tarea es solo el cambio de código en `onEnemyDeath` (lógica de escena, sin unit test propio); la resolución de proyectil ya está blindada por el test existente.
 
-Crear/abrir `tests/projectiles.test.js`:
-
-```js
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { resolveProjectile } from '../src/data/projectiles.js';
-
-test('explodesOnDeath resuelve fuego por defecto del mundo de fuego', () => {
-  // El modifier no declara projectile → cae al default del elemento.
-  assert.equal(resolveProjectile({}, 'fire'), 'fire');
-});
-
-test('explodesOnDeath resuelve hielo en el mundo de agua', () => {
-  assert.equal(resolveProjectile({}, 'water'), 'ice');
-});
-
-test('explodesOnDeath respeta un projectile declarado en el modifier', () => {
-  assert.equal(resolveProjectile({ projectile: 'poison' }, 'water'), 'poison');
-});
-```
-
-- [ ] **Step 2: Correr el test**
+- [ ] **Step 1: Confirmar que el test existente cubre la resolución**
 
 Run: `node --test tests/projectiles.test.js`
-Expected: PASS si `resolveProjectile` ya existe (es lógica ya implementada). Estos tests blindan el comportamiento que `onEnemyDeath` va a consumir. Si fallan, revisar `src/data/projectiles.js`.
+Expected: PASS. Confirma que `resolveProjectile` (que `onEnemyDeath` va a consumir) ya está testeado. No añadir tests nuevos.
 
-- [ ] **Step 3: Cambiar `onEnemyDeath` para usar el proyectil del elemento**
+- [ ] **Step 2: Cambiar `onEnemyDeath` para usar el proyectil del elemento**
 
 Estado actual (`src/scenes/GameScene.js`):
 
@@ -299,15 +302,15 @@ Reemplazar por (resolver el proyectil como hace `executeAttack` y aplicar su efe
 
 (`resolveProjectile` y `PROJECTILES` ya están importados en GameScene — línea 27. `TEX.arrow`/`COLORS.fireball` dejan de usarse aquí; no quitar el import de `TEX`/`COLORS` porque se usan en otras partes del archivo.)
 
-- [ ] **Step 4: Verificar tests**
+- [ ] **Step 3: Verificar tests**
 
 Run: `node --test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add src/scenes/GameScene.js tests/projectiles.test.js
+git add src/scenes/GameScene.js
 git commit -m "fix(projectiles): la explosión al morir lanza el proyectil del elemento (fuego/hielo), no flechas"
 ```
 
