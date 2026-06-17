@@ -47,3 +47,29 @@ test('Water tuning constants are defined and in-range', () => {
   assert.equal(EGG_HATCH_MS, 2500);
   assert.equal(TADPOLE_GROW_MS, 4000);
 });
+
+import {
+  CASTER_STUN_MS, CASTER_LIFT_MS, CC_IMMUNE_MS, PUSH_FORCE, PUSH_MS,
+  EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL,
+  TORNADO_RADIUS, TORNADO_EYE_PULL, TORNADO_EYE_RADIUS_FRAC, TORNADO_ENEMY_PULL,
+  TORNADO_TELEGRAPH_MS, TORNADO_ACTIVE_MS, TORNADO_COOLDOWN_MS,
+  RITUAL_FILL_MS,
+} from '../src/data/tuning.js';
+
+test('Air tuning constants are defined and in-range', () => {
+  assert.equal(CASTER_STUN_MS, 300);
+  assert.equal(CASTER_LIFT_MS, 500);
+  assert.equal(CC_IMMUNE_MS, 600);
+  assert.ok(PUSH_FORCE > 0);
+  assert.ok(PUSH_MS > 0);
+
+  assert.ok(EVADE_DODGE_EVERY > EVADE_DODGE_MS);
+  assert.ok(EVADE_DODGE_MUL > 1);
+
+  assert.ok(TORNADO_RADIUS > 0);
+  assert.equal(TORNADO_EYE_PULL, 0.7);
+  assert.ok(TORNADO_EYE_RADIUS_FRAC > 0 && TORNADO_EYE_RADIUS_FRAC < 1);
+  assert.ok(TORNADO_ENEMY_PULL >= 0 && TORNADO_ENEMY_PULL < TORNADO_EYE_PULL);
+
+  assert.ok(RITUAL_FILL_MS > 0);
+});
