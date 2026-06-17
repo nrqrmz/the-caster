@@ -9,7 +9,9 @@ import {
   MELEE_CONTACT_CD, SPAWN_SAFE_DIST,
   TORNADO_RADIUS, TORNADO_ACTIVE_MS, TORNADO_COOLDOWN_MS, TORNADO_TELEGRAPH_MS, TORNADO_ENEMY_PULL,
   CASTER_STUN_MS, CASTER_LIFT_MS, PUSH_FORCE, PUSH_MS,
+  RITUAL_FILL_MS,
 } from '../data/tuning.js';
+import { tickRitual, ritualFraction } from '../systems/RitualMeter.js';
 import { BASE_STATS } from '../data/stats.js';
 import { WaveRunner } from '../systems/WaveRunner.js';
 import { ProjectilePool } from '../systems/ProjectilePool.js';
@@ -40,6 +42,7 @@ import Enemy from '../objects/Enemy.js';
 import Boss from '../objects/Boss.js';
 
 const ITEM = Object.fromEntries(SHOP_ITEMS.map((i) => [i.key, i]));
+const RITUAL_TAUNT_EVERY = 5200; // ms between the leader's deceiving taunts
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -84,6 +87,7 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpool = null; // { center, radius, phase, mode, t } while a vortex is active
     this.tornado = null; // { center, radius, phase, mode, t } while a tornado is active
     this.tornadoGfx = null; // created lazily in updateTornado
+    this.ritualGfx = null; // created lazily in updateRitual; reset here on level restart
     this.lavaRiver = null;
     this.lavaRiverGfx = null;
     this.casterBurnRemaining = 0;
@@ -183,6 +187,13 @@ export default class GameScene extends Phaser.Scene {
     // display size set explicitly; the forms path does this in _applyBossForm, but a
     // plain (no-forms) def is not routed through there.
     if (def.key === 'elemental_tormenta' && def.radius) this.boss.setDisplaySize(def.radius * 2, def.radius * 2);
+    // Seed the runtime untargetable flag (channeling cultist leader) + start the meter.
+    if (def.untargetable) this.boss._untargetable = true;
+    if (def.ritual) {
+      this.boss._ritual = { filled: 0, total: RITUAL_FILL_MS };
+      this.boss._ritualTauntT = RITUAL_TAUNT_EVERY;
+      this.boss._ritualTaunt = 0;
+    }
     if (def.forms && def.forms.length) {
       this.boss._formSeq = new FormSequencer(def.forms);
       // Bootstrap the boss def to the first form.
@@ -505,6 +516,7 @@ export default class GameScene extends Phaser.Scene {
         if (this.tornadoGfx) this.tornadoGfx.clear();
         this.lavaRiver = null;
         if (this.lavaRiverGfx) this.lavaRiverGfx.clear();
+        if (this.ritualGfx) this.ritualGfx.clear();
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
         if (dialogue && dialogue.length) {
           this.scene.pause();
@@ -828,6 +840,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateLavaRiver(delta);
     this.updateWhirlpool(delta);
     this.updateTornado(delta);
+    this.updateRitual(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     for (const b of this.bosses) { if (b && b.active && !b._burrowed) b.drawBar(); else if (b && b._burrowed) b.bar.clear(); }
@@ -1011,6 +1024,56 @@ export default class GameScene extends Phaser.Scene {
     if (w.mode === 'cooldown') {
       if (w.t <= 0) this.tornado = null; // boss re-triggers via the spawnTornado hook
     }
+  }
+
+  // nv7 cultist-leader ritual. While the leader is alive + untargetable, the bar
+  // fills by timer; periodic taunts float. On full: he becomes targetable and is
+  // forced into his fight phase (stops summoning). Killing him then clears the level.
+  updateRitual(delta) {
+    const boss = this.boss;
+    if (!boss || !boss.active || !boss.def || !boss.def.ritual || !boss._ritual) {
+      if (this.ritualGfx) this.ritualGfx.clear();
+      return;
+    }
+
+    if (boss._untargetable) {
+      const r = tickRitual(boss._ritual, delta);
+      // Deceiving taunts ("ya casi, maestro…") — light floating text, no pause.
+      boss._ritualTauntT -= delta;
+      if (boss._ritualTauntT <= 0) {
+        boss._ritualTauntT = RITUAL_TAUNT_EVERY;
+        const key = `story.air.ritual.taunt.${boss._ritualTaunt % 3}`;
+        boss._ritualTaunt += 1;
+        this.floatRitualTaunt(boss, t(key));
+      }
+      if (r.full) {
+        // Rite complete: the leader becomes targetable and stops channeling.
+        boss._untargetable = false;
+        if (boss.brainState && boss.brainState.boss) boss.brainState.boss.forcedPhase = 1;
+        else boss.brainState = { ...(boss.brainState || {}), boss: { forcedPhase: 1 } };
+      }
+    }
+
+    // Render the ritual bar (a thin graphics bar near the top, above the coffin).
+    if (!this.ritualGfx) this.ritualGfx = this.add.graphics().setDepth(950);
+    this.ritualGfx.clear();
+    const frac = ritualFraction(boss._ritual);
+    const bw = GAME_WIDTH - 80, bh = 10, bx = 40, by = 70;
+    this.ritualGfx.fillStyle(COLORS.healthBack, 0.9);
+    this.ritualGfx.fillRect(bx, by, bw, bh);
+    this.ritualGfx.fillStyle(COLORS.lightning, 0.95);
+    this.ritualGfx.fillRect(bx, by, bw * frac, bh);
+    this.ritualGfx.lineStyle(2, COLORS.boss, 0.9);
+    this.ritualGfx.strokeRect(bx, by, bw, bh);
+  }
+
+  // Floating deceiving taunt above the leader; rises and fades.
+  floatRitualTaunt(boss, text) {
+    const label = this.add.text(boss.x, boss.y - 40, text, {
+      fontFamily: 'monospace', fontSize: '12px', color: '#fff176', align: 'center',
+      wordWrap: { width: 200 },
+    }).setOrigin(0.5).setDepth(951);
+    this.tweens.add({ targets: label, y: label.y - 28, alpha: 0, duration: 2200, onComplete: () => label.destroy() });
   }
 
   // Back-compat wrapper used by BossMechanics' poisonFloor (damages the caster).

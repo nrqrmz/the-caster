@@ -105,3 +105,41 @@ export const ELEMENTAL_TORMENTA = {
     ] },
   ],
 };
+
+// ─── nv7 LEVELBOSS ───────────────────────────────────────────────────────────
+// El Líder Cultista — the ritual setpiece (dramatic irony: killing the leader
+// completes the rite that revives Galahad). Phase 0 (channel): untargetable
+// (visible ritual shield via GameScene), static, summons the ritual fodder
+// (capped). The ritual bar fills by TIMER while he channels — NOT by kills — so
+// the player can't stop it by clearing adds; periodic taunting floating text.
+// Phase 1 (fight): on bar-full, GameScene flips _untargetable=false and sets
+// brainState.boss.forcedPhase=1 → he stops summoning, becomes targetable, and
+// fights with ~200 hp + bolts. His death completes the rite (clears the level).
+// Flags: ritual:true (gates the GameScene updateRitual loop), untargetable:true
+// (seeds the runtime _untargetable flag at spawn).
+export const LIDER_CULTISTA = {
+  key: 'lider_cultista', tex: TEX.boss, color: COLORS.boss,
+  hp: 200, speed: 60, damage: 12, radius: 26,
+  elite: true,
+  geometric: true,
+  ritual: true,         // GameScene.updateRitual gates on this
+  untargetable: true,   // seeds enemy._untargetable at spawn (channel phase)
+  movement: { type: 'static' },
+  phases: [
+    // Phase 0 — channel. forcedPhase stays 0 (untargetable) until the bar fills.
+    // from:1.0 so it is the default hp-fraction pick before the meter forces phase 1.
+    { from: 1.0, sequence: [
+      { do: 'summon', spawnType: 'cultista_canalizador', count: 1, cap: 3, respawnMs: 9000, dur: 900 },
+      { do: 'summon', spawnType: 'guardian_rito', count: 1, cap: 2, respawnMs: 11000, dur: 900 },
+      { do: 'summon', spawnType: 'cultista', count: 2, cap: 6, respawnMs: 7000, dur: 800 },
+      { do: 'wait', dur: 700 },
+    ] },
+    // Phase 1 — fight. Reached ONLY via forcedPhase=1 (meter full), never by hp.
+    // from:0.0 so the hp-fraction picker never selects it on its own.
+    { from: 0.0, sequence: [
+      { do: 'shootStraight', speed: 250, damage: 12, telegraph: 300, dur: 600 },
+      { do: 'shootSpread', count: 5, arc: 70, speed: 240, damage: 11, telegraph: 320, dur: 650 },
+      { do: 'wait', dur: 450 },
+    ] },
+  ],
+};
