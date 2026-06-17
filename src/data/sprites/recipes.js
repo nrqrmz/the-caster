@@ -35,11 +35,15 @@ const KNIGHT_WATER = [
 const KNIGHT_VAMP = [...KNIGHT.slice(0, 5), { name: 'knight_eyes', palette: 'vampglow' }];
 const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
 // Bespoke blood-knight lord for caballero_sangre (air nv4 boss). Full-height (h32)
-// imposing armored vampire-lord: crown+helm+spiked pauldrons+breastplate+greaves.
+// imposing armored vampire-lord: black flowing cape, red+black plate armor, massive
+// Saga-style pauldrons, slimmer torso, visored helm (no crown), greaves + greatsword.
 // Distinctly different from the plain fodder KNIGHT_VAMP used by guardia_nocturno.
+// Layer order back-to-front: cape → sword → body → pauldrons → eyes.
 const BLOOD_KNIGHT = [
+  { name: 'bk_cape', palette: 'vampblack' },
   { name: 'bk_sword', palette: 'steel' },
   { name: 'bk_body' },
+  { name: 'bk_pauldrons', palette: 'steel' },
   { name: 'bk_eyes', palette: 'vampglow' },
 ];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and

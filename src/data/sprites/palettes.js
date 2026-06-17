@@ -57,4 +57,6 @@ export const NAMED_PALETTES = {
   drownedskin: derivePalette(0xbcd0c0, { base: 0xbcd0c0, shade: 0x86a392, highlight: 0xe0eee2, outline: 0x3a4f44 }),
   drownedhair: derivePalette(0x222d28, { base: 0x222d28, highlight: 0x415048, shade: 0x141b17, outline: 0x080c0a }),
   hollow: derivePalette(0x0c120f, { base: 0x0c120f, highlight: 0x33473d, shade: 0x060a08, outline: 0x020403 }),
+  // Black cape for Caballero de Sangre — near-black with dark-plum highlight fold sheen.
+  vampblack: derivePalette(0x14090c, { base: 0x1a0e12, highlight: 0x3a2630, shade: 0x0c0608, outline: 0x000000 }),
 };
