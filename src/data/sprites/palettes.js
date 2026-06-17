@@ -59,4 +59,6 @@ export const NAMED_PALETTES = {
   hollow: derivePalette(0x0c120f, { base: 0x0c120f, highlight: 0x33473d, shade: 0x060a08, outline: 0x020403 }),
   // Black cape for Caballero de Sangre — near-black with dark-plum highlight fold sheen.
   vampblack: derivePalette(0x14090c, { base: 0x1a0e12, highlight: 0x3a2630, shade: 0x0c0608, outline: 0x000000 }),
+  // Pale vampire skin for humanoid vampire footsoldiers (Siervo/Duelista/Vástago).
+  vampskin: derivePalette(0xd7a3a3, { base: 0xcdbfc9, highlight: 0xede0e6, shade: 0x9a8a96, outline: 0x4a3a44 }),
 };

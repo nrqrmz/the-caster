@@ -90,6 +90,16 @@ const MAGE_CASTER = (hairPal) => [
   { name: 'mage_staff', palette: 'wood' }, { name: 'mage_robe' }, MAGE_HEAD,
   { name: 'mage_hair', palette: hairPal }, MAGE_HANDS, { name: 'mage_orb', palette: 'orbblue' },
 ];
+// Vampire footsoldiers: bare-headed humanoid with pale `vampskin` face/hands.
+const VAMP_GRUNT = (hairPal) => [
+  { name: 'villager_legs', palette: 'pants' }, { name: 'villager_shirt' },
+  { name: 'mage_head', palette: 'vampskin' }, { name: 'mage_hands', palette: 'vampskin' },
+  { name: 'hair_short', palette: hairPal },
+];
+const VAMP_DUELIST = [
+  { name: 'mage_robe' }, { name: 'mage_head', palette: 'vampskin' }, { name: 'mage_mitre' },
+  { name: 'mage_hands', palette: 'vampskin' }, { name: 'mage_club', palette: 'steel' },
+];
 // Fire beasts. body = type color; molten cracks/crest/core = `ember`; eyes = `glow`;
 // horns = `bone` (filled ivory cow-horns).
 const LARVA = [{ name: 'larva_body' }, { name: 'larva_glow', palette: 'ember' }, { name: 'larva_eyes', palette: 'glow' }];
@@ -262,6 +272,11 @@ export const RECIPES = {
   // --- Air knights (vampiric) ---
   guardia_nocturno: { archetype: 'humanoid', size: 64, baseColor: 0x37474f, parts: KNIGHT_VAMP },
   caballero_sangre: { archetype: 'boss',     size: 96, baseColor: 0xb71c1c, parts: BLOOD_KNIGHT },
+
+  // --- Air humanoid vampires ---
+  siervo_torre:      { archetype: 'humanoid', size: 32, baseColor: 0x37474f, parts: VAMP_GRUNT('blackhair') },
+  vastago_vampirico: { archetype: 'humanoid', size: 32, baseColor: 0x6a1b9a, parts: VAMP_GRUNT('blackhair') },
+  duelista_nocturno: { archetype: 'humanoid', size: 32, baseColor: 0x90a4ae, parts: VAMP_DUELIST },
 
   // --- Air casters ---
   acolito_trueno:   { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: ACOLITO },
