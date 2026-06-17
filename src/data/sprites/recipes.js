@@ -129,6 +129,9 @@ const FENIX = [{ name: 'fenix_crest', palette: 'ember' }, { name: 'fenix_body' }
 const AVISPA = [{ name: 'avispa_wings', palette: 'bone' }, { name: 'avispa_body' }, { name: 'avispa_eyes', palette: 'shadow' }];
 const TOTEM_FIRE = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'glow' }];
 const TOTEM_FROST = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'orbblue' }];
+// Bat: membranous wings + small furred body + ears + glowing eyes. Serves the swarm
+// bat, the heavy winged vampire, and (later) Galahad's giant-bat form (size/baseColor vary).
+const BAT = [{ name: 'bat_wings' }, { name: 'bat_body' }, { name: 'bat_eyes', palette: 'glow' }];
 // Fish / serpent / shelled. body = type color (belly = its own highlight); teeth/fangs
 // = bone; eyes shadow|glow. Turtle/crab carry their own green/red type colors.
 const SHARK = [{ name: 'shark_body' }, { name: 'shark_teeth', palette: 'bone' }, { name: 'shark_eye', palette: 'shadow' }];
@@ -303,6 +306,10 @@ export const RECIPES = {
   tronador:         { archetype: 'humanoid', size: 32, baseColor: 0x8d6e63, parts: TRONADOR_PARTS },
   sacerdote_sangre: { archetype: 'humanoid', size: 32, baseColor: 0xb71c1c, parts: CULT_STAFF },
   bruja_vendaval:   { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: BRUJA },
+
+  // --- Air winged (new art) ---
+  murcielago:    { archetype: 'floating', size: 32, baseColor: 0x6a1b9a, parts: BAT },
+  vampiro_alado: { archetype: 'floating', size: 64, baseColor: 0xb71c1c, parts: BAT },
 
   // --- Air blobs + stone sentinels ---
   fuego_fatuo:        { archetype: 'blob',     size: 32, baseColor: 0xffee58, parts: BRASA },
