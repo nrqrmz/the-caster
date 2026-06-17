@@ -179,6 +179,10 @@ export default class GameScene extends Phaser.Scene {
     this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.diff));
     this.enemies.add(this.boss);
     this.bosses = [this.boss];
+    // Oversized single-def bosses (e.g. Elemental de Tormenta, radius 56) need their
+    // display size set explicitly; the forms path does this in _applyBossForm, but a
+    // plain (no-forms) def is not routed through there.
+    if (!def.forms && def.radius) this.boss.setDisplaySize(def.radius * 2, def.radius * 2);
     if (def.forms && def.forms.length) {
       this.boss._formSeq = new FormSequencer(def.forms);
       // Bootstrap the boss def to the first form.
@@ -798,6 +802,12 @@ export default class GameScene extends Phaser.Scene {
       for (const att of intent.fires) this.executeAttack(e, att);
       if (intent.telegraphs) for (const t of intent.telegraphs) this.drawTelegraph(e, t);
       if (intent.enters) for (const h of intent.enters) this.runBossHook(e, h);
+      // Elemental de Tormenta: keep _tornadoPhase in sync with the BossBrain phase
+      // (P1=1, P2=2, P3=3) so the tornado-eye pull/radius escalate per phase.
+      if (e.def && e.def.key === 'elemental_tormenta' && e.brainState && e.brainState.boss) {
+        const pi = e.brainState.boss.phaseIndex;
+        if (typeof pi === 'number' && pi >= 0) e._tornadoPhase = pi + 1;
+      }
       // Burrow surface telegraph: draw warning ring while _surfacing.
       if (e._surfacing) {
         this.telegraphGfx.lineStyle(3, COLORS.water, 0.85);
