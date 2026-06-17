@@ -38,7 +38,7 @@ const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
 // imposing armored vampire-lord: black flowing cape, red+black plate armor, massive
 // Saga-style pauldrons, slimmer torso, visored helm (no crown), greaves + greatsword.
 // Distinctly different from the plain fodder KNIGHT_VAMP used by guardia_nocturno.
-// Layer order back-to-front: cape → sword → body → pauldrons → eyes.
+// Layer order back-to-front: cape → body → pauldrons → sword → eyes.
 const BLOOD_KNIGHT = [
   { name: 'bk_cape', palette: 'vampblack' },
   { name: 'bk_body' },
@@ -247,6 +247,14 @@ export const RECIPES = {
   // --- Air knights (vampiric) ---
   guardia_nocturno: { archetype: 'humanoid', size: 64, baseColor: 0x37474f, parts: KNIGHT_VAMP },
   caballero_sangre: { archetype: 'boss',     size: 96, baseColor: 0xb71c1c, parts: BLOOD_KNIGHT },
+
+  // --- Air casters ---
+  acolito_trueno:   { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: CULT_STAFF },
+  heraldo_rayo:     { archetype: 'humanoid', size: 32, baseColor: 0x546e7a, parts: CULT_STAFF },
+  hechicero_viento: { archetype: 'humanoid', size: 32, baseColor: 0x90a4ae, parts: MAGE_CASTER('blackhair') },
+  tronador:         { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: MAGE_CASTER('hair') },
+  sacerdote_sangre: { archetype: 'humanoid', size: 32, baseColor: 0xb71c1c, parts: CULT_STAFF },
+  bruja_vendaval:   { archetype: 'boss',     size: 96, baseColor: 0x6a1b9a, parts: MAGE_CASTER('silverhair') },
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
