@@ -71,38 +71,42 @@ const GALAHAD_COUNT = [
   { name: 'cnt_legs',      palette: 'vampblack' },
   { name: 'cnt_shirt',     palette: 'linen' },
   { name: 'cnt_head',      palette: 'vampskin' },
+  { name: 'cnt_hair',      palette: 'blackhair' },
   { name: 'cnt_medallion', palette: 'glow' },
   { name: 'cnt_eyes',      palette: 'vampglow' },
 ];
 // Galahad Rage — same Count silhouette, corrupted red tint (first corruption stage).
 // Blood-stained shirt, flushed reddened skin, cape stays near-black, eyes brighter red.
-// Layer order back-to-front: cape → legs → shirt → head → medallion → eyes.
+// Layer order back-to-front: cape → legs → shirt → head → hair → medallion → eyes.
 const GALAHAD_RAGE = [
   { name: 'cnt_cape',      palette: 'vampblack' },
   { name: 'cnt_legs',      palette: 'vampblack' },
   { name: 'cnt_shirt',     palette: 'countrage_shirt' },
   { name: 'cnt_head',      palette: 'countrage_skin' },
+  { name: 'cnt_hair',      palette: 'blackhair' },
   { name: 'cnt_medallion', palette: 'glow' },
   { name: 'cnt_eyes',      palette: 'vampglow' },
 ];
 // Galahad Rage2 — deeper corruption, NO CAPE, darker/bloodier palettes.
 // The cape is dropped so the bloodied shirt is fully exposed. More monstrous.
-// Layer order back-to-front: legs → shirt → head → medallion → eyes.
+// Layer order back-to-front: legs → shirt → head → hair → medallion → eyes.
 const GALAHAD_RAGE2 = [
   { name: 'cnt_legs',      palette: 'vampblack' },
   { name: 'cnt_shirt',     palette: 'countrage2_shirt' },
   { name: 'cnt_head',      palette: 'countrage2_skin' },
+  { name: 'cnt_hair',      palette: 'blackhair' },
   { name: 'cnt_medallion', palette: 'glow' },
   { name: 'cnt_eyes',      palette: 'vampglow' },
 ];
 // Galahad Final — ashen/dying Count: desaturated grey-white (true death form).
 // Ashen cloth, death-pale skin, dim fading eyes. Cape present (crumbling remnant of dignity).
-// Layer order back-to-front: cape → legs → shirt → head → medallion → eyes.
+// Layer order back-to-front: cape → legs → shirt → head → hair → medallion → eyes.
 const GALAHAD_FINAL = [
   { name: 'cnt_cape',      palette: 'vampblack' },
   { name: 'cnt_legs',      palette: 'ashen_cloth' },
   { name: 'cnt_shirt',     palette: 'ashen_cloth' },
   { name: 'cnt_head',      palette: 'ashen_skin' },
+  { name: 'cnt_hair',      palette: 'blackhair' },
   { name: 'cnt_medallion', palette: 'ashen_glow' },
   { name: 'cnt_eyes',      palette: 'ashen_glow' },
 ];

@@ -18,7 +18,7 @@ const layers = {
   gar_wings: {}, gar_body: {}, gar_head: {}, gar_eyes: {},
   gal_cape: {}, gal_body: {}, gal_sword: {}, gal_eyes: {},
   // Galahad Form 1 — Vampire Count (cnt_*)
-  cnt_cape: {}, cnt_shirt: {}, cnt_head: {}, cnt_legs: {}, cnt_medallion: {}, cnt_eyes: {},
+  cnt_cape: {}, cnt_shirt: {}, cnt_head: {}, cnt_hair: {}, cnt_legs: {}, cnt_medallion: {}, cnt_eyes: {},
 };
 const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
 const Rd = (v) => Math.round(v);
@@ -1142,13 +1142,10 @@ for (const [hx, hy] of [[8,21],[9,21],[10,21],[8,22],[9,22],[10,22],
   if (!layers['cnt_shirt'][`${hx},${hy}`]) put('cnt_shirt', hx, hy, 'b');
 }
 
-// ============================ CNT_HEAD (pale face + slicked-back dark hair — vampskin + blackhair) ============================
+// ============================ CNT_HEAD (pale gaunt face only — vampskin palette) ============================
 // Head oval centered at cx, y=1..9. vampskin palette drives pale complexion.
-// Dark slicked-back hair as 'a' (accent role — will appear as base vampskin accent unless
-// overridden; instead use 's' for the shadow of hair and let the blackhair layer sit on top).
-// Actually: draw hair directly as 'o'/'s' pixels for dark appearance over the pale face.
-// Face: oval y=2..9, cx center. Eyes NOT here (cnt_eyes on top).
-// Hair: slick dark rows at y=1..4 (top of head), parted center, swept back.
+// Hair is now a SEPARATE cnt_hair layer (blackhair palette) drawn on top — no hair pixels here.
+// Face: oval y=1..9, cx center. Eyes NOT here (cnt_eyes on top).
 
 // Face oval (vampskin): pale, slightly gaunt
 const inFace = (x, y) => ((x - cx) / 4.0) ** 2 + ((y - 5.5) / 4.5) ** 2 <= 1;
@@ -1159,28 +1156,6 @@ for (let y = 1; y <= 9; y++) for (let x = 10; x <= 22; x++) {
   else if (x >= 20 || y >= 9) r = 's';      // right cheek / jaw shadow
   put('cnt_head', x, y, r);
 }
-
-// Dark hair (slick, parted center, swept back): drawn as near-outline pixels overlaid on head
-// Hair top: a row of dark pixels across y=1..3 (slick top)
-for (let y = 1; y <= 3; y++) {
-  const hw = (y === 1) ? 3.5 : (y === 2) ? 4.0 : 4.5;
-  const Lx = Rd(cx - hw), Rx = Rd(cx + hw);
-  for (let x = Lx; x <= Rx; x++) {
-    // Only paint where head exists or slightly above (the very top)
-    if (y === 1 || layers['cnt_head'][`${x},${y}`]) {
-      put('cnt_head', x, y, 'o'); // dark — outline role = darkest
-    }
-  }
-  // Center part: tiny pale highlight pixel
-  if (layers['cnt_head'][`${cx},${y}`]) put('cnt_head', cx, y, 's');
-}
-// Side hair at temples (y=2..6, x=10..11 and x=21..22): dark side-swept
-for (let y = 2; y <= 6; y++) {
-  put('cnt_head', 10, y, 'o'); // left temple hair
-  put('cnt_head', 21, y, 'o'); // right temple hair
-}
-// Thin widow's peak suggestion (center-top, y=4): slight dark notch at hairline
-put('cnt_head', cx - 1, 4, 'o'); put('cnt_head', cx + 1, 4, 'o');
 // Aristocratic high cheekbones hint: shade band at y=7
 for (const x of [13, 20]) if (layers['cnt_head'][`${x},7`]) put('cnt_head', x, 7, 's');
 // Nose bridge: narrow central highlight y=5..7
@@ -1189,6 +1164,84 @@ put('cnt_head', cx, 5, 'h'); put('cnt_head', cx, 6, 'h');
 for (let x = cx - 1; x <= cx + 1; x++) put('cnt_head', x, 8, 's');
 // Chin shadow at y=9
 for (let x = cx - 2; x <= cx + 2; x++) if (layers['cnt_head'][`${x},9`]) put('cnt_head', x, 9, 's');
+
+// ============================ CNT_HAIR (long dark vampire hair — blackhair palette) ============================
+// A single connected dark hair mass: crown across the top of the head, flowing STRAIGHT DOWN
+// both sides of the face, reaching ~y=12 (just above the shirt collar / shoulder level).
+// Both sides must connect to the crown with NO gap — no floating strands.
+// Shape: wider crown cap at y=1..3, then straight side curtains y=3..12, tapering slightly.
+// Drawn on top of cnt_head (face visible through the center opening).
+// blackhair palette: o=outline (near-black), b=base (dark brown-black), s=shade, h=subtle highlight.
+//
+// Absolute grid (cx=16, 32×32 canvas):
+//   Crown: y=1..3, x=12..20 (spans the head top, ~4px each side of center)
+//   Left curtain: y=3..12, x=10..12 (3px wide strip, connected to crown at y=3,x=12)
+//   Right curtain: y=3..12, x=20..22 (3px wide strip, connected to crown at y=3,x=20)
+//   Hairline: a thin dark row at y=4 that frames the forehead (crown-to-sides transition)
+//
+// Connection guarantee: crown's left edge is x=12 (same col where left curtain starts),
+//   crown's right edge is x=20 (same col where right curtain starts) → zero gap.
+
+// Crown cap: y=1..3 — spans head top, slightly wider each row
+for (let y = 1; y <= 3; y++) {
+  // Width: from (cx-4)=12 to (cx+4)=20 at y=1, expanding to (cx-5)=11 to (cx+5)=21 at y=3
+  const hw = (y === 1) ? 4.0 : (y === 2) ? 4.5 : 5.0;
+  const CLx = Rd(cx - hw), CRx = Rd(cx + hw);
+  for (let x = CLx; x <= CRx; x++) {
+    let r = 'b';
+    if (x === CLx || x === CRx) r = 'o';
+    else if (x === CLx + 1) r = 'h';  // left highlight (light catches top of head)
+    else if (x === CRx - 1) r = 's';  // right shade
+    // Slicked center part: darker mid to suggest swept-back parting
+    if (x === cx || x === cx - 1) r = 's';
+    put('cnt_hair', x, y, r);
+  }
+}
+
+// Hairline transition row y=4: narrow band connecting crown sides to the side curtains
+// (ensures the crown-to-curtain junction is clearly connected, no gap)
+for (let y = 3; y <= 4; y++) {
+  // Left: x=10..12 (curtain width, meeting the crown at x=11 which is the y=3 crown left edge)
+  for (let x = 10; x <= 12; x++) {
+    const r = (x === 10) ? 'o' : (x === 12 ? 's' : 'b');
+    put('cnt_hair', x, y, r);
+  }
+  // Right: x=20..22
+  for (let x = 20; x <= 22; x++) {
+    const r = (x === 22) ? 'o' : (x === 20 ? 's' : 'b');
+    put('cnt_hair', x, y, r);
+  }
+}
+
+// Side curtains: straight hair falling from y=5 to y=12 on both sides of the face
+// Left curtain: x=10..12, slight taper at bottom (long vampire locks)
+for (let y = 5; y <= 12; y++) {
+  // Taper: full 3px (x=10..12) until y=10, then narrow to 2px by y=12
+  const x1 = (y >= 11) ? 11 : 10;  // left edge: shifts right slightly near bottom
+  for (let x = x1; x <= 12; x++) {
+    let r = 'b';
+    if (x === x1) r = 'o';
+    else if (x === 12) r = 's';  // inner edge (toward face): subtle shade
+    // Vertical highlight strand to suggest hair texture
+    if (x === 11 && y % 3 === 0) r = 'h';
+    put('cnt_hair', x, y, r);
+  }
+}
+// Right curtain: x=20..22, mirrored taper
+for (let y = 5; y <= 12; y++) {
+  const x1 = (y >= 11) ? 21 : 22;  // right edge: shifts left slightly near bottom
+  for (let x = 20; x <= x1; x++) {
+    let r = 'b';
+    if (x === x1) r = 'o';
+    else if (x === 20) r = 's';  // inner edge (toward face)
+    if (x === 21 && y % 3 === 0) r = 'h';
+    put('cnt_hair', x, y, r);
+  }
+}
+
+// Tip ends: small tapered tips at y=12 to finish the locks cleanly
+put('cnt_hair', 11, 12, 'b'); put('cnt_hair', 12, 12, 's');  // left tip
+put('cnt_hair', 20, 12, 's'); put('cnt_hair', 21, 12, 'b');  // right tip
 
 // ============================ CNT_MEDALLION (gold medallion on chest — glow palette) ============================
 // A prominent circular gold medallion/brooch centered on the shirt front at y=13..15.
@@ -1231,5 +1284,6 @@ emit('cnt_cape');
 emit('cnt_legs');
 emit('cnt_shirt');
 emit('cnt_head');
+emit('cnt_hair');
 emit('cnt_medallion');
 emit('cnt_eyes');
