@@ -797,6 +797,10 @@ export default class GameScene extends Phaser.Scene {
     let tentacle = null;
     if (style === 'water') {
       const r = opts.radius ?? 60;
+      // Marca de suelo del MISMO radio que el hitbox: el tentáculo (alto) es cosmético,
+      // el daño es este círculo. Persiste toda la vida de la zona (cleanup destruye z.gfx).
+      gfx = this.add.circle(opts.x, opts.y, r, color, 0.16).setDepth(5);
+      gfx.setStrokeStyle(2, color, 0.7);
       // Scale the 32-px texture to radius × 2 (width) and radius × 3 (full height).
       const tsx = (r * 2) / 32;
       const tsy = (r * 3) / 32;
