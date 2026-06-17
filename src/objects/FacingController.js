@@ -6,6 +6,12 @@ export function pickFacing(vx, vy, lastDir = 'down') {
   return { dir: vy < 0 ? 'up' : 'down', flipX: false };
 }
 
+// PURE. flipX para un enemigo que siempre mira a la princesa: voltea cuando ella
+// está a la izquierda del sprite. Sin histéresis (banda muerta opcional a futuro).
+export function facePlayerFlip(spriteX, targetX) {
+  return targetX < spriteX;
+}
+
 const MOVE_EPS = 6; // px/s below which we treat the entity as idle
 
 export class FacingController {
