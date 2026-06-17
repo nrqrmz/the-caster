@@ -444,7 +444,11 @@ export default class GameScene extends Phaser.Scene {
       const stillSpawning = this.spawnEvent !== null && this.spawnEvent !== undefined;
       if (alive === 0 && !stillSpawning) { this.runner.onCleared(); this.beginPhase(); }
     } else if (phase === 'miniboss' || phase === 'levelBoss' || phase === 'templeBoss') {
-      if (this.enemies.countActive(true) === 0) {
+      if (this.bosses.length === 0) {
+        // El boss murió: el nivel está concluido aunque queden minions. Despawnear
+        // los enemigos no-boss restantes para que no persistan al diálogo/siguiente fase.
+        const leftovers = this.enemies.getChildren().filter((e) => e && e.active);
+        for (const e of leftovers) e.destroy();
         this.bossMechanics = null;
         this.triangle = null;
         if (this.triangleGfx) this.triangleGfx.clear();
