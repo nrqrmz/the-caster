@@ -70,7 +70,7 @@ export const AIR_ENEMIES = {
     modifiers: [{ type: 'drain', heal: 3 }] },
 
   // #10 — Arpía: dive-bomb flyer. Charges in then dashStrikes.
-  arpia: { key: 'arpia', geometric: true, tex: TEX.archer, color: COLORS.harpyPlum,
+  arpia: { key: 'arpia', tex: TEX.archer, color: COLORS.harpyPlum,
     hp: 40, speed: 110, damage: 13, radius: 16,
     flying: true,
     movement: { type: 'charge', windup: 450, dash: 320, recover: 500, dashMul: 3.2 },
@@ -115,7 +115,7 @@ export const AIR_ENEMIES = {
     attacks: [{ type: 'shootHoming', every: 2600, speed: 120, telegraph: 350 }] },
 
   // #16 — Torbellino Errante: 0-damage ambient hazard. Pushes you and briefly lifts (0.5 s) on contact.
-  torbellino_errante: { key: 'torbellino_errante', geometric: true, tex: TEX.archer, color: COLORS.whirlGrey,
+  torbellino_errante: { key: 'torbellino_errante', tex: TEX.archer, color: COLORS.whirlGrey,
     hp: 40, speed: 50, damage: 0, radius: 20,
     movement: { type: 'erratic' },
     attacks: [],
