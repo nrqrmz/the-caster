@@ -1,7 +1,8 @@
 import { COLORS, TEX } from '../../config.js';
 
 // Water world roster (~20). Control + attrition: higher HP and more healers than
-// Fire; fewer projectiles. Three enemies apply onHitSlow (capped at 0.45× speed).
+// Fire; fewer projectiles. Two enemies apply onHitSlow by melee/aura contact
+// (capped at 0.45× speed); ranged ice shots also slow via projectile type.
 // Stat numbers are starting values; tune in playtest.
 export const WATER_ENEMIES = {
   // === Cultistas / ahogados (human — nv1–6) ===
