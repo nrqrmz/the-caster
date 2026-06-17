@@ -96,9 +96,17 @@ const VAMP_GRUNT = (hairPal) => [
   { name: 'mage_head', palette: 'vampskin' }, { name: 'mage_hands', palette: 'vampskin' },
   { name: 'hair_short', palette: hairPal },
 ];
-const VAMP_DUELIST = [
-  { name: 'mage_robe' }, { name: 'mage_head', palette: 'vampskin' }, { name: 'mage_mitre' },
-  { name: 'mage_hands', palette: 'vampskin' }, { name: 'mage_club', palette: 'steel' },
+// Lean night swordsman: small cape behind shoulders, fitted shirt+trousers, pale vamp face/hands,
+// black hair, and a slender rapier held to the right. Dark steel-blue (0x455a64) fitted top.
+// Layer order back-to-front: cape → legs → shirt → head → hands → hair → blade.
+const DUELIST = [
+  { name: 'duelist_cape', palette: 'vampblack' },
+  { name: 'villager_legs', palette: 'pants' },
+  { name: 'villager_shirt' },
+  { name: 'mage_head', palette: 'vampskin' },
+  { name: 'mage_hands', palette: 'vampskin' },
+  { name: 'hair_short', palette: 'blackhair' },
+  { name: 'duelist_blade', palette: 'steel' },
 ];
 // Fire beasts. body = type color; molten cracks/crest/core = `ember`; eyes = `glow`;
 // horns = `bone` (filled ivory cow-horns).
@@ -276,7 +284,7 @@ export const RECIPES = {
   // --- Air humanoid vampires ---
   siervo_torre:      { archetype: 'humanoid', size: 32, baseColor: 0x37474f, parts: VAMP_GRUNT('blackhair') },
   vastago_vampirico: { archetype: 'humanoid', size: 32, baseColor: 0x6a1b9a, parts: VAMP_GRUNT('blackhair') },
-  duelista_nocturno: { archetype: 'humanoid', size: 32, baseColor: 0x90a4ae, parts: VAMP_DUELIST },
+  duelista_nocturno: { archetype: 'humanoid', size: 32, baseColor: 0x455a64, parts: DUELIST },
 
   // --- Air casters ---
   acolito_trueno:   { archetype: 'humanoid', size: 32, baseColor: 0x607d8b, parts: ACOLITO },

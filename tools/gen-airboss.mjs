@@ -14,6 +14,7 @@ const N = 32, cx = 16, cy = 16;
 const layers = {
   bk_cape: {}, bk_sword: {}, bk_body: {}, bk_pauldrons: {}, bk_eyes: {},
   bruja_body: {}, bruja_head: {}, bruja_hair: {}, bruja_staff: {}, bruja_wind: {},
+  duelist_blade: {}, duelist_cape: {},
 };
 const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
 const Rd = (v) => Math.round(v);
@@ -465,3 +466,78 @@ emit('bruja_head');
 emit('bruja_hair');
 emit('bruja_staff');
 emit('bruja_wind');
+
+// ============================ DUELIST_BLADE (thin rapier — right side, for duelista_nocturno) ============================
+// A lean elegant rapier held vertically on the right side of the figure.
+// Blade: 1px wide highlight column (x=24) + 1px base/shade (x=25), y=3..21 — very slender.
+// Crossguard: short horizontal bar at y=22..23, x=21..27.
+// Grip: x=24..25, y=24..26 (wrapped, alternating).
+// Pommel: small circle at y=27..28, x=23..25.
+// Steel palette: o=outline, h=highlight(bright steel), b=base(steel mid), s=shade(dark steel).
+// Anchored right side: blade left edge at x=24. Fits within 32-grid for a 32px humanoid.
+
+// Blade tip
+put('duelist_blade', 24, 3, 'h');
+put('duelist_blade', 24, 4, 'h');
+// Blade shaft: slender 2-px (x=24 highlight, x=25 base), with shade edge
+for (let y = 5; y <= 21; y++) {
+  put('duelist_blade', 24, y, 'h');
+  put('duelist_blade', 25, y, 'b');
+  // Subtle shade every 4 rows for gleam effect
+  if (y % 4 === 1) put('duelist_blade', 25, y, 's');
+}
+// Outline (left edge of blade — makes it crisp)
+for (let y = 3; y <= 21; y++) put('duelist_blade', 23, y, 'o');
+// Right edge outline
+for (let y = 5; y <= 21; y++) put('duelist_blade', 26, y, 'o');
+
+// Crossguard: a short horizontal sweep y=22, x=21..27
+for (let x = 21; x <= 27; x++) {
+  put('duelist_blade', x, 22, x === 21 || x === 27 ? 'o' : (x === 22 || x === 26 ? 's' : (x === 24 ? 'h' : 'b')));
+}
+// Crossguard lower edge
+put('duelist_blade', 21, 23, 'o'); put('duelist_blade', 22, 23, 's');
+put('duelist_blade', 26, 23, 's'); put('duelist_blade', 27, 23, 'o');
+
+// Grip: y=24..26, x=23..26 — narrow, alternating wrap
+for (let y = 24; y <= 26; y++) {
+  put('duelist_blade', 23, y, 'o');
+  put('duelist_blade', 24, y, y % 2 === 0 ? 'h' : 'b');
+  put('duelist_blade', 25, y, y % 2 === 0 ? 'b' : 's');
+  put('duelist_blade', 26, y, 'o');
+}
+
+// Pommel: small 3×2 ellipse at y=27..28
+for (const [x, y, r] of [
+  [23, 27, 'o'], [24, 27, 'h'], [25, 27, 'b'], [26, 27, 'o'],
+  [23, 28, 'o'], [24, 28, 'b'], [25, 28, 's'], [26, 28, 'o'],
+]) put('duelist_blade', x, y, r);
+
+emit('duelist_blade');
+
+// ============================ DUELIST_CAPE (small dark shoulder cape — elegant flair) ============================
+// A SHORT cape anchored behind the shoulders, draping from y=11 to y=22. Kept NARROW (5px)
+// so it reads as a fencer's half-cape, not an amorphous mass. Dark (vampblack palette).
+// Center at cx=16, width 5px (x=13..17). The shape is slightly angled right for dynamism.
+
+const DCAPE_TOP = 11, DCAPE_BOT = 22;
+for (let y = DCAPE_TOP; y <= DCAPE_BOT; y++) {
+  const t = (y - DCAPE_TOP) / (DCAPE_BOT - DCAPE_TOP); // 0..1
+  // Slight right-lean: right edge stays at cx+2, left edge fans from cx-2 to cx-4
+  const Lx = Rd(cx - 2 - t * 2);
+  const Rx = Rd(cx + 2 + t * 0.5);
+  for (let x = Lx; x <= Rx; x++) {
+    let r = 'b';
+    if (x === Lx || x === Rx) r = 'o';
+    else if (x === Lx + 1) r = 's';
+    // Subtle fold highlight
+    else if (x === Rd((Lx + Rx) / 2)) r = 'h';
+    put('duelist_cape', x, y, r);
+  }
+}
+// Short attachment band at shoulders (y=10)
+for (let x = cx - 2; x <= cx + 2; x++) {
+  put('duelist_cape', x, 10, x === cx - 2 || x === cx + 2 ? 'o' : 's');
+}
+
+emit('duelist_cape');
