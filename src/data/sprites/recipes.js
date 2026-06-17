@@ -67,11 +67,25 @@ const BLOOD_KNIGHT = [
 // (vs blood-V mark), cross-shaped longsword crossguard (vs greatsword serrations), gold
 // holy-gleam accent (vs blood-red accent), open face slit with golden eyes (vs vampglow).
 // Layer order back-to-front: cape → body → sword → eyes.
+// Used by galahad_rage, galahad_rage2, galahad_final (knight forms to be redesigned later).
 const GALAHAD_KNIGHT = [
   { name: 'gal_cape', palette: 'vampblack' },
   { name: 'gal_body' },
   { name: 'gal_sword', palette: 'steel' },
   { name: 'gal_eyes', palette: 'glow' },
+];
+// Galahad Form 1 — Vampire Count (human form).
+// A risen vampire Count: iconic high-collar cape, white dress shirt, black trousers,
+// pale gaunt face with slicked dark hair, gold medallion, red glowing eyes.
+// NOT armored — aristocratic, menacing, unmistakably Dracula-archetype.
+// Layer order back-to-front: cape → legs → shirt → head → medallion → eyes.
+const GALAHAD_COUNT = [
+  { name: 'cnt_cape',      palette: 'vampblack' },
+  { name: 'cnt_legs',      palette: 'vampblack' },
+  { name: 'cnt_shirt',     palette: 'linen' },
+  { name: 'cnt_head',      palette: 'vampskin' },
+  { name: 'cnt_medallion', palette: 'glow' },
+  { name: 'cnt_eyes',      palette: 'vampglow' },
 ];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
@@ -355,7 +369,7 @@ export const RECIPES = {
   // --- Galahad (nv8 air temple final boss) — 5 shapeshifter forms ---
   // Holy → blood → dark fury → giant bat → ashen. The 4 human forms use the bespoke
   // GALAHAD_KNIGHT parts; the bat form reuses the BAT archetype at boss scale (96px).
-  galahad_humano:     { archetype: 'boss', size: 96, baseColor: 0x9aa6b2, accent: 0xffd54f, parts: GALAHAD_KNIGHT }, // pale steel plate, gold trim — holy paladin
+  galahad_humano:     { archetype: 'boss', size: 96, baseColor: 0xcdbfc9, parts: GALAHAD_COUNT }, // vampire Count form: pale, caped, white shirt, black trousers, gold medallion, red eyes
   galahad_rage:       { archetype: 'boss', size: 96, baseColor: 0xb71c1c, accent: 0xffd54f, parts: GALAHAD_KNIGHT }, // blood-red — first corruption
   galahad_rage2:      { archetype: 'boss', size: 96, baseColor: 0x7f0000, accent: 0xff5252, parts: GALAHAD_KNIGHT }, // dark crimson, scarlet accent — full fury
   galahad_murcielago: { archetype: 'boss', size: 96, baseColor: 0x4a148c, parts: BAT },                             // deep purple giant bat

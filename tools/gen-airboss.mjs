@@ -17,6 +17,8 @@ const layers = {
   duelist_blade: {}, duelist_cape: {},
   gar_wings: {}, gar_body: {}, gar_head: {}, gar_eyes: {},
   gal_cape: {}, gal_body: {}, gal_sword: {}, gal_eyes: {},
+  // Galahad Form 1 — Vampire Count (cnt_*)
+  cnt_cape: {}, cnt_shirt: {}, cnt_head: {}, cnt_legs: {}, cnt_medallion: {}, cnt_eyes: {},
 };
 const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
 const Rd = (v) => Math.round(v);
@@ -996,3 +998,238 @@ emit('gal_cape');
 emit('gal_body');
 emit('gal_sword');
 emit('gal_eyes');
+
+// ============================ GALAHAD FORM 1 — VAMPIRE COUNT (cnt_*) ============================
+// Sir Galahad's HUMAN form: a risen vampire Count (Dracula archetype).
+// NOT armored — aristocratic: tall-collar cape, white dress shirt, black trousers, pale face,
+// slick dark hair, gold medallion on chest, red glowing eyes.
+// Composition (back-to-front): cnt_cape → cnt_legs → cnt_shirt → cnt_head → cnt_medallion → cnt_eyes
+// All on a 32×32 canvas (res:32) to match the other galahad parts.
+// Palette roles used per part (via recipe or named override):
+//   cnt_cape      → vampblack  (o=outline, b=near-black, s=shade, h=dark-plum fold sheen)
+//   cnt_shirt     → linen      (o=outline, b=linen base, s=shade, h=near-white highlight)
+//   cnt_head      → vampskin   (o=outline, b=pale base, s=shade, h=highlight) + blackhair embedded via 'a' role (but hair drawn separately)
+//   cnt_legs      → vampblack  (same near-black palette as cape)
+//   cnt_medallion → glow       (o=outline, b=gold base, h=gold highlight)
+//   cnt_eyes      → vampglow   (h=bright red, b=red base)
+// Figure layout: head y=1..9, collar y=5..11, torso y=10..20, legs y=20..31.
+
+// ============================ CNT_CAPE (high-collar cape — Dracula iconic silhouette) ============================
+// Two distinct elements:
+//   1. TALL COLLAR: flanks the head, rising from y=5 to y=1, frames the face (cx-6..cx-4 and cx+4..cx+6)
+//   2. CAPE BODY: drapes from shoulders (y=11) to hem (y=31), slightly wider than the shirt behind it.
+// vampblack palette: o=outline, b=base(near-black), s=shade, h=highlight(dark-plum fold sheen)
+
+// Tall collar — left wing (x=8..11, y=2..11): rises beside/above head, slight taper upward
+for (let y = 2; y <= 11; y++) {
+  // Collar narrows as it rises (wider at base near shoulders, tapers to a point at top)
+  const half = (y <= 4) ? 1.5 : (y <= 7) ? 2.0 : (y <= 9) ? 2.5 : 3.0;
+  const colLx = Rd(cx - 9 - 0);      // left collar anchored at left of figure
+  const colRx = Rd(cx - 9 + half * 2); // right edge tapers inward as y decreases
+  // Simpler: just draw left collar as a column
+  const lc_x0 = (y <= 4) ? 9 : (y <= 7) ? 8 : 8;
+  const lc_x1 = (y <= 4) ? 10 : (y <= 7) ? 10 : 11;
+  for (let x = lc_x0; x <= lc_x1; x++) {
+    put('cnt_cape', x, y, x === lc_x0 || x === lc_x1 ? 'o' : 'h');
+  }
+}
+// Right collar wing (mirror)
+for (let y = 2; y <= 11; y++) {
+  const rc_x0 = (y <= 4) ? 21 : (y <= 7) ? 21 : 20;
+  const rc_x1 = (y <= 4) ? 22 : (y <= 7) ? 23 : 23;
+  for (let x = rc_x0; x <= rc_x1; x++) {
+    put('cnt_cape', x, y, x === rc_x0 || x === rc_x1 ? 'o' : 'h');
+  }
+}
+// Collar top points — sharp tips at y=1 to look like raised vampire collar points
+put('cnt_cape', 9, 1, 'o'); put('cnt_cape', 10, 1, 'b');
+put('cnt_cape', 21, 1, 'b'); put('cnt_cape', 22, 1, 'o');
+
+// Cape body: drapes from y=10..31, fills behind the figure. Width fans slightly.
+// Narrower than gal_cape (not a royal mantle) but wider than bk_cape (not straight curtain).
+// Anchored behind torso — NOT centered exactly the same but slightly narrower at top.
+const CNT_CAPE_TOP = 10, CNT_CAPE_BOT = 31;
+for (let y = CNT_CAPE_TOP; y <= CNT_CAPE_BOT; y++) {
+  const t = (y - CNT_CAPE_TOP) / (CNT_CAPE_BOT - CNT_CAPE_TOP); // 0..1
+  // Half-width: 5 at shoulders, fans to 9 at hem — aristocratic drape, not a king's mantle
+  const half = Rd(5 + t * 4);
+  const Lx = Math.max(0, cx - half), Rx = Math.min(31, cx + half);
+  for (let x = Lx; x <= Rx; x++) {
+    let r = 'b';
+    if (x === Lx || x === Rx) r = 'o';
+    else if (x === Lx + 1 || x === Rx - 1) r = 's';
+    // Two subtle fold-highlight drape lines (fabric creases)
+    else if (x === cx - Rd(t * 2) || x === cx + Rd(t * 2)) r = 'h';
+    put('cnt_cape', x, y, r);
+  }
+}
+// Cape attachment band at shoulders (y=9..10): narrow clasp band
+for (let x = cx - 4; x <= cx + 4; x++) {
+  put('cnt_cape', x, 9, x === cx - 4 || x === cx + 4 ? 'o' : 's');
+}
+// Hem fold accent (y=30..31): slightly ragged hem
+for (const xc of [cx - 6, cx - 2, cx + 2, cx + 6]) {
+  if (layers['cnt_cape'][`${xc},31`]) put('cnt_cape', xc, 31, 'h');
+}
+
+// ============================ CNT_LEGS (black aristocratic trousers — vampblack) ============================
+// Slim-cut trousers, y=21..31. Two close-together legs. vampblack palette.
+// Left leg: x=13..15, Right leg: x=17..19. Small gap at center.
+for (let y = 21; y <= 31; y++) {
+  // Waistband area (y=21..22): slightly wider
+  if (y <= 22) {
+    for (let x = 13; x <= 19; x++) {
+      let r = 'b';
+      if (x === 13 || x === 19) r = 'o';
+      else if (x === 14 || x === 18) r = 'h';
+      else if (x === 16) r = 's'; // center seam
+      put('cnt_legs', x, y, r);
+    }
+  } else {
+    // Left leg: x=13..15
+    for (const x of [13, 14, 15]) put('cnt_legs', x, y, x === 13 || x === 15 ? 'o' : (x === 14 ? 'h' : 'b'));
+    // Right leg: x=17..19
+    for (const x of [17, 18, 19]) put('cnt_legs', x, y, x === 17 || x === 19 ? 'o' : (x === 18 ? 'h' : 'b'));
+  }
+}
+// Shoe / foot detail at y=30..31: slightly wider than leg (aristocratic shoes)
+for (const x of [12, 13, 14, 15, 16]) put('cnt_legs', x, 31, x === 12 || x === 16 ? 'o' : 's');
+for (const x of [16, 17, 18, 19, 20]) put('cnt_legs', x, 31, x === 16 || x === 20 ? 'o' : 's');
+
+// ============================ CNT_SHIRT (white dress shirt + slim torso — linen palette) ============================
+// The main torso visible between/over the cape. Slim aristocratic cut.
+// Torso: y=10..22, centered. Shoulders slightly wider (cx±5.5), waist tapers (cx±4).
+// White shirt: b=linen base, h=bright near-white, s=linen shade, o=outline.
+// Includes a small neck collar at y=9..10 (visible above the cape collar's rear).
+// Arms hang at sides (slim sleeves y=11..21, x=8..9 left, x=23..24 right).
+for (let y = 10; y <= 21; y++) {
+  const half = (y <= 12) ? 5.5 : (y <= 16) ? 5.0 : (y <= 19) ? 4.5 : 4.0;
+  const Lx = Rd(cx - half), Rx = Rd(cx + half);
+  for (let x = Lx; x <= Rx; x++) {
+    let r = 'b';
+    if (x === Lx || x === Rx) r = 'o';
+    else if (x === Lx + 1) r = 'h'; // left edge catch-light (bright white)
+    else if (x === Rx - 1) r = 's'; // right shade
+    // Central shirt-front crease / button line
+    if (x === cx) r = 's';
+    // Shirt placket buttons: tiny 'h' dots along center at y=12,14,16,18
+    if (x === cx && (y === 12 || y === 14 || y === 16 || y === 18)) r = 'h';
+    put('cnt_shirt', x, y, r);
+  }
+}
+// Shirt collar visible at neck (y=9..10): two small collar tabs flanking the center
+for (let y = 9; y <= 10; y++) {
+  const hw = y === 9 ? 2 : 3;
+  for (let x = cx - hw; x <= cx + hw; x++) {
+    put('cnt_shirt', x, y, x === cx - hw || x === cx + hw ? 'o' : 'h');
+  }
+}
+// Shirt cuffs at wrists (y=20..21): slightly wider, defined by shade
+for (let y = 20; y <= 21; y++) {
+  for (const x of [8, 9, 10]) put('cnt_shirt', x, y, x === 8 || x === 10 ? 'o' : 's');
+  for (const x of [22, 23, 24]) put('cnt_shirt', x, y, x === 22 || x === 24 ? 'o' : 's');
+}
+// Slim arms (y=11..21): 2px sleeves alongside torso
+for (let y = 11; y <= 21; y++) {
+  put('cnt_shirt', 9, y, 'o');
+  put('cnt_shirt', 10, y, 'b');
+  put('cnt_shirt', 22, y, 'b');
+  put('cnt_shirt', 23, y, 'o');
+}
+// Hands (pale, clawed — empty hands): small fist shape y=21..22
+for (const [hx, hy] of [[8,21],[9,21],[10,21],[8,22],[9,22],[10,22],
+                          [22,21],[23,21],[24,21],[22,22],[23,22],[24,22]]) {
+  if (!layers['cnt_shirt'][`${hx},${hy}`]) put('cnt_shirt', hx, hy, 'b');
+}
+
+// ============================ CNT_HEAD (pale face + slicked-back dark hair — vampskin + blackhair) ============================
+// Head oval centered at cx, y=1..9. vampskin palette drives pale complexion.
+// Dark slicked-back hair as 'a' (accent role — will appear as base vampskin accent unless
+// overridden; instead use 's' for the shadow of hair and let the blackhair layer sit on top).
+// Actually: draw hair directly as 'o'/'s' pixels for dark appearance over the pale face.
+// Face: oval y=2..9, cx center. Eyes NOT here (cnt_eyes on top).
+// Hair: slick dark rows at y=1..4 (top of head), parted center, swept back.
+
+// Face oval (vampskin): pale, slightly gaunt
+const inFace = (x, y) => ((x - cx) / 4.0) ** 2 + ((y - 5.5) / 4.5) ** 2 <= 1;
+for (let y = 1; y <= 9; y++) for (let x = 10; x <= 22; x++) {
+  if (!inFace(x, y)) continue;
+  let r = 'b';
+  if (x <= 12 || y <= 2) r = 'h';           // lit side + forehead
+  else if (x >= 20 || y >= 9) r = 's';      // right cheek / jaw shadow
+  put('cnt_head', x, y, r);
+}
+
+// Dark hair (slick, parted center, swept back): drawn as near-outline pixels overlaid on head
+// Hair top: a row of dark pixels across y=1..3 (slick top)
+for (let y = 1; y <= 3; y++) {
+  const hw = (y === 1) ? 3.5 : (y === 2) ? 4.0 : 4.5;
+  const Lx = Rd(cx - hw), Rx = Rd(cx + hw);
+  for (let x = Lx; x <= Rx; x++) {
+    // Only paint where head exists or slightly above (the very top)
+    if (y === 1 || layers['cnt_head'][`${x},${y}`]) {
+      put('cnt_head', x, y, 'o'); // dark — outline role = darkest
+    }
+  }
+  // Center part: tiny pale highlight pixel
+  if (layers['cnt_head'][`${cx},${y}`]) put('cnt_head', cx, y, 's');
+}
+// Side hair at temples (y=2..6, x=10..11 and x=21..22): dark side-swept
+for (let y = 2; y <= 6; y++) {
+  put('cnt_head', 10, y, 'o'); // left temple hair
+  put('cnt_head', 21, y, 'o'); // right temple hair
+}
+// Thin widow's peak suggestion (center-top, y=4): slight dark notch at hairline
+put('cnt_head', cx - 1, 4, 'o'); put('cnt_head', cx + 1, 4, 'o');
+// Aristocratic high cheekbones hint: shade band at y=7
+for (const x of [13, 20]) if (layers['cnt_head'][`${x},7`]) put('cnt_head', x, 7, 's');
+// Nose bridge: narrow central highlight y=5..7
+put('cnt_head', cx, 5, 'h'); put('cnt_head', cx, 6, 'h');
+// Thin lips: dark line at y=8
+for (let x = cx - 1; x <= cx + 1; x++) put('cnt_head', x, 8, 's');
+// Chin shadow at y=9
+for (let x = cx - 2; x <= cx + 2; x++) if (layers['cnt_head'][`${x},9`]) put('cnt_head', x, 9, 's');
+
+// ============================ CNT_MEDALLION (gold medallion on chest — glow palette) ============================
+// A prominent circular gold medallion/brooch centered on the shirt front at y=13..15.
+// Circular disk with bright highlight. Small circular motif.
+// glow palette: o=outline, b=gold base, h=gold highlight, s=shade.
+disk('cnt_medallion', cx, 13, 2.5, 'b');
+// Highlight crescent (upper-left of medallion = light source)
+disk('cnt_medallion', cx - 0.5, 12.5, 1.2, 'h');
+// Outline ring
+for (let y = 10; y <= 16; y++) for (let x = 12; x <= 20; x++) {
+  const d2 = ((x - cx) ** 2 + (y - 13) ** 2);
+  if (d2 >= 5 && d2 <= 8) put('cnt_medallion', x, y, 'o');
+}
+// Inner detail: a tiny 'a' accent cross (decorative engraving)
+put('cnt_medallion', cx, 12, 'a');
+put('cnt_medallion', cx, 13, 'a');
+put('cnt_medallion', cx - 1, 13, 'a');
+put('cnt_medallion', cx + 1, 13, 'a');
+
+// ============================ CNT_EYES (red glowing eyes — vampglow palette) ============================
+// Menacing red eyes, set in the face at y=5..6 (eye-level in the oval).
+// Two 2×2 glow spots: left eye at (cx-2..cx-1, 5..6), right at (cx+1..cx+2, 5..6).
+// vampglow: h=bright red highlight, b=red base, o=outline ring pixel.
+// Left eye
+put('cnt_eyes', cx - 3, 5, 'o');
+put('cnt_eyes', cx - 2, 5, 'h');
+put('cnt_eyes', cx - 1, 5, 'b');
+put('cnt_eyes', cx - 3, 6, 'o');
+put('cnt_eyes', cx - 2, 6, 'b');
+put('cnt_eyes', cx - 1, 6, 'o');
+// Right eye
+put('cnt_eyes', cx + 1, 5, 'b');
+put('cnt_eyes', cx + 2, 5, 'h');
+put('cnt_eyes', cx + 3, 5, 'o');
+put('cnt_eyes', cx + 1, 6, 'o');
+put('cnt_eyes', cx + 2, 6, 'b');
+put('cnt_eyes', cx + 3, 6, 'o');
+
+emit('cnt_cape');
+emit('cnt_legs');
+emit('cnt_shirt');
+emit('cnt_head');
+emit('cnt_medallion');
+emit('cnt_eyes');

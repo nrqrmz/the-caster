@@ -63,4 +63,6 @@ export const NAMED_PALETTES = {
   vampblack: derivePalette(0x14090c, { base: 0x1a0e12, highlight: 0x3a2630, shade: 0x0c0608, outline: 0x000000 }),
   // Pale vampire skin for humanoid vampire footsoldiers (Siervo/Duelista/Vástago).
   vampskin: derivePalette(0xd7a3a3, { base: 0xcdbfc9, highlight: 0xede0e6, shade: 0x9a8a96, outline: 0x4a3a44 }),
+  // Linen white — near-white dress-shirt palette for Sir Galahad's vampire-count human form.
+  linen: derivePalette(0xe8e6df, { base: 0xe8e6df, highlight: 0xfbfbf7, shade: 0xb9b6ac, outline: 0x6b6960 }),
 };
