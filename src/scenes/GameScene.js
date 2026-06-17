@@ -820,21 +820,33 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpoolGfx.clear();
 
     if (w.mode === 'telegraph') {
-      // Draw dashed warning circle.
-      this.whirlpoolGfx.lineStyle(2, COLORS.water, 0.5);
+      // Pulsing warning ring.
+      const pulse = 0.4 + 0.4 * Math.abs(Math.sin(this.lavaTime * 4));
+      this.whirlpoolGfx.lineStyle(3, COLORS.water, pulse);
       this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, w.radius);
       if (w.t <= 0) { w.mode = 'active'; w.t = WHIRLPOOL_ACTIVE_MS; }
       return;
     }
 
     if (w.mode === 'active') {
-      // Draw animated spiral (approximate with concentric arcs).
+      // Rotating multi-arm spiral converging to the center.
       const phaseMul = scaleForPhase(w.phase);
       const activeRadius = w.radius * phaseMul;
-      this.whirlpoolGfx.lineStyle(3, COLORS.waterDeep, 0.75);
-      this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, activeRadius);
-      this.whirlpoolGfx.lineStyle(1, COLORS.waterDeep, 0.4);
-      this.whirlpoolGfx.strokeCircle(w.center.x, w.center.y, activeRadius * 0.5);
+      const arms = 3, turns = 2.4, steps = 40;
+      const rot = this.lavaTime * 2;
+      for (let a = 0; a < arms; a++) {
+        this.whirlpoolGfx.lineStyle(2, COLORS.waterDeep, 0.8);
+        this.whirlpoolGfx.beginPath();
+        for (let s = 0; s <= steps; s++) {
+          const f = s / steps;
+          const ang = rot + a * (Math.PI * 2 / arms) + f * turns * Math.PI * 2;
+          const rad = activeRadius * (1 - f);
+          const px = w.center.x + Math.cos(ang) * rad;
+          const py = w.center.y + Math.sin(ang) * rad;
+          if (s === 0) this.whirlpoolGfx.moveTo(px, py); else this.whirlpoolGfx.lineTo(px, py);
+        }
+        this.whirlpoolGfx.strokePath();
+      }
 
       // Apply force to caster.
       if (this.caster && this.caster.hp > 0 && isInside(w.center, activeRadius, this.caster)) {
