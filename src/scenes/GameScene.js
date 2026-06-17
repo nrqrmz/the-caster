@@ -233,7 +233,12 @@ export default class GameScene extends Phaser.Scene {
     } else if (form.color) {
       boss.setTint(form.color);
     }
-    if (form.radius) boss.setDisplaySize(form.radius * 2, form.radius * 2);
+    // galahad_murcielago is a native 2:1 texture (128×64); all other forms are square.
+    if (form.key === 'galahad_murcielago') {
+      boss.setDisplaySize(128, 64);
+    } else if (form.radius) {
+      boss.setDisplaySize(form.radius * 2, form.radius * 2);
+    }
     // Reset BossBrain phase state for the new form.
     boss.brainState.boss = {};
     // Reset transient movement state AND the burrow invuln latch on every form swap.
@@ -255,10 +260,20 @@ export default class GameScene extends Phaser.Scene {
 
     const feint = !!(boss.def && (boss.def.deathFeint || (boss.def.key && String(boss.def.key).startsWith('galahad'))));
     if (feint) {
-      // "Cae cadáver → resucita": collapse (flatten + dim + sink), hold, then rise.
+      // "Cae cadáver → resucita": collapse (flatten + dim + sink) ~420ms,
+      // then swap to the prone corpse sprite (holding on floor), then rise as next form.
       const baseY = boss.y;
       this.tweens.add({ targets: boss, alpha: 0.2, scaleY: boss.scaleY * 0.3, y: baseY + 14, duration: 420, ease: 'Quad.easeIn' });
       this.flashCircle(boss.x, boss.y, (boss.def.radius || 26) + 12, COLORS.boss);
+      // After collapse anim finishes: show cadáver on the floor while invuln window holds.
+      this.time.delayedCall(440, () => {
+        if (!boss.active) return;
+        boss.setTexture(spriteKey('galahad_cadaver'));
+        boss.setDisplaySize(128, 64);
+        boss.setAlpha(0.85);
+        // Restore scaleY to 1 relative to the new display size (setDisplaySize already locked it).
+        boss.scaleY = boss.scaleX;
+      });
     } else {
       boss.setAlpha(0.3); // brief dim during transform telegraph (legacy path)
     }
@@ -406,11 +421,34 @@ export default class GameScene extends Phaser.Scene {
       enemy._formSeq.applyDamage(damage);
       enemy.hp = enemy._formSeq.currentHp; // keep hp in sync for BossBrain hpFrac
       if (enemy._formSeq.fightOver) {
-        // Galahad's real death: burn effect ("por fin lo destruiste") before destroy.
+        // Galahad's real death (deathFeint gate): show corpse → fire/fade → then onClear.
         if (enemy.def && (enemy.def.deathFeint || (enemy.def.key && String(enemy.def.key).startsWith('galahad')))) {
-          this.flashCircle(enemy.x, enemy.y, (enemy.def.radius || 26) + 30, COLORS.fireball);
-          const burn = this.add.circle(enemy.x, enemy.y, (enemy.def.radius || 26) + 10, COLORS.fireball, 0.5).setDepth(8);
-          this.tweens.add({ targets: burn, alpha: 0, scale: 1.8, duration: 600, onComplete: () => burn.destroy() });
+          enemy._untargetable = true; // prevent any stray hit from double-firing
+          // Swap to the prone corpse sprite.
+          enemy.setTexture(spriteKey('galahad_cadaver'));
+          enemy.setDisplaySize(128, 64);
+          enemy.setAlpha(1);
+          // Fire flash: instant large ring.
+          this.flashCircle(enemy.x, enemy.y, 80, COLORS.fireball);
+          // Overlay burn circle that fades out over the corpse.
+          const burn = this.add.circle(enemy.x, enemy.y, 48, COLORS.fireball, 0.65).setDepth(8);
+          this.tweens.add({ targets: burn, alpha: 0, scale: 1.9, duration: 800, onComplete: () => burn.destroy() });
+          // Fade the corpse itself to zero, then run the normal death/clear path.
+          this.tweens.add({
+            targets: enemy,
+            alpha: 0,
+            duration: 850,
+            ease: 'Quad.easeIn',
+            onComplete: () => {
+              if (!enemy.active) return; // already cleaned up
+              this.onEnemyDeath(enemy);
+              if (enemy === this.boss) this.boss = null;
+              this.bosses = this.bosses.filter((b) => b !== enemy);
+              enemy.destroy();
+              this.checkPhaseCleared();
+            },
+          });
+          return;
         }
         this.onEnemyDeath(enemy);
         if (enemy === this.boss) this.boss = null;
