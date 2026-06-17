@@ -36,6 +36,7 @@ export const COLORS = {
   boss: 0xd32f2f,       // deep red
   temple: 0xffd54f,     // gold
   lightning: 0xfff176,  // yellow zap
+  bolt: 0xffee58,       // electric yellow — enemy lightning projectile (Air world)
   ice: 0xb3e5fc,        // pale ice blue (distinct from the orb's cyan)
   water: 0x00bcd4,      // burrow surface / whirlpool telegraph (cyan)
   waterDeep: 0x0288d1,  // active whirlpool spiral (deep blue)
@@ -86,6 +87,7 @@ export const TEX = {
   warrior: 'tex_warrior',
   archer: 'tex_archer',
   arrow: 'tex_arrow',
+  bolt: 'tex_bolt',
   iceShard: 'tex_iceShard',
   poisonGlob: 'tex_poisonGlob',
   miniboss: 'tex_miniboss',

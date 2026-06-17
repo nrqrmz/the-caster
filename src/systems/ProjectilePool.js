@@ -4,7 +4,7 @@ import { hasRecipe } from '../data/sprites/recipes.js';
 
 const PROJECTILE_KEY = {
   [TEX.orb]: 'orb', [TEX.fireball]: 'fireball', [TEX.arrow]: 'arrow',
-  [TEX.iceShard]: 'iceShard', [TEX.poisonGlob]: 'poisonGlob',
+  [TEX.bolt]: 'bolt', [TEX.iceShard]: 'iceShard', [TEX.poisonGlob]: 'poisonGlob',
 };
 
 export class ProjectilePool {
