@@ -1,17 +1,27 @@
 // Elemental de Tormenta (nv6 setpiece boss) — storm-cloud elemental.
-// A roiling black cumulonimbus with lightning veins and a single glaring eye.
+// A roiling CÚMULO (cumulus cluster): organic rounded puffs, transparent corners,
+// THREE menacing eyes, and idle lightning animation crackling through the cloud.
 // Parts emitted:
-//   storm_body  — big lumpy dark storm cloud, fills full 32×32 grid edge-to-edge
-//                 (at 128×64 display each grid pixel is 4w×2h — broad horizontal mass)
-//   storm_bolts — jagged lightning veins spanning the wide cloud
-//   storm_eye   — one menacing glaring eye at the cloud center (sentient elemental)
+//   storm_body  — organic cloud cluster: wide rounded puffs, transparent corners
+//                 (at 128×128 display each grid pixel is 4×4 — square, uniform)
+//   storm_bolts — jagged lightning veins (4 animated idle frames, different crackle positions)
+//   storm_eyes  — THREE glaring eyes across the cloud (left/center/right puffs)
 //
 // Run: node tools/gen-stormelem.mjs
+
 const N = 32, cx = 16;
-const layers = {
-  storm_body: {}, storm_bolts: {}, storm_eye: {},
-};
-const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
+
+// We need separate layers per bolt frame + static body/eyes
+const body = {};
+const eyes = {};
+const bolts = [
+  {}, // frame 0 (static fallback)
+  {}, // frame 1
+  {}, // frame 2
+  {}, // frame 3
+];
+
+const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) L[`${x},${y}`] = r; };
 
 function line(L, x0, y0, x1, y1, r) {
   const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
@@ -37,183 +47,256 @@ function blob(L, cx0, cy0, rx, ry, role = 'b') {
     }
 }
 
-// ============================ STORM_BODY (roiling cumulonimbus — fills full 32×32) ============================
-// Strategy: spread blobs to reach x=0..31, y=0..31 — at 128×64 display this reads as a wide cumulonimbus.
-// Upper part: billowing rounded turrets spanning the full width.
-// Middle: very broad main body.
-// Lower: wide flat anvil base reaching all four corners.
-// Color roles: 'b'=dark storm body, 'o'=rim/outline, 'h'=upper-billow highlights, 's'=shade pockets.
+// ============================ STORM_BODY (organic cloud cluster — TRANSPARENT corners) ============================
+// Strategy: overlapping rounded puffs that form a wide cloud shape but leave corners empty.
+// The cloud occupies roughly the middle 24×28 of the 32×32 grid, with puff bumps poking higher.
+// Upper: three main puffs (left/center/right billow tops) — tallest center, flanked by two side puffs.
+// Middle: broad body connecting all three puffs.
+// Lower: wide rounded underside that tapers at sides (NOT filling bottom corners).
+// Colors: 'b'=dark storm body (baseColor 0x37474f), 'o'=rim, 'h'=highlight (upper puff tops), 's'=shade pockets.
 
-// ---- MAIN CLOUD BODY (extra-wide mid section, covers full x range) ----
-blob('storm_body', cx,      18, 15, 9);      // central bulk — full width + deep
-blob('storm_body', 4,       15, 7,  6);      // far-left upper lobe (reaches x=0)
-blob('storm_body', 28,      15, 7,  6);      // far-right upper lobe (reaches x=31)
-blob('storm_body', cx - 5,  14, 7,  5.5);   // left-center upper lobe
-blob('storm_body', cx + 5,  14, 7,  5.5);   // right-center upper lobe
+// ---- LEFT PUFF (left billow, centered ~x=9) ----
+blob(body,  9,  9, 6.5, 5.5);   // main left puff
+blob(body,  7,  6, 4,   3.5);   // left puff crown
+blob(body,  11, 5, 3.5, 3);     // inner-left upper crown
+blob(body,  5,  12, 4,  3.5);   // left puff lower lobe
+blob(body,  4,  8, 3,  2.5);    // far-left small crown
 
-// ---- UPPER BILLOWING TURRETS (wide spread, reach near edges) ----
-blob('storm_body', cx,      6,  7,   5.5);  // top-center billow (tallest)
-blob('storm_body', 4,       8,  5,   4.5);  // far-left billow (x touches 0)
-blob('storm_body', 28,      8,  5,   4.5);  // far-right billow (x touches 31)
-blob('storm_body', cx - 7,  9,  5,   4);    // left secondary billow
-blob('storm_body', cx + 7,  9,  5,   4);    // right secondary billow
-blob('storm_body', 2,       5,  3.5, 3.5);  // far-left crown puff (y=1..9, x=0..5)
-blob('storm_body', 30,      5,  3.5, 3.5);  // far-right crown puff
-blob('storm_body', cx - 3,  4,  3.5, 3);   // left-center crown
-blob('storm_body', cx + 3,  4,  3.5, 3);   // right-center crown
-// Top-edge spires — fill y=0 strip
-for (let x = 0; x < N; x++) {
-  // Push a few pixels to y=0 at various x positions to guarantee top-row coverage
-  if (x < 6 || (x >= 10 && x <= 14) || x === cx || (x >= 18 && x <= 22) || x > 25) {
-    if (!layers.storm_body[`${x},0`]) put('storm_body', x, 0, 'h');
-    if (!layers.storm_body[`${x},1`]) put('storm_body', x, 1, 'h');
-  }
+// ---- CENTER PUFF (tallest billow, centered ~x=16) ----
+blob(body,  16, 7, 7,   6);     // main center puff (tall)
+blob(body,  16, 4, 4.5, 3.5);   // center crown (reaches y=0)
+blob(body,  13, 5, 3.5, 3);     // left-center crown
+blob(body,  19, 5, 3.5, 3);     // right-center crown
+blob(body,  16, 11, 7, 4.5);    // center-lower lobe
+
+// ---- RIGHT PUFF (right billow, centered ~x=23) ----
+blob(body,  23, 9, 6.5, 5.5);   // main right puff
+blob(body,  25, 6, 4,   3.5);   // right puff crown
+blob(body,  21, 5, 3.5, 3);     // inner-right upper crown
+blob(body,  27, 12, 4,  3.5);   // right puff lower lobe
+blob(body,  28, 8, 3,  2.5);    // far-right small crown
+
+// ---- BROAD BODY — connects all three puffs, forms main mass ----
+blob(body,  16, 16, 12, 7.5);   // central wide body
+blob(body,  9,  15, 6,  5);     // left body connect
+blob(body,  23, 15, 6,  5);     // right body connect
+blob(body,  16, 20, 10, 5.5);   // wide mid-belly
+blob(body,  10, 20, 5,  4);     // left belly
+blob(body,  22, 20, 5,  4);     // right belly
+
+// ---- ROUNDED UNDERSIDE (organic, tapers at sides — NOT filling corners) ----
+blob(body,  16, 24, 9.5, 4.5);  // center underbelly (wide)
+blob(body,  10, 24, 5,  3.5);   // left underbelly lobe
+blob(body,  22, 24, 5,  3.5);   // right underbelly lobe
+blob(body,  16, 27, 7.5, 3.5);  // lower center (tapering)
+
+// ---- SHADE POCKETS (dark turbulence) ----
+blob(body,  12, 17, 3.5, 2.5, 's');
+blob(body,  20, 17, 3,   2.5, 's');
+blob(body,  16, 21, 4,   2.5, 's');
+blob(body,  8,  15, 2.5, 2,   's');
+blob(body,  24, 15, 2.5, 2,   's');
+blob(body,  16, 25, 3,   2,   's');
+
+// ---- UPPER HIGHLIGHTS on puff tops ----
+disk(body,  9,  4,  2.5, 'h');   // left puff highlight
+disk(body,  16, 1.5, 3,  'h');   // center puff top highlight
+disk(body,  23, 4,  2.5, 'h');   // right puff highlight
+disk(body,  7,  7,  1.5, 'h');   // far-left crown highlight
+disk(body,  25, 7,  1.5, 'h');   // far-right crown highlight
+disk(body,  13, 3,  1.5, 'h');   // left-center crown
+disk(body,  19, 3,  1.5, 'h');   // right-center crown
+
+// ============================ STORM_EYES (THREE glaring eyes — one per puff) ============================
+// Left eye: in left puff ~(8, 13)
+// Center eye: in center puff ~(16, 12)
+// Right eye: in right puff ~(24, 13)
+// Each eye: bright `h`/`a` glow ring, `b` iris, `o` slit pupil (menacing).
+// All THREE use glow palette.
+
+function drawEye(L, ex, ey) {
+  // Outer glow halo — 3px radius
+  disk(L, ex, ey, 3.0, 'h');
+  // Mid iris — 1.8px radius
+  disk(L, ex, ey, 1.8, 'b');
+  // Narrow vertical slit pupil
+  for (let y = ey - 1; y <= ey + 1; y++) put(L, ex, y, 'o');
+  put(L, ex - 1, ey, 'o');
+  put(L, ex + 1, ey, 'o');
+  // Upper eyelid shadow (heavy-lidded glare)
+  for (let x = ex - 2; x <= ex + 2; x++) put(L, x, ey - 2, 'b');
+  // Inner glow flanks
+  put(L, ex - 1, ey - 1, 'h');
+  put(L, ex + 1, ey - 1, 'h');
 }
 
-// ---- ANVIL / FLAT BASE (cumulonimbus shelf — fills full width at bottom) ----
-// Far side overhangs reach x=0 and x=31
-blob('storm_body', 3,       24, 5.5, 4);    // far-left underhang
-blob('storm_body', 29,      24, 5.5, 4);    // far-right underhang
-blob('storm_body', cx - 7,  23, 5,   3.5);  // left-center underhang
-blob('storm_body', cx + 7,  23, 5,   3.5);  // right-center underhang
-// Flat underbelly connecting everything — full-width horizontal strip
-for (let y = 23; y <= 31; y++) {
-  // Wide base that reaches x=0..31 at the bottom rows
-  const halfBase = 16 - (y - 23) * 0.25;   // barely tapers
-  const Lx = Math.max(0, Math.round(cx - halfBase));
-  const Rx = Math.min(31, Math.round(cx + halfBase));
-  for (let x = Lx; x <= Rx; x++) {
-    if (!layers.storm_body[`${x},${y}`]) {
-      const edge = (x === Lx || x === Rx);
-      put('storm_body', x, y, edge ? 'o' : 's');
+drawEye(eyes, 8,  13);   // left eye (in left puff)
+drawEye(eyes, 16, 12);   // center eye (in center puff, slightly higher)
+drawEye(eyes, 24, 13);   // right eye (in right puff)
+
+// ============================ STORM_BOLTS (4 animated frames — lightning crackles through the cloud) ============================
+// Palette: wispglow (electric yellow). Roles: 'h' = bright channel, 'a' = glow fringe.
+// Each frame has the same STRUCTURE (main + flanking bolts) but different ZIG positions
+// so the lightning appears to flow/crackle per frame.
+// Static down/up/side = frame 0.
+
+// Helper: draw a bolt along a path (array of [x,y] waypoints)
+function drawBolt(L, path, fringe = true) {
+  for (let i = 0; i < path.length - 1; i++) {
+    const [x0, y0] = path[i], [x1, y1] = path[i + 1];
+    line(L, x0, y0, x1, y1, 'h');
+    if (fringe) {
+      line(L, x0 - 1, y0, x1 - 1, y1, 'a');
+      line(L, x0 + 1, y0, x1 + 1, y1, 'a');
     }
   }
 }
-// Bottom row fill — ensure y=31 is fully covered edge-to-edge
-for (let x = 0; x < N; x++) {
-  if (!layers.storm_body[`${x},31`]) put('storm_body', x, 31, 's');
-  if (!layers.storm_body[`${x},30`]) put('storm_body', x, 30, 's');
-}
-// Fill any remaining gaps at x=0 and x=31 columns mid-body
-for (let y = 5; y <= 28; y++) {
-  if (!layers.storm_body[`0,${y}`])  put('storm_body', 0,  y, 'o');
-  if (!layers.storm_body[`31,${y}`]) put('storm_body', 31, y, 'o');
-}
 
-// ---- SHADE POCKETS (turbulent inner darkness) ----
-blob('storm_body', cx - 3, 19, 4,   3,   's');
-blob('storm_body', cx + 4, 20, 3.5, 2.5, 's');
-blob('storm_body', cx - 5, 15, 3,   2.5, 's');
-blob('storm_body', 5,       18, 3,   2.5, 's');  // far-left pocket
-blob('storm_body', 27,      18, 3,   2.5, 's');  // far-right pocket
-
-// ---- UPPER HIGHLIGHTS on top billows (catch-light on rounded cloud tops) ----
-for (const [bx, by, r] of [
-  [cx,     2,  2.5],  // top of center turret
-  [cx - 1, 3,  1.5],
-  [cx + 1, 3,  1.5],
-  [4,      3,  2],    // far-left billow crown
-  [28,     3,  2],    // far-right billow crown
-  [cx - 7, 6,  1.5],  // left billow crown
-  [cx + 7, 6,  1.5],  // right billow crown
-  [cx - 3, 2,  1.5],  // left puff crown
-  [cx + 3, 2,  1.5],  // right puff crown
-  [2,      2,  1.2],  // far-left corner puff top
-  [30,     2,  1.2],  // far-right corner puff top
-]) {
-  disk('storm_body', bx, by, r, 'h');
+// FRAME 0 — baseline crackle positions
+{
+  const L = bolts[0];
+  // Central bolt: top-center zigzags down through body
+  drawBolt(L, [
+    [16, 5], [18, 8], [14, 11], [17, 14], [13, 17], [16, 20], [14, 23], [16, 27],
+  ]);
+  // Left bolt
+  drawBolt(L, [
+    [8, 8], [6, 11], [9, 14], [6, 17], [8, 21], [5, 25],
+  ]);
+  // Right bolt
+  drawBolt(L, [
+    [24, 8], [26, 11], [23, 14], [26, 17], [24, 21], [27, 25],
+  ]);
+  // Short inner-left branch
+  drawBolt(L, [
+    [12, 11], [10, 14], [13, 17], [11, 20],
+  ], false);
+  // Flare tips
+  put(L, 15, 27, 'h'); put(L, 17, 27, 'h');
+  put(L, 4,  25, 'h'); put(L, 5,  26, 'a');
+  put(L, 27, 25, 'h'); put(L, 28, 26, 'a');
 }
 
-// ============================ STORM_BOLTS (jagged lightning veins — span full width) ============================
-// Four distinct lightning bolts zig-zagging across the wide mass.
-// Using roles: 'h' (bright electric) for the main channel, 'a' (accent) for glow fringe.
-
-// ---- Bolt 1: main central bolt — top-center down to lower-center ----
-const bolt1 = [
-  [cx, 5], [cx + 2, 8], [cx - 2, 11], [cx + 3, 14], [cx - 2, 17], [cx + 1, 20], [cx - 1, 24], [cx, 28],
-];
-for (let i = 0; i < bolt1.length - 1; i++) {
-  const [x0, y0] = bolt1[i], [x1, y1] = bolt1[i + 1];
-  line('storm_bolts', x0, y0, x1, y1, 'h');
-  line('storm_bolts', x0 - 1, y0, x1 - 1, y1, 'a');
-  line('storm_bolts', x0 + 1, y0, x1 + 1, y1, 'a');
+// FRAME 1 — bolts shift right (crackle moves right side active)
+{
+  const L = bolts[1];
+  // Central bolt shifts slightly right, different kinks
+  drawBolt(L, [
+    [17, 5], [15, 8], [19, 11], [16, 14], [20, 17], [17, 20], [19, 23], [17, 27],
+  ]);
+  // Left bolt dimmer path
+  drawBolt(L, [
+    [8, 9], [10, 12], [7, 15], [9, 18], [7, 22], [9, 25],
+  ]);
+  // Right bolt brighter/stronger
+  drawBolt(L, [
+    [24, 7], [27, 10], [24, 13], [27, 16], [25, 19], [28, 23], [26, 26],
+  ]);
+  // Short inner-right branch active
+  drawBolt(L, [
+    [20, 11], [22, 14], [19, 17], [21, 20],
+  ], false);
+  // Flare tips
+  put(L, 16, 27, 'h'); put(L, 18, 27, 'h');
+  put(L, 8,  25, 'h'); put(L, 9,  26, 'a');
+  put(L, 26, 26, 'h'); put(L, 27, 27, 'a');
 }
 
-// ---- Bolt 2: left bolt — wide left flank ----
-const bolt2 = [
-  [5, 7], [4, 10], [6, 13], [3, 16], [5, 20], [2, 25],
-];
-for (let i = 0; i < bolt2.length - 1; i++) {
-  const [x0, y0] = bolt2[i], [x1, y1] = bolt2[i + 1];
-  line('storm_bolts', x0, y0, x1, y1, 'h');
-  line('storm_bolts', x0 - 1, y0, x1 - 1, y1, 'a');
-  line('storm_bolts', x0 + 1, y0, x1 + 1, y1, 'a');
+// FRAME 2 — bolts shift left (left side active, center shorter)
+{
+  const L = bolts[2];
+  // Central bolt leans left
+  drawBolt(L, [
+    [15, 5], [13, 8], [16, 11], [13, 14], [15, 17], [13, 20], [15, 23], [14, 27],
+  ]);
+  // Left bolt wide/strong
+  drawBolt(L, [
+    [9, 7], [6, 10], [9, 13], [5, 16], [8, 19], [5, 22], [7, 26],
+  ]);
+  // Right bolt shorter
+  drawBolt(L, [
+    [23, 9], [25, 12], [22, 15], [24, 18], [23, 22], [25, 25],
+  ]);
+  // Short inner-left branch active
+  drawBolt(L, [
+    [11, 10], [9,  13], [12, 16], [10, 19],
+  ], false);
+  // Flare tips
+  put(L, 13, 27, 'h'); put(L, 15, 27, 'h');
+  put(L, 6,  26, 'h'); put(L, 7,  27, 'a');
+  put(L, 25, 25, 'h'); put(L, 26, 26, 'a');
 }
 
-// ---- Bolt 3: right bolt — wide right flank ----
-const bolt3 = [
-  [27, 7], [28, 10], [26, 13], [29, 16], [27, 20], [30, 25],
-];
-for (let i = 0; i < bolt3.length - 1; i++) {
-  const [x0, y0] = bolt3[i], [x1, y1] = bolt3[i + 1];
-  line('storm_bolts', x0, y0, x1, y1, 'h');
-  line('storm_bolts', x0 - 1, y0, x1 - 1, y1, 'a');
-  line('storm_bolts', x0 + 1, y0, x1 + 1, y1, 'a');
+// FRAME 3 — wide spread, all three bolts active simultaneously, new kinks
+{
+  const L = bolts[3];
+  // Central bolt new kink pattern
+  drawBolt(L, [
+    [16, 4], [19, 8], [15, 12], [18, 15], [14, 18], [17, 21], [15, 24], [17, 27],
+  ]);
+  // Left bolt medium
+  drawBolt(L, [
+    [8, 8], [5, 11], [8, 14], [5, 17], [7, 20], [4, 24], [6, 27],
+  ]);
+  // Right bolt medium
+  drawBolt(L, [
+    [24, 8], [27, 11], [24, 14], [27, 17], [25, 20], [28, 24], [26, 27],
+  ]);
+  // Center horizontal flicker (unique to frame 3)
+  drawBolt(L, [
+    [12, 15], [14, 15], [16, 14], [18, 15], [20, 15],
+  ], false);
+  // Flare tips
+  put(L, 16, 27, 'h'); put(L, 18, 27, 'h');
+  put(L, 5,  27, 'h'); put(L, 6,  28, 'a');
+  put(L, 27, 27, 'h'); put(L, 28, 28, 'a');
 }
 
-// ---- Bolt 4: left-of-center short bolt ----
-const bolt4 = [
-  [cx - 7, 9], [cx - 6, 12], [cx - 9, 15], [cx - 7, 19],
-];
-for (let i = 0; i < bolt4.length - 1; i++) {
-  const [x0, y0] = bolt4[i], [x1, y1] = bolt4[i + 1];
-  line('storm_bolts', x0, y0, x1, y1, 'h');
-  line('storm_bolts', x0 + 1, y0, x1 + 1, y1, 'a');
-}
-
-// ---- Extra tip flares at bolt terminations ----
-put('storm_bolts', cx - 1, 28, 'h'); put('storm_bolts', cx + 1, 28, 'h');
-put('storm_bolts', 2,  25, 'h');     put('storm_bolts', 1,  26, 'a');
-put('storm_bolts', 30, 25, 'h');     put('storm_bolts', 31, 26, 'a');
-put('storm_bolts', cx - 7, 19, 'h'); put('storm_bolts', cx - 8, 20, 'a');
-
-// ============================ STORM_EYE (glaring sentient eye in the cloud center) ============================
-// One large menacing eye near the cloud center (y≈14..17, cx).
-// The eye has: an outer glow ring (h), a dark iris (b), and a narrow vertical slit pupil (o).
-// Uses glow palette → 'h' = bright highlight, 'b' = glow base/iris, 'o' = dark pupil slit.
-
-const EY = 15, EX = cx;   // eye center
-// Outer glow halo — 3px radius
-disk('storm_eye', EX, EY, 3.2, 'h');
-// Mid iris — 2px radius, slightly darker
-disk('storm_eye', EX, EY, 2.0, 'b');
-// Narrow vertical slit pupil (menacing, like a glaring storm deity)
-for (let y = EY - 2; y <= EY + 2; y++) put('storm_eye', EX, y, 'o');
-// Slightly widen the slit at center for a cat/reptile slit effect
-put('storm_eye', EX - 1, EY, 'o');
-put('storm_eye', EX + 1, EY, 'o');
-// Upper eyelid shadow (makes it look like a heavy-lidded glare)
-for (let x = EX - 2; x <= EX + 2; x++) put('storm_eye', x, EY - 2, 'b');
-// Inner glow: tiny bright pupils flanking the slit
-put('storm_eye', EX - 1, EY - 1, 'h');
-put('storm_eye', EX + 1, EY - 1, 'h');
-
-// ============================ emit ============================
-function emit(name) {
-  const keys = Object.keys(layers[name]);
-  if (!keys.length) { console.log(`// ${name} EMPTY`); return; }
+// ============================ emit helpers ============================
+function layerToRows(L) {
+  const keys = Object.keys(L);
+  if (!keys.length) return null;
   const xs = keys.map(k => +k.split(',')[0]), ys = keys.map(k => +k.split(',')[1]);
   const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
   const rows = [];
   for (let y = miny; y <= maxy; y++) {
     let row = '';
-    for (let x = minx; x <= maxx; x++) row += layers[name][`${x},${y}`] ?? '.';
+    for (let x = minx; x <= maxx; x++) row += L[`${x},${y}`] ?? '.';
     rows.push(row);
   }
+  return { rows, minx, maxx, miny, maxy, w: maxx - minx + 1, h: maxy - miny + 1 };
+}
+
+function emitStatic(name, L) {
+  const info = layerToRows(L);
+  if (!info) { console.log(`// ${name} EMPTY`); return; }
+  const { rows, minx, miny, w, h } = info;
   const block = `[\n${rows.map(r => `      '${r}',`).join('\n')}\n    ]`;
-  const w = maxx - minx + 1, h = maxy - miny + 1;
   console.log(`  ${name}: {\n    res: 32, w: ${w}, h: ${h}, anchor: { x: ${minx}, y: ${miny} },\n    down: ${block}, up: ${block}, side: ${block},\n  },`);
 }
-emit('storm_body');
-emit('storm_bolts');
-emit('storm_eye');
+
+function emitAnimatedBolts() {
+  const infos = bolts.map(layerToRows);
+  // Use frame 0 geometry for the anchor/dims (static fallback)
+  const { minx, miny, w, h } = infos[0];
+  const staticBlock = `[\n${infos[0].rows.map(r => `      '${r}',`).join('\n')}\n    ]`;
+
+  // Build per-direction anim frame arrays (all dirs identical — cloud is symmetric)
+  function frameBlock(info) {
+    return `[\n${info.rows.map(r => `        '${r}',`).join('\n')}\n      ]`;
+  }
+  const framesStr = infos.map(frameBlock).join(', ');
+  const animDir = `[ ${framesStr} ]`;
+
+  console.log(`  storm_bolts: {`);
+  console.log(`    res: 32, w: ${w}, h: ${h}, anchor: { x: ${minx}, y: ${miny} },`);
+  console.log(`    down: ${staticBlock}, up: ${staticBlock}, side: ${staticBlock},`);
+  console.log(`    anim: {`);
+  console.log(`      idle: { down: ${animDir}, up: ${animDir}, side: ${animDir} },`);
+  console.log(`    },`);
+  console.log(`  },`);
+}
+
+emitStatic('storm_body', body);
+emitAnimatedBolts();
+emitStatic('storm_eyes', eyes);
