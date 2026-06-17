@@ -21,6 +21,7 @@ export class FacingController {
     this.key = key;
     this.lastDir = lastDir;
     this.attacking = false;
+    this.facePlayer = false; // si true, el flipX se rige por `aim` (la princesa) cada frame
   }
 
   // Play the one-shot attack anim for the current facing; ignored if the creature has no
@@ -37,12 +38,21 @@ export class FacingController {
   // Call every frame. aim is an optional {x,y} world point to face when idle (hero auto-aim).
   update(vx, vy, aim) {
     if (this.attacking) {
-      // keep playing the attack anim to completion; only track facing for the next swing
       const moving = Math.abs(vx) + Math.abs(vy) > MOVE_EPS;
       if (moving) this.lastDir = pickFacing(vx, vy, this.lastDir).dir;
       return;
     }
     const moving = Math.abs(vx) + Math.abs(vy) > MOVE_EPS;
+    // facePlayer: el flipX se rige por la princesa (aim) cada frame, no por la velocidad.
+    // El sprite es de vista lateral: dirección 'side', se voltea al cruzar ella la vertical.
+    if (this.facePlayer && aim) {
+      const flipX = facePlayerFlip(this.sprite.x, aim.x);
+      this.lastDir = 'side';
+      this.sprite.setFlipX(flipX);
+      const state = moving ? 'walk' : 'idle';
+      this.sprite.anims.play(`${this.key}-${state}-side`, true);
+      return;
+    }
     let f;
     if (moving) {
       f = pickFacing(vx, vy, this.lastDir);
