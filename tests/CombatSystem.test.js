@@ -79,3 +79,25 @@ test('applyResist clamps resist to [0,1]', () => {
   assert.equal(applyResist(100, -0.5), 100); // negative resist = no reduction
   assert.equal(applyResist(100, 1.5), 0);    // over 1 = full immunity
 });
+
+import { tryMeleeContact } from '../src/systems/CombatSystem.js';
+
+test('tryMeleeContact permite el primer golpe y arma el cooldown', () => {
+  const e = {};
+  assert.equal(tryMeleeContact(e, 1000, 600), true);
+  assert.equal(e.contactReadyAt, 1600);
+});
+
+test('tryMeleeContact bloquea golpes dentro del cooldown', () => {
+  const e = {};
+  tryMeleeContact(e, 1000, 600);
+  assert.equal(tryMeleeContact(e, 1300, 600), false); // 1300 < 1600
+  assert.equal(tryMeleeContact(e, 1599, 600), false);
+});
+
+test('tryMeleeContact vuelve a permitir tras el cooldown', () => {
+  const e = {};
+  tryMeleeContact(e, 1000, 600);
+  assert.equal(tryMeleeContact(e, 1600, 600), true); // exactamente al expirar
+  assert.equal(e.contactReadyAt, 2200);
+});

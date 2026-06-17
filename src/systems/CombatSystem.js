@@ -7,6 +7,15 @@ export function applyDamage(entity, amount) {
   return { hp, dead: hp <= 0 };
 }
 
+// Melee contact i-frames. `state` es el enemigo (o cualquier objeto con
+// contactReadyAt). Devuelve true y arma el cooldown si el contacto está permitido;
+// false mientras sigue en cooldown. PURE (solo muta state.contactReadyAt).
+export function tryMeleeContact(state, now, cooldownMs) {
+  if ((state.contactReadyAt ?? 0) > now) return false;
+  state.contactReadyAt = now + cooldownMs;
+  return true;
+}
+
 // state: { slowRemaining, slowFactor }  (fields live on Caster instance)
 export function applyCasterSlow(state, factor, ms) {
   // Clamp factor to floor so no enemy can freeze the caster.
