@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeMovement, MOVEMENTS, summonSlots, isFlying } from '../src/systems/EnemyBrain.js';
+import { computeMovement, MOVEMENTS, summonSlots, isFlying, resolveMutateOnDeath } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
 import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS, BURROW_EMERGE_DIST, EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL } from '../src/data/tuning.js';
 
@@ -470,5 +470,25 @@ test('isFlying reads the flying flag', () => {
   assert.equal(isFlying({ flying: false }), false);
   assert.equal(isFlying({}), false);
   assert.equal(isFlying(null), false);
+});
+
+test('resolveMutateOnDeath returns null when no modifier', () => {
+  assert.equal(resolveMutateOnDeath({ modifiers: [] }), null);
+  assert.equal(resolveMutateOnDeath({}), null);
+});
+
+test('resolveMutateOnDeath resolves an enemy spawn (lobo -> fleeing human)', () => {
+  const def = { modifiers: [{ type: 'mutateOnDeath', spawnType: 'cautivo_huye', count: 1 }] };
+  assert.deepEqual(resolveMutateOnDeath(def), { kind: 'enemy', spawnType: 'cautivo_huye', count: 1 });
+});
+
+test('resolveMutateOnDeath resolves a hazard zone (fungus -> spore cloud)', () => {
+  const def = { modifiers: [{ type: 'mutateOnDeath', zone: { radius: 50, dps: 18, duration: 2500 } }] };
+  assert.deepEqual(resolveMutateOnDeath(def), { kind: 'zone', radius: 50, dps: 18, duration: 2500 });
+});
+
+test('resolveMutateOnDeath defaults count to 1 for enemy spawns', () => {
+  const def = { modifiers: [{ type: 'mutateOnDeath', spawnType: 'lobo' }] };
+  assert.deepEqual(resolveMutateOnDeath(def), { kind: 'enemy', spawnType: 'lobo', count: 1 });
 });
 

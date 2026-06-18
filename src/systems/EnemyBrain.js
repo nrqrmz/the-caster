@@ -293,6 +293,20 @@ export function buildSplitChildren(def) {
   return children;
 }
 
+// Normalizes a `mutateOnDeath` modifier into a spawn directive.
+// Returns null, an enemy spawn { kind:'enemy', spawnType, count }, or a hazard { kind:'zone', radius, dps, duration }.
+export function resolveMutateOnDeath(def) {
+  const m = findModifier(def, 'mutateOnDeath');
+  if (!m) return null;
+  if (m.zone) {
+    return { kind: 'zone', radius: m.zone.radius ?? 50, dps: m.zone.dps ?? 18, duration: m.zone.duration ?? 2500 };
+  }
+  if (m.spawnType) {
+    return { kind: 'enemy', spawnType: m.spawnType, count: m.count ?? 1 };
+  }
+  return null;
+}
+
 export const LIFECYCLE = Object.freeze({ EGG: 'egg', TADPOLE: 'tadpole', ADULT: 'adult' });
 
 // Ticks the per-enemy lifecycle timer (egg→tadpole→adult).
