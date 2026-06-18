@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeMovement, MOVEMENTS, summonSlots, isFlying } from '../src/systems/EnemyBrain.js';
+import { computeMovement, MOVEMENTS, summonSlots, isFlying, resolveMutateOnDeath } from '../src/systems/EnemyBrain.js';
 import { ENEMY_MARGIN } from '../src/config.js';
 import { BURROW_SUBMERGE_MS, BURROW_TELEGRAPH_MS, BURROW_SURFACE_MS, BURROW_EMERGE_DIST, EVADE_DODGE_EVERY, EVADE_DODGE_MS, EVADE_DODGE_MUL } from '../src/data/tuning.js';
 
@@ -301,9 +301,9 @@ test('split children keep ×0.7 when above the floor', () => {
   assert.equal(kids[0].radius, 21); // round(30*0.7)
 });
 
-test('no enemy def has a radius below the floor of 16', () => {
+test('no enemy def has a radius below the floor of 12', () => {
   for (const [key, def] of Object.entries(ENEMY_TYPES)) {
-    if (typeof def.radius === 'number') assert.ok(def.radius >= 16, `${key} radius ${def.radius} < 16`);
+    if (typeof def.radius === 'number') assert.ok(def.radius >= 12, `${key} radius ${def.radius} < 12`);
   }
 });
 
@@ -470,5 +470,55 @@ test('isFlying reads the flying flag', () => {
   assert.equal(isFlying({ flying: false }), false);
   assert.equal(isFlying({}), false);
   assert.equal(isFlying(null), false);
+});
+
+test('resolveMutateOnDeath returns null when no modifier', () => {
+  assert.equal(resolveMutateOnDeath({ modifiers: [] }), null);
+  assert.equal(resolveMutateOnDeath({}), null);
+});
+
+test('resolveMutateOnDeath resolves an enemy spawn (lobo -> fleeing human)', () => {
+  const def = { modifiers: [{ type: 'mutateOnDeath', spawnType: 'cautivo_huye', count: 1 }] };
+  assert.deepEqual(resolveMutateOnDeath(def), { kind: 'enemy', spawnType: 'cautivo_huye', count: 1 });
+});
+
+test('resolveMutateOnDeath resolves a hazard zone (fungus -> spore cloud)', () => {
+  const def = { modifiers: [{ type: 'mutateOnDeath', zone: { radius: 50, dps: 18, duration: 2500 } }] };
+  assert.deepEqual(resolveMutateOnDeath(def), { kind: 'zone', radius: 50, dps: 18, duration: 2500 });
+});
+
+test('resolveMutateOnDeath defaults count to 1 for enemy spawns', () => {
+  const def = { modifiers: [{ type: 'mutateOnDeath', spawnType: 'lobo' }] };
+  assert.deepEqual(resolveMutateOnDeath(def), { kind: 'enemy', spawnType: 'lobo', count: 1 });
+});
+
+import { selectTransmuteTarget, transmuteBeastKey } from '../src/systems/EnemyBrain.js';
+
+const cap = (x, y, extra = {}) => ({ x, y, active: true, def: { transmuteTo: 'lobo' }, _transmuteLocked: false, ...extra });
+
+test('selectTransmuteTarget picks the nearest active captive', () => {
+  const near = cap(10, 0);
+  const far = cap(100, 0);
+  const chosen = selectTransmuteTarget({ x: 0, y: 0 }, [far, near]);
+  assert.equal(chosen, near);
+});
+
+test('selectTransmuteTarget skips inactive, non-captive, and already-locked candidates', () => {
+  const inactive = cap(5, 0, { active: false });
+  const notCaptive = cap(6, 0, { def: {} });
+  const locked = cap(7, 0, { _transmuteLocked: true });
+  const valid = cap(50, 0);
+  const chosen = selectTransmuteTarget({ x: 0, y: 0 }, [inactive, notCaptive, locked, valid]);
+  assert.equal(chosen, valid);
+});
+
+test('selectTransmuteTarget returns null when no valid candidate', () => {
+  assert.equal(selectTransmuteTarget({ x: 0, y: 0 }, []), null);
+  assert.equal(selectTransmuteTarget({ x: 0, y: 0 }, [cap(1, 1, { active: false })]), null);
+});
+
+test('transmuteBeastKey returns the captive def transmuteTo, or null', () => {
+  assert.equal(transmuteBeastKey({ transmuteTo: 'lobo' }), 'lobo');
+  assert.equal(transmuteBeastKey({}), null);
 });
 

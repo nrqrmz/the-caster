@@ -64,6 +64,7 @@ export class ProjectilePool {
     this.group.children.iterate((p) => {
       if (!p || !p.active) return true;
       if (p.x < -40 || p.x > width + 40 || p.y < -40 || p.y > height + 40) {
+        if (p._transmute && p._transmuteTarget && p._transmuteTarget.active) p._transmuteTarget._transmuteLocked = false;
         this.despawn(p);
       }
       return true;

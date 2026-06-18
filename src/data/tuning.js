@@ -76,12 +76,13 @@ export const LAVA_RIVER_TELEGRAPH_MS = 1000;  // aviso antes de encenderse
 export const LAVA_RIVER_ACTIVE_MS = 2500;     // dura encendido
 export const LAVA_RIVER_DPS = 18;             // menos letal que el triángulo (~28)
 
-// --- Air world (La Torre Montaña) ---
+// --- Caster control-loss (stun/lift = Air; root = Earth). Brief but consequential. ---
 
-// Caster control-loss (velocidad + desplazamiento). Brief but consequential.
+// Caster control-loss mechanics.
 export const CASTER_STUN_MS = 300;   // total control loss (electric discharge)
 export const CASTER_LIFT_MS = 500;   // lifted by a small tornado (can't move/dodge)
-export const CC_IMMUNE_MS   = 600;   // anti-chain window after a stun/lift expires
+export const CASTER_ROOT_MS = 800;   // legs rooted (raíces/lodo): can't move, CAN still cast
+export const CC_IMMUNE_MS   = 600;   // anti-chain window after a stun/lift/root expires
 
 // Directional push (onHitPush / gust). Impulse the caster receives on hit.
 export const PUSH_FORCE = 220;       // px/sec impulse magnitude
@@ -103,3 +104,9 @@ export const TORNADO_COOLDOWN_MS     = 4500; // gap before it reforms at a new s
 
 // Ritual meter (nv7 cultist leader). Fills while the leader channels (untargetable).
 export const RITUAL_FILL_MS = 38000; // time to fill from empty to full
+
+// Griffin flight/ground cycle (nv7 earth levelboss El Grifo).
+export const GRIFFIN_GROUND_MS = 5000; // reachable window — generous + always returns (anti-spam)
+export const GRIFFIN_FLIGHT_MS = 3000; // bounded untargetable dive window
+
+export const BOSS_TAUNT_EVERY = 7000; // ms between a boss's floating taunts
