@@ -307,6 +307,25 @@ export function resolveMutateOnDeath(def) {
   return null;
 }
 
+// Picks the nearest valid friendly captive for a transmute bolt to hunt.
+// A valid candidate is active, captive (def.transmuteTo set), and not already locked by another bolt.
+export function selectTransmuteTarget(source, candidates) {
+  let best = null;
+  let bestD = Infinity;
+  for (const c of candidates || []) {
+    if (!c || !c.active || !c.def || !c.def.transmuteTo || c._transmuteLocked) continue;
+    const dx = c.x - source.x;
+    const dy = c.y - source.y;
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = c; }
+  }
+  return best;
+}
+
+export function transmuteBeastKey(captiveDef) {
+  return (captiveDef && captiveDef.transmuteTo) || null;
+}
+
 export const LIFECYCLE = Object.freeze({ EGG: 'egg', TADPOLE: 'tadpole', ADULT: 'adult' });
 
 // Ticks the per-enemy lifecycle timer (egg→tadpole→adult).

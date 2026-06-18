@@ -492,3 +492,33 @@ test('resolveMutateOnDeath defaults count to 1 for enemy spawns', () => {
   assert.deepEqual(resolveMutateOnDeath(def), { kind: 'enemy', spawnType: 'lobo', count: 1 });
 });
 
+import { selectTransmuteTarget, transmuteBeastKey } from '../src/systems/EnemyBrain.js';
+
+const cap = (x, y, extra = {}) => ({ x, y, active: true, def: { transmuteTo: 'lobo' }, _transmuteLocked: false, ...extra });
+
+test('selectTransmuteTarget picks the nearest active captive', () => {
+  const near = cap(10, 0);
+  const far = cap(100, 0);
+  const chosen = selectTransmuteTarget({ x: 0, y: 0 }, [far, near]);
+  assert.equal(chosen, near);
+});
+
+test('selectTransmuteTarget skips inactive, non-captive, and already-locked candidates', () => {
+  const inactive = cap(5, 0, { active: false });
+  const notCaptive = cap(6, 0, { def: {} });
+  const locked = cap(7, 0, { _transmuteLocked: true });
+  const valid = cap(50, 0);
+  const chosen = selectTransmuteTarget({ x: 0, y: 0 }, [inactive, notCaptive, locked, valid]);
+  assert.equal(chosen, valid);
+});
+
+test('selectTransmuteTarget returns null when no valid candidate', () => {
+  assert.equal(selectTransmuteTarget({ x: 0, y: 0 }, []), null);
+  assert.equal(selectTransmuteTarget({ x: 0, y: 0 }, [cap(1, 1, { active: false })]), null);
+});
+
+test('transmuteBeastKey returns the captive def transmuteTo, or null', () => {
+  assert.equal(transmuteBeastKey({ transmuteTo: 'lobo' }), 'lobo');
+  assert.equal(transmuteBeastKey({}), null);
+});
+
