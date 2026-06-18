@@ -26,7 +26,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation, isFlying } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, resolveMutateOnDeath, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation, isFlying } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
@@ -539,6 +539,25 @@ export default class GameScene extends Phaser.Scene {
       const e = new Enemy(this, enemy.x + Phaser.Math.Between(-20, 20), enemy.y + Phaser.Math.Between(-20, 20), scaled);
       this.enemies.add(e);
       if (childDef.radius) e.setDisplaySize(childDef.radius * 2, childDef.radius * 2);
+    }
+    const mutate = resolveMutateOnDeath(enemy.def);
+    if (mutate && !enemy._mutated) {
+      enemy._mutated = true; // guard: never recurse
+      if (mutate.kind === 'zone') {
+        this.spawnZone({
+          x: enemy.x, y: enemy.y,
+          radius: mutate.radius, duration: mutate.duration,
+          casterDps: mutate.dps,
+          color: COLORS.poison, style: 'fire',
+        });
+      } else if (mutate.kind === 'enemy' && this.enemies.countActive(true) < CONCURRENCY_CAP) {
+        const def = ENEMY_TYPES[mutate.spawnType];
+        if (def) {
+          const e = new Enemy(this, enemy.x, enemy.y, scaleEnemyDef(def, this.diff));
+          this.enemies.add(e);
+          if (def.radius) e.setDisplaySize(def.radius * 2, def.radius * 2);
+        }
+      }
     }
   }
 
