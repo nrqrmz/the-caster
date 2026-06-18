@@ -103,10 +103,10 @@ test('tryMeleeContact vuelve a permitir tras el cooldown', () => {
 });
 
 import {
-  applyCasterCc, tickCasterCc, isControlLocked,
+  applyCasterCc, tickCasterCc, isControlLocked, isMovementLocked,
   applyCasterPush, tickCasterPush, getCasterPush, applyDrain,
 } from '../src/systems/CombatSystem.js';
-import { CASTER_STUN_MS, CASTER_LIFT_MS, CC_IMMUNE_MS } from '../src/data/tuning.js';
+import { CASTER_STUN_MS, CASTER_LIFT_MS, CC_IMMUNE_MS, CASTER_ROOT_MS } from '../src/data/tuning.js';
 
 function freshCc() {
   return { stunRemaining: 0, liftRemaining: 0, ccImmuneRemaining: 0 };
@@ -153,6 +153,40 @@ test('a second stun is blocked during the immunity window, then allowed after it
   tickCasterCc(s, CC_IMMUNE_MS); // immunity decays to 0
   assert.equal(s.ccImmuneRemaining, 0);
   assert.equal(applyCasterCc(s, 'stun', 300), true); // allowed again
+});
+
+test('applyCasterCc root sets rootRemaining and returns true', () => {
+  const s = { stunRemaining: 0, liftRemaining: 0, rootRemaining: 0, ccImmuneRemaining: 0 };
+  assert.equal(applyCasterCc(s, 'root', CASTER_ROOT_MS), true);
+  assert.equal(s.rootRemaining, CASTER_ROOT_MS);
+});
+
+test('root locks movement but NOT control (caster keeps casting while rooted)', () => {
+  const s = { stunRemaining: 0, liftRemaining: 0, rootRemaining: 0, ccImmuneRemaining: 0 };
+  applyCasterCc(s, 'root', 300);
+  assert.equal(isMovementLocked(s), true);  // can't move
+  assert.equal(isControlLocked(s), false);  // can still cast/fire
+});
+
+test('tickCasterCc decrements root and arms ccImmune when it expires', () => {
+  const s = { stunRemaining: 0, liftRemaining: 0, rootRemaining: 0, ccImmuneRemaining: 0 };
+  applyCasterCc(s, 'root', 100);
+  tickCasterCc(s, 60);
+  assert.equal(s.rootRemaining, 40);
+  assert.equal(s.ccImmuneRemaining, 0); // not expired yet
+  tickCasterCc(s, 60); // expires this frame
+  assert.equal(s.rootRemaining, 0);
+  assert.equal(s.ccImmuneRemaining, CC_IMMUNE_MS);
+  assert.equal(isMovementLocked(s), false);
+});
+
+test('a root is blocked during the anti-chain immunity window', () => {
+  const s = { stunRemaining: 0, liftRemaining: 0, rootRemaining: 0, ccImmuneRemaining: 0 };
+  applyCasterCc(s, 'root', 50);
+  tickCasterCc(s, 60); // root expires → ccImmune armed
+  assert.equal(applyCasterCc(s, 'root', 300), false); // blocked
+  tickCasterCc(s, CC_IMMUNE_MS); // immunity decays
+  assert.equal(applyCasterCc(s, 'root', 300), true); // allowed again
 });
 
 test('applyCasterPush sets a decaying impulse; getCasterPush returns it then zero', () => {

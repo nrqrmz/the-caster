@@ -81,6 +81,7 @@ export const LAVA_RIVER_DPS = 18;             // menos letal que el triángulo (
 // Caster control-loss (velocidad + desplazamiento). Brief but consequential.
 export const CASTER_STUN_MS = 300;   // total control loss (electric discharge)
 export const CASTER_LIFT_MS = 500;   // lifted by a small tornado (can't move/dodge)
+export const CASTER_ROOT_MS = 800;   // legs rooted (raíces/lodo): can't move, CAN still cast
 export const CC_IMMUNE_MS   = 600;   // anti-chain window after a stun/lift expires
 
 // Directional push (onHitPush / gust). Impulse the caster receives on hit.
