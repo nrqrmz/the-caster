@@ -71,6 +71,34 @@ export const CEFALO = {
   forms: [CEFALO_HUMANO, CEFALO_FELINO],
 };
 
+// nv6 dual boss — La Dríada & su Ent, the healer + tank with hamadryad death-link.
+// The tank: slow, high-HP, stomps for root. Its death kills the bound Dríada (hamadryad link).
+const ENT_GUARDIAN = {
+  key: 'ent_guardian', tex: TEX.boss, color: COLORS.barkBrown,
+  hp: 520, speed: 40, damage: 18, radius: 26, resist: 0.10, elite: true,
+  movement: { type: 'chase' },
+  phases: [ { from: 1.0, sequence: [
+    { do: 'lobAoe', radius: 55, duration: 1500, root: true, telegraph: 550, dur: 700 }, // pisotón
+    { do: 'wait', dur: 700 },
+  ] } ],
+};
+
+// The brain: mobile (kite, NOT flee), stays at heal range, heals the Ent + roots you with raíces.
+export const DRIADA = {
+  key: 'driada', tex: TEX.miniboss, color: COLORS.mossGreen,
+  hp: 280, speed: 75, damage: 10, radius: 24, elite: true,
+  coBoss: ENT_GUARDIAN,
+  coBossKillsMaster: true,        // killing the Ent kills the Dríada
+  modifiers: [{ type: 'healAllies', hps: 15, radius: 220 }],
+  movement: { type: 'kite', range: 230 },
+  phases: [ { from: 1.0, sequence: [
+    { do: 'lobAoe', radius: 50, duration: 1500, root: true, telegraph: 500, dur: 650 }, // raíces
+    { do: 'lobAoe', radius: 60, dps: 26, duration: 3000, telegraph: 450, dur: 700 },     // poison floor
+    { do: 'summon', spawnType: 'flor_carnivora', count: 1, cap: 2, respawnMs: 11000, dur: 700 },
+    { do: 'wait', dur: 500 },
+  ] } ],
+};
+
 // nv8 templeboss — Circe, summoner pura. Releases captives and transmutes them into beasts.
 // `taunts` drives a floating-text line (Task 7); death triggers revertBeasts (Task 7).
 export const CIRCE = {

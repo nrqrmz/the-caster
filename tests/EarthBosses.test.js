@@ -42,3 +42,9 @@ test('Céfalo is a 2-form boss guarded by a co-boss', () => {
   assert.equal(BOSSES.CEFALO.gateUntilCoBossDead, true);
   assert.equal(BOSSES.CEFALO.untargetable, true);
 });
+
+test('Dríada is kill-linked to its Ent and heals allies', () => {
+  assert.ok(BOSSES.DRIADA.coBoss && BOSSES.DRIADA.coBoss.key === 'ent_guardian');
+  assert.equal(BOSSES.DRIADA.coBossKillsMaster, true);
+  assert.ok((BOSSES.DRIADA.modifiers || []).some((m) => m.type === 'healAllies'));
+});
