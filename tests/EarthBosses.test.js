@@ -48,3 +48,8 @@ test('Dríada is kill-linked to its Ent and heals allies', () => {
   assert.equal(BOSSES.DRIADA.coBossKillsMaster, true);
   assert.ok((BOSSES.DRIADA.modifiers || []).some((m) => m.type === 'healAllies'));
 });
+
+test('Grifo is a high-HP flying griffin', () => {
+  assert.ok(BOSSES.GRIFO.griffin === true && BOSSES.GRIFO.flying === true);
+  assert.ok(BOSSES.GRIFO.hp >= 650);
+});

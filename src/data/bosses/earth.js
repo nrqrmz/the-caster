@@ -99,6 +99,28 @@ export const DRIADA = {
   ] } ],
 };
 
+// nv7 levelboss — guardian of Circe's sanctum. Alternates flight (untargetable dives) and ground (window).
+export const GRIFO = {
+  key: 'grifo', tex: TEX.boss, color: COLORS.barkBrown,
+  hp: 700, speed: 110, damage: 20, radius: 26, resist: 0.20, elite: true,
+  flying: true,
+  griffin: true, // drives updateGriffin's flight/ground state machine
+  movement: { type: 'charge', windup: 420, dash: 360, recover: 520, dashMul: 3.0 },
+  phases: [
+    { from: 1.0, sequence: [
+      { do: 'summon', spawnType: 'lobo', count: 2, cap: 4, respawnMs: 9000, dur: 800 },
+      { do: 'dashStrike', damage: 20, range: 90, telegraph: 320, dur: 420 },
+      { do: 'wait', dur: 500 },
+    ] },
+    { from: 0.45, speedMul: 1.15, sequence: [
+      { do: 'summon', spawnTypes: ['lobo', 'jabali'], count: 2, cap: 5, respawnMs: 8000, dur: 750 },
+      { do: 'dashStrike', damage: 22, range: 100, telegraph: 280, dur: 400 },
+      { do: 'dashStrike', damage: 22, range: 100, telegraph: 260, dur: 380 },
+      { do: 'wait', dur: 400 },
+    ] },
+  ],
+};
+
 // nv8 templeboss — Circe, summoner pura. Releases captives and transmutes them into beasts.
 // `taunts` drives a floating-text line (Task 7); death triggers revertBeasts (Task 7).
 export const CIRCE = {

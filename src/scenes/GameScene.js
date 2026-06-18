@@ -10,6 +10,7 @@ import {
   TORNADO_RADIUS, TORNADO_ACTIVE_MS, TORNADO_COOLDOWN_MS, TORNADO_TELEGRAPH_MS, TORNADO_ENEMY_PULL,
   CASTER_STUN_MS, CASTER_LIFT_MS, CASTER_ROOT_MS, PUSH_FORCE, PUSH_MS,
   RITUAL_FILL_MS,
+  GRIFFIN_GROUND_MS, GRIFFIN_FLIGHT_MS,
 } from '../data/tuning.js';
 import { tickRitual, ritualFraction } from '../systems/RitualMeter.js';
 import { BASE_STATS } from '../data/stats.js';
@@ -1078,6 +1079,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateTornado(delta);
     this.updateRitual(delta);
     this.updateBossGates();
+    this.updateGriffin(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     for (const b of this.bosses) { if (b && b.active && !b._burrowed) b.drawBar(); else if (b && b._burrowed) b.bar.clear(); }
@@ -1305,6 +1307,20 @@ export default class GameScene extends Phaser.Scene {
   updateBossGates() {
     for (const b of this.bosses) {
       if (b && b.active && b._gateGuard && !b._gateGuard.active) b._untargetable = false;
+    }
+  }
+
+  // nv7 earth levelboss flight/ground cycle. Ground is the default and always returns (anti-spam).
+  updateGriffin(delta) {
+    for (const b of this.bosses) {
+      if (!b || !b.active || !b.def || !b.def.griffin) continue;
+      if (b._griffin == null) { b._griffin = { mode: 'ground', t: GRIFFIN_GROUND_MS }; b._untargetable = false; }
+      const g = b._griffin;
+      g.t -= delta;
+      if (g.t <= 0) {
+        if (g.mode === 'ground') { g.mode = 'flight'; g.t = GRIFFIN_FLIGHT_MS; b._untargetable = true; b.setAlpha(0.6); }
+        else { g.mode = 'ground'; g.t = GRIFFIN_GROUND_MS; b._untargetable = false; b.setAlpha(1); }
+      }
     }
   }
 
