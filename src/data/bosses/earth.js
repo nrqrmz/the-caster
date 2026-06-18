@@ -23,6 +23,54 @@ export const SENOR_LOBO = {
   ],
 };
 
+// nv5 miniboss — the hunter Céfalo guarded by his hound Lélaps.
+// Lélaps is untargetable-gate-boss for Céfalo; petrifies into a block on death.
+// Céfalo's 2 forms: marksman → Circe transmutes him into a feline.
+
+// The hound "that always catches" — guards Céfalo; petrifies into an impassable block on death.
+const LELAPS = {
+  key: 'lelaps', tex: TEX.miniboss, color: COLORS.stoneGrey,
+  hp: 140, speed: 140, damage: 14, radius: 18, elite: true,
+  petrifyBlock: true,
+  movement: { type: 'chase' },
+  attacks: [{ type: 'melee' }],
+};
+
+// Form 1 — the marksman: infallible (homing) wood-and-silver javelin, kept at range.
+const CEFALO_HUMANO = {
+  key: 'cefalo_humano', tex: TEX.miniboss, color: COLORS.barkBrown,
+  hp: 300, speed: 70, damage: 14, radius: 24, resist: 0, elite: true,
+  movement: { type: 'kite', range: 230 },
+  phases: [ { from: 1.0, sequence: [
+    { do: 'shootHoming', speed: 130, damage: 14, tint: COLORS.wood, telegraph: 350, dur: 700 },
+    { do: 'shootStraight', speed: 230, damage: 12, tint: COLORS.wood, telegraph: 250, dur: 600 },
+    { do: 'wait', dur: 500 },
+  ] } ],
+};
+
+// Form 2 — the feline Circe made of him: fast, dodgy, melee.
+const CEFALO_FELINO = {
+  key: 'cefalo_felino', tex: TEX.miniboss, color: COLORS.beastFur,
+  hp: 360, speed: 150, damage: 18, radius: 22, resist: 0.10, elite: true,
+  movement: { type: 'evade', range: 120 },
+  phases: [ { from: 1.0, sequence: [
+    { do: 'dashStrike', damage: 18, range: 80, telegraph: 280, dur: 380 },
+    { do: 'wait', dur: 450 },
+  ] } ],
+};
+
+export const CEFALO = {
+  key: 'cefalo', tex: TEX.miniboss, color: COLORS.barkBrown,
+  hp: 300, speed: 70, damage: 14, radius: 24, elite: true,
+  untargetable: true,           // guarded by Lélaps (gate clears when Lélaps dies)
+  coBoss: LELAPS,
+  gateUntilCoBossDead: true,
+  deathFeint: true,             // collapse→rise on the form transition
+  transformCameo: true,         // Circe appears in the transition
+  movement: { type: 'kite', range: 230 },
+  forms: [CEFALO_HUMANO, CEFALO_FELINO],
+};
+
 // nv8 templeboss — Circe, summoner pura. Releases captives and transmutes them into beasts.
 // `taunts` drives a floating-text line (Task 7); death triggers revertBeasts (Task 7).
 export const CIRCE = {

@@ -35,3 +35,10 @@ test('Señor Lobo and Circe are exported and multi-phase', () => {
   assert.ok(BOSSES.SENOR_LOBO && BOSSES.SENOR_LOBO.phases.length >= 2);
   assert.ok(BOSSES.CIRCE && BOSSES.CIRCE.phases.length === 3);
 });
+
+test('Céfalo is a 2-form boss guarded by a co-boss', () => {
+  assert.equal(BOSSES.CEFALO.forms.length, 2);
+  assert.ok(BOSSES.CEFALO.coBoss && BOSSES.CEFALO.coBoss.key === 'lelaps');
+  assert.equal(BOSSES.CEFALO.gateUntilCoBossDead, true);
+  assert.equal(BOSSES.CEFALO.untargetable, true);
+});

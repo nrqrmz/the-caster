@@ -277,6 +277,10 @@ export default class GameScene extends Phaser.Scene {
 
   _beginBossTransform(boss) {
     boss._transforming = true;
+    if (boss.def && boss.def.transformCameo) {
+      this.flashCircle(boss.x, boss.y - 10, 40, COLORS.sporeViolet); // Circe arrives
+      this.floatText(boss.x, boss.y - 50, t('story.earth.cefalo.cameo'));
+    }
     // Clear this form's adds.
     const live = this.enemies.getChildren().filter((e) => e.active && e !== boss);
     for (const e of live) e.destroy();
@@ -540,6 +544,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   onEnemyDeath(enemy) {
+    if (enemy.def && enemy.def.petrifyBlock) this.spawnPetrifyBlock(enemy.x, enemy.y);
     // Si era un invocado con tope, libera su slot e inicia el cooldown del padre.
     if (enemy._summonedBy && enemy._summonedBy.active && enemy._summonCapKey) {
       const tr = enemy._summonedBy._summonTrackers && enemy._summonedBy._summonTrackers[enemy._summonCapKey];
@@ -817,6 +822,7 @@ export default class GameScene extends Phaser.Scene {
       const shot = this.enemyShots.fire(spec.tex, enemy.x, enemy.y, tx, ty, p.speed, p.damage, 0);
       if (!shot) continue;
       shot.setTint(spec.tint); // disparos enemigos distinguibles del orbe cian del jugador
+      if (att.tint != null) shot.setTint(att.tint); // step-level tint override (Céfalo's wood javelin)
       if (p.big) {
         shot.setDisplaySize(60, 60);                 // bola enorme reusando TEX.fireball (32px)
         if (shot.body) shot.body.setCircle(28); // hitbox grande
@@ -992,6 +998,11 @@ export default class GameScene extends Phaser.Scene {
   flashCircle(x, y, radius, color) {
     const c = this.add.circle(x, y, radius, color, 0.35).setDepth(6);
     this.tweens.add({ targets: c, alpha: 0, scale: 1.2, duration: 250, onComplete: () => c.destroy() });
+  }
+
+  floatText(x, y, str) {
+    const txt = this.add.text(x, y, str, { fontSize: '12px', color: '#e1bee7', align: 'center', wordWrap: { width: 200 } }).setOrigin(0.5).setDepth(960);
+    this.tweens.add({ targets: txt, y: y - 30, alpha: 0, duration: 1800, onComplete: () => txt.destroy() });
   }
 
   // A green beam from a healer to an ally it's restoring — fades out so a new one is drawn each VFX tick.
