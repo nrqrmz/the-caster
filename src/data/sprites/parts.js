@@ -959,6 +959,31 @@ export const PARTS = {
       '.....o.....',
     ], up: null, side: null,
   },
+  // Rayo: glifo ⚡ — trazo superior baja a la izquierda, codo brillante al centro,
+  // trazo inferior remata en punta. Núcleo (h) muy claro, cuerpo (b), contorno (o).
+  // No rota con la dirección (siempre se ve como rayo), a diferencia de la flecha.
+  bolt_body: {
+    res: 32, w: 13, h: 17, anchor: { x: 6, y: 8 },
+    down: [
+      '......oo.....',
+      '.....ohho....',
+      '....ohbho....',
+      '...ohbho.....',
+      '..ohbho......',
+      '.ohbho.......',
+      '.ohbhooooo...',
+      '.ohbbbbbho...',
+      '.oohhbbbho...',
+      '....oobbho...',
+      '......ohho...',
+      '.....ohbo....',
+      '....ohbo.....',
+      '...ohbo......',
+      '..ohho.......',
+      '.oho.........',
+      '.oo..........',
+    ], up: null, side: null,
+  },
   // Gota de veneno: glóbulo redondo con burbujas (accent) y una gota que escurre.
   poison_glob: {
     res: 32, w: 11, h: 13, anchor: { x: 5, y: 5 },

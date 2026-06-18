@@ -188,6 +188,28 @@ test('a root is blocked during the anti-chain immunity window', () => {
   tickCasterCc(s, CC_IMMUNE_MS); // immunity decays
   assert.equal(applyCasterCc(s, 'root', 300), true); // allowed again
 });
+// Regresión del charco/tornadito (lobAoe): una zona persistente NO debe perma-bloquear.
+// La zona aplica el CC SOLO al entrar (rising-edge en updateZones); así el lift corre su
+// curso, termina, se arma la inmunidad y la jugadora puede salir aunque siga el peligro.
+test('zona: aplicar CC una sola vez (al entrar) permite salir antes de que acabe la zona', () => {
+  const s = freshCc();
+  applyCasterCc(s, 'lift', CASTER_LIFT_MS); // entrada a la zona
+  let lockedMs = 0;
+  for (let t = 0; t < 1800; t += 16) { // simula permanecer dentro 1800ms SIN reaplicar
+    if (isControlLocked(s)) lockedMs += 16;
+    tickCasterCc(s, 16);
+  }
+  assert.ok(lockedMs <= CASTER_LIFT_MS + 32, `el lock (${lockedMs}ms) no debe durar toda la zona`);
+  assert.equal(isControlLocked(s), false);
+});
+
+// Documenta POR QUÉ el bug perma-bloqueaba: reaplicar cada frame refresca el timer con
+// max(), el lock nunca termina y la inmunidad (que se arma al terminar) jamás dispara.
+test('zona (bug): reaplicar CC cada frame perma-bloquea — por eso ahora se aplica al entrar', () => {
+  const s = freshCc();
+  for (let t = 0; t < 1800; t += 16) { applyCasterCc(s, 'lift', CASTER_LIFT_MS); tickCasterCc(s, 16); }
+  assert.equal(isControlLocked(s), true); // sigue atrapada tras 1800ms
+});
 
 test('applyCasterPush sets a decaying impulse; getCasterPush returns it then zero', () => {
   const s = { pushX: 0, pushY: 0, pushRemaining: 0 };

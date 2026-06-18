@@ -4,7 +4,9 @@ import { hasRecipe } from '../data/sprites/recipes.js';
 
 const PROJECTILE_KEY = {
   [TEX.orb]: 'orb', [TEX.fireball]: 'fireball', [TEX.arrow]: 'arrow',
-  [TEX.iceShard]: 'iceShard', [TEX.poisonGlob]: 'poisonGlob',
+  [TEX.bolt]: 'bolt', [TEX.iceShard]: 'iceShard', [TEX.poisonGlob]: 'poisonGlob',
+  // Tornado (lift de jefes de Aire): recicla el sprite/anim del torbellino_errante.
+  [TEX.tornado]: 'torbellino_errante',
 };
 
 export class ProjectilePool {
@@ -39,6 +41,10 @@ export class ProjectilePool {
     const angle = Phaser.Math.Angle.Between(x, y, targetX, targetY);
     p.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
 
+    // El pool reusa cuerpos: limpia cualquier giro residual. El tornado NO rota ni se
+    // anima a propósito — un funnel visto de lado girando como peonza se ve absurdo;
+    // se muestra como sprite estático y vertical.
+    if (p.body) p.body.setAngularVelocity(0);
     if (useSprite) {
       p.setRotation(0);
       if (sprKey === 'orb' || sprKey === 'fireball') p.anims.play(`${sprKey}-idle-down`, true);
