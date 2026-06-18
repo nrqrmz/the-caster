@@ -26,7 +26,7 @@ import { grantClear } from '../systems/Campaign.js';
 import { goldReward } from '../systems/Economy.js';
 import { BossMechanics } from '../systems/BossMechanics.js';
 import { chainTargets, freezeEffect } from '../systems/SkillTargeting.js';
-import { buildProjectiles, findModifier, buildSplitChildren, resolveMutateOnDeath, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation, isFlying } from '../systems/EnemyBrain.js';
+import { buildProjectiles, findModifier, buildSplitChildren, resolveMutateOnDeath, tickLifecycle, LIFECYCLE, summonSlots, pushOutsideRing, sisterFormation, isFlying, selectTransmuteTarget, transmuteBeastKey } from '../systems/EnemyBrain.js';
 import { clampBodyInside } from '../systems/clampBodyInside.js';
 import { hazardEdges, onAnyEdge, riverEdges } from '../systems/TriangleHazard.js';
 import { forceAt, isInside, centerDot, scaleForPhase } from '../systems/WhirlpoolHazard.js';
@@ -160,6 +160,7 @@ export default class GameScene extends Phaser.Scene {
     });
     this.physics.add.overlap(this.caster, this.enemyShots.group, (caster, shot) => {
       if (!shot.active) return;
+      if (shot._transmute) return; // transmute bolts hunt a captive, not the caster
       this.damageCaster(shot.damage);
       if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
       if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
@@ -399,6 +400,18 @@ export default class GameScene extends Phaser.Scene {
     }
     this.enemies.add(e);
     enemy.destroy();
+  }
+
+  swapToBeast(captive) {
+    const key = transmuteBeastKey(captive.def);
+    const def = key ? ENEMY_TYPES[key] : null;
+    if (def && this.enemies.countActive(true) < CONCURRENCY_CAP) {
+      const e = new Enemy(this, captive.x, captive.y, scaleEnemyDef(def, this.diff));
+      this.enemies.add(e);
+      if (def.radius) e.setDisplaySize(def.radius * 2, def.radius * 2);
+      this.flashCircle(captive.x, captive.y, (def.radius || 20) + 12, COLORS.poison); // transform tell
+    }
+    captive.destroy();
   }
 
   // No enemy may ever leave the play area — for ANY reason. An escaped enemy never
@@ -725,6 +738,20 @@ export default class GameScene extends Phaser.Scene {
       }
       return;
     }
+    if (att.type === 'transmute') {
+      const candidates = [];
+      this.enemies.children.iterate((e) => { if (e && e.active && e.def && e.def.transmuteTo && !e._transmuteLocked) candidates.push(e); return true; });
+      const target = selectTransmuteTarget({ x: enemy.x, y: enemy.y }, candidates);
+      if (!target) return;
+      target._transmuteLocked = true;
+      const shot = this.enemyShots.fire(TEX.poisonGlob, enemy.x, enemy.y, target.x, target.y, att.speed ?? 150, 0, 0);
+      if (!shot) { target._transmuteLocked = false; return; }
+      shot.setTint(COLORS.poison);
+      shot.damage = 0;
+      shot._transmute = true;
+      shot._transmuteTarget = target;
+      return;
+    }
     if (att.type === 'submerge') {
       // Dive deep: vanish completely (untargetable + invisible, no fin) for a window and
       // summon a minion from the depths. A DPS-denial beat — it stays put, never moves.
@@ -828,6 +855,26 @@ export default class GameScene extends Phaser.Scene {
       const current = Math.atan2(p.body.velocity.y, p.body.velocity.x);
       const next = Phaser.Math.Angle.RotateTo(current, desired, turn);
       const s = p.homingSpeed || 120;
+      p.setVelocity(Math.cos(next) * s, Math.sin(next) * s);
+      return true;
+    });
+  }
+
+  steerTransmuteShots(delta) {
+    const turn = 0.02 * delta; // tighter than caster-homing — it must reliably reach its captive
+    this.enemyShots.group.children.iterate((p) => {
+      if (!p || !p.active || !p._transmute) return true;
+      const target = p._transmuteTarget;
+      if (!target || !target.active) { this.enemyShots.despawn(p); return true; } // captive died → fizzle
+      if (Phaser.Math.Distance.Between(p.x, p.y, target.x, target.y) < 24) {
+        this.swapToBeast(target);
+        this.enemyShots.despawn(p);
+        return true;
+      }
+      const desired = Phaser.Math.Angle.Between(p.x, p.y, target.x, target.y);
+      const current = Math.atan2(p.body.velocity.y, p.body.velocity.x);
+      const next = Phaser.Math.Angle.RotateTo(current, desired, turn);
+      const s = p.homingSpeed || 150;
       p.setVelocity(Math.cos(next) * s, Math.sin(next) * s);
       return true;
     });
@@ -983,6 +1030,7 @@ export default class GameScene extends Phaser.Scene {
     }
     this.orbs.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     this.steerHomingShots(delta);
+    this.steerTransmuteShots(delta);
     this.enemyShots.cullOffscreen(GAME_WIDTH, GAME_HEIGHT);
     if (this.bossMechanics) this.bossMechanics.update(delta);
     this.updateZones(delta);
