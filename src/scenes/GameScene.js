@@ -750,6 +750,7 @@ export default class GameScene extends Phaser.Scene {
       shot.damage = 0;
       shot._transmute = true;
       shot._transmuteTarget = target;
+      shot.homingSpeed = att.speed ?? 150;
       return;
     }
     if (att.type === 'submerge') {
@@ -865,7 +866,7 @@ export default class GameScene extends Phaser.Scene {
     this.enemyShots.group.children.iterate((p) => {
       if (!p || !p.active || !p._transmute) return true;
       const target = p._transmuteTarget;
-      if (!target || !target.active) { this.enemyShots.despawn(p); return true; } // captive died → fizzle
+      if (!target || !target.active) { if (p._transmuteTarget) p._transmuteTarget._transmuteLocked = false; this.enemyShots.despawn(p); return true; } // captive died → fizzle
       if (Phaser.Math.Distance.Between(p.x, p.y, target.x, target.y) < 24) {
         this.swapToBeast(target);
         this.enemyShots.despawn(p);
