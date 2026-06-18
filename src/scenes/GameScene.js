@@ -40,6 +40,7 @@ import { SHOP_ITEMS } from '../data/shop.js';
 import Caster from '../objects/Caster.js';
 import Enemy from '../objects/Enemy.js';
 import Boss from '../objects/Boss.js';
+import StaticBlock from '../objects/StaticBlock.js';
 
 const ITEM = Object.fromEntries(SHOP_ITEMS.map((i) => [i.key, i]));
 const RITUAL_TAUNT_EVERY = 5200; // ms between the leader's deceiving taunts
@@ -91,6 +92,7 @@ export default class GameScene extends Phaser.Scene {
     this.whirlpoolSustain = false; // Kraken: keep auto-respawning the whirlpool for the whole fight
     this.tornado = null; // { center, radius, phase, mode, t } while a tornado is active
     this.tornadoGfx = null; // created lazily in updateTornado
+    this.blocks = [];    // StaticBlock obstacles (e.g. petrified Lélaps); destroyed on phase clear
     this.ritualGfx = null; // created lazily in updateRitual; reset here on level restart
     this.lavaRiver = null;
     this.lavaRiverGfx = null;
@@ -402,6 +404,14 @@ export default class GameScene extends Phaser.Scene {
     enemy.destroy();
   }
 
+  spawnPetrifyBlock(x, y) {
+    const block = new StaticBlock(this, x, y, 40);
+    this.blocks.push(block);
+    if (this.caster) this.physics.add.collider(this.caster, block);
+    this.flashCircle(x, y, 34, COLORS.stoneGrey); // petrify tell
+    return block;
+  }
+
   swapToBeast(captive) {
     const key = transmuteBeastKey(captive.def);
     const def = key ? ENEMY_TYPES[key] : null;
@@ -630,6 +640,8 @@ export default class GameScene extends Phaser.Scene {
         this.lavaRiver = null;
         if (this.lavaRiverGfx) this.lavaRiverGfx.clear();
         if (this.ritualGfx) this.ritualGfx.clear();
+        for (const b of this.blocks) if (b && b.active) b.destroy();
+        this.blocks = [];
         const dialogue = this.runner.currentPhase().dialogue || this.phaseStoryDialogue(phase);
         if (dialogue && dialogue.length) {
           this.scene.pause();
