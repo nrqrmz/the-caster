@@ -927,7 +927,8 @@ export default class GameScene extends Phaser.Scene {
     this.updateCasterBurn(delta);
     this.updateCasterPoison(delta);
     this.caster.moveBy(this.joystick.vector);
-    if (this.caster.liftRemaining > 0 || this.caster.stunRemaining > 0 || this.caster.rootRemaining > 0) this.caster.setTint(COLORS.poison);
+    if (this.caster.rootRemaining > 0) this.caster.setTint(COLORS.poison);
+    else if (this.caster.liftRemaining > 0 || this.caster.stunRemaining > 0) this.caster.setTint(COLORS.lightning);
     else if (this.caster.slowRemaining === 0) this.caster.clearTint();
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
