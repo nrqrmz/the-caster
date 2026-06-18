@@ -6,6 +6,7 @@ import { makeLevel } from './levelBuilder.js';
 import { PYRA, VESTA, FAVILLA, SISTERS_TRIO, IGNATIUS } from './bosses/fire.js';
 import { SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL, KRAKEN, DAMA_LAGO } from './bosses/water.js';
 import { CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, GALAHAD } from './bosses/air.js';
+import { SENOR_LOBO, CEFALO, DRIADA, GRIFO, CIRCE } from './bosses/earth.js';
 
 const wave = (spawnDelay, spawns) => ({ spawnDelay, spawns });
 const ramp = (base, tier) => Math.round(base * (1 + 0.4 * (tier - 1)));
@@ -309,11 +310,19 @@ export const REGIONS = {
   earth: makeBranch({
     id: 'earth', element: 'earth', name: 'region.earth.name', grantsSkill: 'poison',
     basic: earthWaves, inter: earthInterWaves,
+    minibosses: [SENOR_LOBO, CEFALO, DRIADA],
+    levelBoss: GRIFO,
+    templeBoss: CIRCE,
     intro: [{ speaker: 'speaker.narrator', text: 'story.earth.intro.0' }],
     mageName: 'speaker.mage.earth',
     mageLines: [
       'story.earth.mage.0',
       'story.earth.mage.1',
+    ],
+    onClear: [
+      { speaker: 'speaker.circe',   text: 'story.earth.circe.clear.0' },
+      { speaker: 'speaker.caster',  text: 'story.earth.circe.clear.1' },
+      { speaker: 'speaker.narrator', text: 'story.earth.circe.clear.2' },
     ],
   }),
   castle: makeCastle(),

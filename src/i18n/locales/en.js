@@ -15,6 +15,7 @@ export default {
     caster: 'The Caster',
     unknown: '???',
     galahad: 'Sir Galahad',
+    circe: 'Circe',
     mage: { fire: 'Fire Mage', water: 'Madame Le Fay', air: 'Air Mage', earth: 'Garden Warden' },
   },
   region: {
@@ -84,6 +85,14 @@ export default {
       intro: { 0: 'You cross into a garden that breathes. The flowers watch you. Something here turns men into beasts.' },
       mage: { 0: "You came far, princess. But this garden is Circe's, and Circe spares none of your kind.",
               1: 'Take the venom of this land. Let the poison she cultivates be your weapon now.' },
+      cefalo: { cameo: 'A hunter without his quarry… how sad. I will give you claws of your own.' },
+      circe: {
+        taunt: { 0: "I don't hate them… they simply waste the form they have.",
+                 1: "When I'm done with you, you'll be a darling little rabbit." },
+        clear: { 0: 'No… my garden… my creatures…',
+                 1: 'They are who they were again. Your garden was never yours, Circe.',
+                 2: 'The last element is yours. Only the castle remains… and the truth it hides.' },
+      },
     },
     castle: {
       intro: { 0: 'The castle gates open. Those who loved the ones you killed await you.' },

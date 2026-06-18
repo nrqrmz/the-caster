@@ -15,6 +15,7 @@ export default {
     caster: 'The Caster',
     unknown: '???',
     galahad: 'Sir Galahad',
+    circe: 'Circe',
     mage: { fire: 'Mago del Fuego', water: 'Madame Le Fay', air: 'Mago del Aire', earth: 'Guardián del Jardín' },
   },
   region: {
@@ -84,6 +85,14 @@ export default {
       intro: { 0: 'Cruzas el umbral de un jardín que respira. Las flores te miran. Algo aquí convierte a los hombres en bestias.' },
       mage: { 0: 'Llegaste lejos, princesa. Pero este jardín es de Circe, y Circe no perdona a los de tu especie.',
               1: 'Toma el veneno de estas tierras. Que la ponzoña que ella cultiva sea ahora tu arma.' },
+      cefalo: { cameo: 'Un cazador sin su presa… qué triste. Te daré garras propias.' },
+      circe: {
+        taunt: { 0: 'No los odio… solo desperdician la forma que tienen.',
+                 1: 'Cuando acabe contigo, serás un conejito precioso.' },
+        clear: { 0: 'No… mi jardín… mis criaturas…',
+                 1: 'Vuelven a ser quienes eran. Tu jardín nunca fue tuyo, Circe.',
+                 2: 'El último elemento es tuyo. Solo queda el castillo… y la verdad que esconde.' },
+      },
     },
     castle: {
       intro: { 0: 'Las puertas del castillo se abren. Los que amaban a quienes mataste te esperan.' },
