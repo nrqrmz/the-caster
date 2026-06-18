@@ -49,28 +49,36 @@ export function applyResist(damage, resist) {
 }
 
 // --- Air: caster control-loss (stun/lift) with anti-chain immunity ---
-// state: { stunRemaining, liftRemaining, ccImmuneRemaining }  (fields live on Caster)
+// state: { stunRemaining, liftRemaining, rootRemaining, ccImmuneRemaining }  (fields live on Caster)
 
 // Apply a control-loss effect. Returns false (no-op) while the immunity window is up
-// so a swarm can't perma-lock the player. kind: 'stun' | 'lift'.
+// so a swarm can't perma-lock the player. kind: 'stun' | 'lift' | 'root'.
 export function applyCasterCc(state, kind, ms) {
   if ((state.ccImmuneRemaining ?? 0) > 0) return false;
   if (kind === 'lift') state.liftRemaining = Math.max(state.liftRemaining ?? 0, ms);
+  else if (kind === 'root') state.rootRemaining = Math.max(state.rootRemaining ?? 0, ms);
   else state.stunRemaining = Math.max(state.stunRemaining ?? 0, ms);
   return true;
 }
 
 export function tickCasterCc(state, delta) {
-  const wasLocked = isControlLocked(state);
+  const wasLocked = isMovementLocked(state);
   if (state.stunRemaining > 0) state.stunRemaining = Math.max(0, state.stunRemaining - delta);
   if (state.liftRemaining > 0) state.liftRemaining = Math.max(0, state.liftRemaining - delta);
-  // When control-lock just ended, arm the immunity window.
-  if (wasLocked && !isControlLocked(state)) state.ccImmuneRemaining = CC_IMMUNE_MS;
+  if (state.rootRemaining > 0) state.rootRemaining = Math.max(0, state.rootRemaining - delta);
+  // When movement-lock just ended, arm the immunity window.
+  if (wasLocked && !isMovementLocked(state)) state.ccImmuneRemaining = CC_IMMUNE_MS;
   else if ((state.ccImmuneRemaining ?? 0) > 0) state.ccImmuneRemaining = Math.max(0, state.ccImmuneRemaining - delta);
 }
 
+// stun/lift remove the cast; root does NOT (caster keeps firing while rooted).
 export function isControlLocked(state) {
   return (state.stunRemaining ?? 0) > 0 || (state.liftRemaining ?? 0) > 0;
+}
+
+// stun/lift/root all block movement; used by Caster.moveBy and the tick's anti-chain arming.
+export function isMovementLocked(state) {
+  return (state.stunRemaining ?? 0) > 0 || (state.liftRemaining ?? 0) > 0 || (state.rootRemaining ?? 0) > 0;
 }
 
 // --- Air: decaying directional push (onHitPush / gust) ---

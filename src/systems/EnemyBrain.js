@@ -293,6 +293,39 @@ export function buildSplitChildren(def) {
   return children;
 }
 
+// Normalizes a `mutateOnDeath` modifier into a spawn directive.
+// Returns null, an enemy spawn { kind:'enemy', spawnType, count }, or a hazard { kind:'zone', radius, dps, duration }.
+export function resolveMutateOnDeath(def) {
+  const m = findModifier(def, 'mutateOnDeath');
+  if (!m) return null;
+  if (m.zone) {
+    return { kind: 'zone', radius: m.zone.radius ?? 50, dps: m.zone.dps ?? 18, duration: m.zone.duration ?? 2500 };
+  }
+  if (m.spawnType) {
+    return { kind: 'enemy', spawnType: m.spawnType, count: m.count ?? 1 };
+  }
+  return null;
+}
+
+// Picks the nearest valid friendly captive for a transmute bolt to hunt.
+// A valid candidate is active, captive (def.transmuteTo set), and not already locked by another bolt.
+export function selectTransmuteTarget(source, candidates) {
+  let best = null;
+  let bestD = Infinity;
+  for (const c of candidates || []) {
+    if (!c || !c.active || !c.def || !c.def.transmuteTo || c._transmuteLocked) continue;
+    const dx = c.x - source.x;
+    const dy = c.y - source.y;
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = c; }
+  }
+  return best;
+}
+
+export function transmuteBeastKey(captiveDef) {
+  return (captiveDef && captiveDef.transmuteTo) || null;
+}
+
 export const LIFECYCLE = Object.freeze({ EGG: 'egg', TADPOLE: 'tadpole', ADULT: 'adult' });
 
 // Ticks the per-enemy lifecycle timer (egg→tadpole→adult).

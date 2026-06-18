@@ -6,6 +6,7 @@ import { makeLevel } from './levelBuilder.js';
 import { PYRA, VESTA, FAVILLA, SISTERS_TRIO, IGNATIUS } from './bosses/fire.js';
 import { SOLDADO_HIELO, SAPO_DESOVADOR, TIBURON_ABISAL, KRAKEN, DAMA_LAGO } from './bosses/water.js';
 import { CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, GALAHAD } from './bosses/air.js';
+import { SENOR_LOBO, CEFALO, DRIADA, GRIFO, CIRCE } from './bosses/earth.js';
 
 const wave = (spawnDelay, spawns) => ({ spawnDelay, spawns });
 const ramp = (base, tier) => Math.round(base * (1 + 0.4 * (tier - 1)));
@@ -152,6 +153,50 @@ function airInterWaves(tier) {
   ];
 }
 
+// Earth waves: poison + control + transmutation (spec §3.7).
+// Tier 1 = servants/wolves/pixies; tier 2 adds cautivos/duendes/hongos;
+// tier 3 adds jabalis/totems/brotes.
+function earthWaves(tier) {
+  if (tier === 1) {
+    return [
+      wave(700, [{ type: 'naufrago_encantado', count: ramp(4, tier) }, { type: 'pixie', count: ramp(2, tier) }]),
+      wave(650, [{ type: 'lobo', count: ramp(2, tier) }, { type: 'naufrago_encantado', count: ramp(3, tier) }]),
+      wave(600, [{ type: 'pixie', count: ramp(3, tier) }, { type: 'lobo', count: ramp(2, tier) }, { type: 'naufrago_encantado', count: ramp(2, tier) }]),
+    ];
+  }
+  if (tier === 2) {
+    return [
+      wave(650, [{ type: 'acolito_cautivo', count: ramp(2, tier) }, { type: 'duende_ladron', count: ramp(2, tier) }]),
+      wave(600, [{ type: 'hongo_esporario', count: ramp(2, tier) }, { type: 'lobo', count: ramp(2, tier) }, { type: 'pixie', count: ramp(2, tier) }]),
+      wave(550, [{ type: 'acolito_cautivo', count: ramp(2, tier) }, { type: 'duende_ladron', count: ramp(3, tier) }, { type: 'naufrago_encantado', count: ramp(2, tier) }]),
+    ];
+  }
+  return [
+    wave(600, [{ type: 'jabali', count: ramp(2, tier) }, { type: 'totem_espinas', count: 1 }]),
+    wave(550, [{ type: 'brote_pustula', count: ramp(2, tier) }, { type: 'lobo', count: ramp(2, tier) }, { type: 'pixie', count: ramp(2, tier) }]),
+    wave(500, [{ type: 'jabali', count: ramp(2, tier) }, { type: 'duende_ladron', count: ramp(2, tier) }, { type: 'acolito_cautivo', count: ramp(2, tier) }]),
+  ];
+}
+
+function earthInterWaves(tier) {
+  if (tier <= 2) { // Nv4
+    return [
+      wave(600, [{ type: 'oso_jardin', count: 1 }, { type: 'lobo', count: ramp(2, tier) }]),
+      wave(550, [{ type: 'fuego_fatuo_pantano', count: ramp(2, tier) }, { type: 'golem_lodo', count: 1 }, { type: 'pixie', count: ramp(2, tier) }]),
+    ];
+  }
+  if (tier === 3) { // Nv5 — introduce the transmute anchor
+    return [
+      wave(600, [{ type: 'ninfa_transmutadora', count: 1 }, { type: 'naufrago_encantado', count: ramp(3, tier) }]),
+      wave(550, [{ type: 'zarza_estranguladora', count: 2 }, { type: 'lobo', count: ramp(2, tier) }, { type: 'sierva_jardin', count: ramp(2, tier) }]),
+    ];
+  }
+  return [ // Nv6
+    wave(550, [{ type: 'hombre_lobo', count: 1 }, { type: 'flor_carnivora', count: 2 }, { type: 'enredadera_reptante', count: ramp(2, tier) }]),
+    wave(500, [{ type: 'golem_piedra', count: 1 }, { type: 'ninfa_transmutadora', count: 1 }, { type: 'naufrago_encantado', count: ramp(3, tier) }]),
+  ];
+}
+
 const mb = (hp, dmg) => ({ key: 'miniboss', tex: TEX.miniboss, color: COLORS.miniboss, hp, speed: 70, damage: dmg, radius: 33, behavior: 'chase', elite: true });
 const lb = (hp, dmg) => ({ key: 'levelboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 60, damage: dmg, radius: 42, behavior: 'chase', elite: true });
 const tb = (hp, dmg, mechanics) => ({ key: 'templeboss', tex: TEX.boss, color: COLORS.boss, hp, speed: 55, damage: dmg, radius: 48, behavior: 'chase', elite: true, mechanics });
@@ -264,11 +309,20 @@ export const REGIONS = {
   }),
   earth: makeBranch({
     id: 'earth', element: 'earth', name: 'region.earth.name', grantsSkill: 'poison',
+    basic: earthWaves, inter: earthInterWaves,
+    minibosses: [SENOR_LOBO, CEFALO, DRIADA],
+    levelBoss: GRIFO,
+    templeBoss: CIRCE,
     intro: [{ speaker: 'speaker.narrator', text: 'story.earth.intro.0' }],
     mageName: 'speaker.mage.earth',
     mageLines: [
       'story.earth.mage.0',
       'story.earth.mage.1',
+    ],
+    onClear: [
+      { speaker: 'speaker.circe',   text: 'story.earth.circe.clear.0' },
+      { speaker: 'speaker.caster',  text: 'story.earth.circe.clear.1' },
+      { speaker: 'speaker.narrator', text: 'story.earth.circe.clear.2' },
     ],
   }),
   castle: makeCastle(),
