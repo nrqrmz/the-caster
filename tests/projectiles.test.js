@@ -5,13 +5,14 @@ import { PROJECTILES, ELEMENT_DEFAULT_PROJECTILE, resolveProjectile } from '../s
 test('el catálogo tiene los tipos con su efecto', () => {
   assert.equal(PROJECTILES.arrow.effect, null);
   assert.equal(PROJECTILES.bolt.effect, null); // rayo de Aire: mismo daño directo, sin efecto extra
+  assert.equal(PROJECTILES.tornado.effect, null); // tornado: el lift lo aplica el flag att.lift, no un effect
   assert.deepEqual(PROJECTILES.fire.effect, { kind: 'burn', dps: 6, ms: 2000 });
   assert.deepEqual(PROJECTILES.ice.effect, { kind: 'slow', factor: 0.6, ms: 1200 });
   assert.deepEqual(PROJECTILES.poison.effect, { kind: 'dot', dps: 5, ms: 2500 });
 });
 
 test('cada entrada declara una textura y un tinte', () => {
-  for (const k of ['arrow', 'bolt', 'fire', 'ice', 'poison']) {
+  for (const k of ['arrow', 'bolt', 'tornado', 'fire', 'ice', 'poison']) {
     assert.ok(PROJECTILES[k].tex, `${k} debe tener tex`);
     assert.equal(typeof PROJECTILES[k].tint, 'number', `${k} debe tener tinte numérico`);
   }

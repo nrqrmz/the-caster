@@ -54,14 +54,14 @@ export const BRUJA_VENDAVAL = {
   movement: { type: 'strafe', range: 260, strafeSpeed: 55 },
   phases: [
     { from: 1.0, sequence: [
-      { do: 'lobAoe', radius: 56, dps: 14, duration: 1600, lift: true, telegraph: 500, dur: 850 }, // tornadito que eleva
+      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 160, telegraph: 0, dur: 650 }, // tornado recto que eleva
       { do: 'shootHoming', speed: 130, damage: 14, stun: true, telegraph: 420, dur: 900 },          // rayo aturdidor
       { do: 'summon', spawnType: 'murcielago', count: 2, cap: 4, respawnMs: 12000, dur: 700 },
       { do: 'wait', dur: 450 },
     ] },
     { from: 0.5, speedMul: 1.15, sequence: [
-      { do: 'lobAoe', radius: 56, dps: 14, duration: 1600, lift: true, telegraph: 420, dur: 750 }, // dos tornaditos por ciclo
-      { do: 'lobAoe', radius: 56, dps: 14, duration: 1600, lift: true, telegraph: 420, dur: 750 },
+      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 170, telegraph: 0, dur: 600 }, // frenesí: tornado recto…
+      { do: 'shootHoming',   projectile: 'tornado', lift: true, damage: 12, speed: 120, telegraph: 0, dur: 600 }, // …y tornado homing (despawnea a 2.6s)
       { do: 'shootSpread', count: 5, arc: 70, speed: 240, damage: 13, stun: true, telegraph: 320, dur: 650 }, // rayos
       { do: 'wait', dur: 350 },
     ] },
@@ -85,20 +85,20 @@ export const ELEMENTAL_TORMENTA = {
   movement: { type: 'static' },
   phases: [
     { from: 1.0, sequence: [
-      { do: 'lobAoe', radius: 60, dps: 16, duration: 1700, lift: true, telegraph: 520, dur: 880 }, // tornadito
+      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 150, telegraph: 0, dur: 700 }, // tornado recto que eleva
       { do: 'nova', count: 8, speed: 240, damage: 12, stun: true, telegraph: 380, dur: 700 },        // nova de rayos
       { do: 'summon', spawnType: 'murcielago', count: 2, cap: 4, respawnMs: 12000, dur: 700 },
       { do: 'wait', dur: 500 },
     ] },
     { from: 0.6, enter: ['spawnTornado'], sequence: [
-      { do: 'lobAoe', radius: 60, dps: 16, duration: 1700, lift: true, telegraph: 440, dur: 800 },
+      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 160, telegraph: 0, dur: 650 }, // tornado recto
       { do: 'shootHoming', speed: 150, damage: 13, stun: true, telegraph: 320, dur: 700 },           // rayos aturdidores más rápidos
       { do: 'nova', count: 10, speed: 250, damage: 12, stun: true, telegraph: 340, dur: 650 },
       { do: 'wait', dur: 400 },
     ] },
     { from: 0.3, speedMul: 1.0, enter: ['spawnTornado'], sequence: [
-      { do: 'lobAoe', radius: 64, dps: 18, duration: 1800, lift: true, telegraph: 360, dur: 720 }, // frenesí: más tornaditos
-      { do: 'lobAoe', radius: 64, dps: 18, duration: 1800, lift: true, telegraph: 360, dur: 720 },
+      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 170, telegraph: 0, dur: 620 }, // frenesí: tornado recto…
+      { do: 'shootHoming',   projectile: 'tornado', lift: true, damage: 12, speed: 120, telegraph: 0, dur: 620 }, // …y tornado homing
       { do: 'shootHoming', speed: 160, damage: 14, stun: true, telegraph: 280, dur: 620 },
       { do: 'summon', spawnType: 'arpia', count: 2, cap: 4, respawnMs: 12000, dur: 650 },
       { do: 'wait', dur: 300 },

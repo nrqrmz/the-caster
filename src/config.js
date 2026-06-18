@@ -88,6 +88,7 @@ export const TEX = {
   archer: 'tex_archer',
   arrow: 'tex_arrow',
   bolt: 'tex_bolt',
+  tornado: 'tex_tornado',
   iceShard: 'tex_iceShard',
   poisonGlob: 'tex_poisonGlob',
   miniboss: 'tex_miniboss',
