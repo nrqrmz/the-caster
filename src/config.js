@@ -72,6 +72,17 @@ export const COLORS = {
   sentinelStone: 0x78909c,  // Centinela de Piedra — paler statue grey
   whirlGrey: 0xb0bec5,      // Torbellino Errante — pale dust-devil grey
   cultRobe: 0x4a148c,       // Cultista, Cultista Canalizador, Guardián del Rito — dark ritual purple
+  // Earth world palette — El Jardín de Circe (forest greens/browns, stone, spore violet, captive flesh)
+  barkBrown:   0x6d4c41,
+  mossGreen:   0x558b2f,
+  stoneGrey:   0x9e9e9e,
+  mudBrown:    0x795548,
+  vineGreen:   0x33691e,
+  sporeViolet: 0x8e24aa,
+  fleshPale:   0xe0c0a0,
+  beastFur:    0x5d4037,
+  wood:        0x8d6e63,  // Céfalo's javelin shaft
+  silver:      0xcfd8dc,  // Céfalo's javelin tip
   heal: 0x00e676,       // vivid healing green — healer marker ring + tethers (region-agnostic so "green = cura")
   healthBack: 0x33272a,
   healthFill: 0x66bb6a,
