@@ -108,3 +108,5 @@ export const RITUAL_FILL_MS = 38000; // time to fill from empty to full
 // Griffin flight/ground cycle (nv7 earth levelboss El Grifo).
 export const GRIFFIN_GROUND_MS = 5000; // reachable window — generous + always returns (anti-spam)
 export const GRIFFIN_FLIGHT_MS = 3000; // bounded untargetable dive window
+
+export const BOSS_TAUNT_EVERY = 7000; // ms between a boss's floating taunts

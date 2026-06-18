@@ -11,6 +11,7 @@ import {
   CASTER_STUN_MS, CASTER_LIFT_MS, CASTER_ROOT_MS, PUSH_FORCE, PUSH_MS,
   RITUAL_FILL_MS,
   GRIFFIN_GROUND_MS, GRIFFIN_FLIGHT_MS,
+  BOSS_TAUNT_EVERY,
 } from '../data/tuning.js';
 import { tickRitual, ritualFraction } from '../systems/RitualMeter.js';
 import { BASE_STATS } from '../data/stats.js';
@@ -214,6 +215,7 @@ export default class GameScene extends Phaser.Scene {
       this.boss._ritualTauntT = RITUAL_TAUNT_EVERY;
       this.boss._ritualTaunt = 0;
     }
+    if (def.taunts && def.taunts.length) { this.boss._tauntT = BOSS_TAUNT_EVERY; this.boss._tauntI = 0; }
     if (def.forms && def.forms.length) {
       // `scaleForms` (opt-in) pre-scales every form's hp/damage/resist by difficulty BEFORE
       // the sequencer, so the depleted pool (FormSequencer.currentHp) is the scaled value —
@@ -499,6 +501,7 @@ export default class GameScene extends Phaser.Scene {
           return;
         }
         this.onEnemyDeath(enemy);
+        if (enemy.def && enemy.def.key === 'circe') this.revertBeasts();
         if (enemy === this.boss) this.boss = null;
         this.bosses = this.bosses.filter((b) => b !== enemy);
         enemy.destroy();
@@ -1006,6 +1009,28 @@ export default class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: txt, y: y - 30, alpha: 0, duration: 1800, onComplete: () => txt.destroy() });
   }
 
+  updateBossTaunts(delta) {
+    for (const b of this.bosses) {
+      if (!b || !b.active || !b.def || !b.def.taunts || b._tauntT == null) continue;
+      b._tauntT -= delta;
+      if (b._tauntT <= 0) {
+        b._tauntT = BOSS_TAUNT_EVERY;
+        const key = b.def.taunts[b._tauntI % b.def.taunts.length];
+        b._tauntI += 1;
+        this.floatText(b.x, b.y - 40, t(key));
+      }
+    }
+  }
+
+  revertBeasts() {
+    const BEASTS = new Set(['lobo', 'jabali', 'oso_jardin', 'hombre_lobo', 'pixie', 'duende_ladron', 'cefalo_felino']);
+    this.enemies.getChildren().forEach((e) => {
+      if (!e || !e.active || !e.def || !BEASTS.has(e.def.key)) return;
+      e.setTint(COLORS.fleshPale); // beast reverts to a freed human
+      e.def = { ...e.def, movement: { type: 'flee' }, attacks: [] };
+    });
+  }
+
   // A green beam from a healer to an ally it's restoring — fades out so a new one is drawn each VFX tick.
   drawHealTether(from, to) {
     const g = this.add.graphics().setDepth(ACTOR_DEPTH + 1);
@@ -1080,6 +1105,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateRitual(delta);
     this.updateBossGates();
     this.updateGriffin(delta);
+    this.updateBossTaunts(delta);
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     for (const b of this.bosses) { if (b && b.active && !b._burrowed) b.drawBar(); else if (b && b._burrowed) b.bar.clear(); }
