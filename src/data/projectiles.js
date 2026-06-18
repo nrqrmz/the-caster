@@ -5,15 +5,20 @@
 import { TEX, COLORS } from '../config.js';
 
 export const PROJECTILES = {
-  arrow:  { tex: TEX.arrow,      tint: COLORS.arrow,    effect: null },
-  fire:   { tex: TEX.fireball,   tint: COLORS.fireball, effect: { kind: 'burn', dps: 6, ms: 2000 } },
-  ice:    { tex: TEX.iceShard,   tint: COLORS.ice,      effect: { kind: 'slow', factor: 0.6, ms: 1200 } },
-  poison: { tex: TEX.poisonGlob, tint: COLORS.poison,   effect: { kind: 'dot',  dps: 5, ms: 2500 } },
+  arrow:  { tex: TEX.arrow,      tint: COLORS.arrow,     effect: null },
+  bolt:   { tex: TEX.bolt,       tint: COLORS.lightning, effect: null },
+  // Tornado: recicla el sprite del torbellino_errante. No lleva `effect` (burn/slow/dot);
+  // el lift al contacto lo aplica el flag `lift:true` del ataque (ver executeAttack).
+  tornado: { tex: TEX.tornado,   tint: COLORS.whirlGrey, effect: null },
+  fire:   { tex: TEX.fireball,   tint: COLORS.fireball,  effect: { kind: 'burn', dps: 6, ms: 2000 } },
+  ice:    { tex: TEX.iceShard,   tint: COLORS.ice,       effect: { kind: 'slow', factor: 0.6, ms: 1200 } },
+  poison: { tex: TEX.poisonGlob, tint: COLORS.poison,    effect: { kind: 'dot',  dps: 5, ms: 2500 } },
 };
 
 // Tipo por defecto según el elemento del mundo (cuando el ataque no lo declara).
+// Aire = rayo (bolt). Earth/castle siguen en 'arrow' hasta tener proyectil propio.
 export const ELEMENT_DEFAULT_PROJECTILE = {
-  fire: 'fire', water: 'ice', air: 'arrow', earth: 'arrow', castle: 'arrow',
+  fire: 'fire', water: 'ice', air: 'bolt', earth: 'arrow', castle: 'arrow',
 };
 
 // El campo del ataque gana; si no, el default del mundo; si no, 'arrow'.
