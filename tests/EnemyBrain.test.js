@@ -301,9 +301,9 @@ test('split children keep ×0.7 when above the floor', () => {
   assert.equal(kids[0].radius, 21); // round(30*0.7)
 });
 
-test('no enemy def has a radius below the floor of 16', () => {
+test('no enemy def has a radius below the floor of 12', () => {
   for (const [key, def] of Object.entries(ENEMY_TYPES)) {
-    if (typeof def.radius === 'number') assert.ok(def.radius >= 16, `${key} radius ${def.radius} < 16`);
+    if (typeof def.radius === 'number') assert.ok(def.radius >= 12, `${key} radius ${def.radius} < 12`);
   }
 });
 

@@ -53,26 +53,32 @@ test('waterInterWaves tiers 2–4: all referenced enemy types exist in ENEMY_TYP
   }
 });
 
-// ── 3. onHitSlow — exactly 2 melee/aura creatures (ranged acolito migrated to ice projectile type)
-test('onHitSlow modifier is on exactly guardia_hielo and burbuja_gelida (melee/aura only)', () => {
+// ── 3. onHitSlow — Water (guardia_hielo, burbuja_gelida) + Earth slow carriers ──
+test('onHitSlow modifier is on Water melee/aura and Earth slow creatures', () => {
   const hasSlowMod = (k) => (ENEMY_TYPES[k].modifiers || []).some((m) => m.type === 'onHitSlow');
   const slowCarriers = Object.keys(ENEMY_TYPES).filter(hasSlowMod);
   assert.deepEqual(
     slowCarriers.sort(),
-    ['burbuja_gelida', 'guardia_hielo'],
-    'onHitSlow should appear on exactly these two melee/aura Water creatures (acolito_escarcha now slows via ice projectile type)',
+    ['burbuja_gelida', 'enredadera_cria', 'enredadera_reptante', 'fuego_fatuo_pantano', 'golem_lodo', 'golem_lodo_cria', 'guardia_hielo'].sort(),
+    'onHitSlow should appear on Water melee/aura (guardia_hielo, burbuja_gelida) and Earth slow creatures',
   );
   // acolito_escarcha must NOT have onHitSlow (its ice-type shot applies the slow instead)
   assert.ok(!hasSlowMod('acolito_escarcha'), 'acolito_escarcha must NOT have onHitSlow modifier');
 });
 
-// ── 4. splitsOnDeath — exactly medusa ────────────────────────────────────────
-test('splitsOnDeath modifier is on exactly medusa', () => {
+// ── 4. splitsOnDeath — medusa, enredadera_reptante, golem_lodo (Earth) ────────
+test('splitsOnDeath modifier is on medusa and Earth splitters', () => {
   const hasSplit = (k) => (ENEMY_TYPES[k].modifiers || []).some((m) => m.type === 'splitsOnDeath');
-  const splitCarriers = Object.keys(ENEMY_TYPES).filter(hasSplit);
-  assert.deepEqual(splitCarriers, ['medusa'], 'splitsOnDeath should be on medusa only');
-  // Verify medusa_cria does NOT have splitsOnDeath (no re-split)
+  const splitCarriers = Object.keys(ENEMY_TYPES).filter(hasSplit).sort();
+  assert.deepEqual(
+    splitCarriers,
+    ['enredadera_reptante', 'golem_lodo', 'medusa'].sort(),
+    'splitsOnDeath should be on medusa, enredadera_reptante, and golem_lodo',
+  );
+  // Verify cria variants do NOT have splitsOnDeath (no re-split)
   assert.ok(!hasSplit('medusa_cria'), 'medusa_cria must not have splitsOnDeath (no re-split)');
+  assert.ok(!hasSplit('enredadera_cria'), 'enredadera_cria must not have splitsOnDeath (no re-split)');
+  assert.ok(!hasSplit('golem_lodo_cria'), 'golem_lodo_cria must not have splitsOnDeath (no re-split)');
 });
 
 // ── 5. burrow movement — exactly tiburon_joven ───────────────────────────────
