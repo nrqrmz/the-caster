@@ -298,11 +298,14 @@ export default class GameScene extends Phaser.Scene {
       // After collapse anim finishes: show cadáver on the floor while invuln window holds.
       this.time.delayedCall(440, () => {
         if (!boss.active) return;
-        boss.setTexture(spriteKey('galahad_cadaver'));
-        boss.setDisplaySize(128, 64);
+        // Galahad-only: swap to his prone vampire-corpse sprite (128×64 2:1 texture).
+        // Non-Galahad deathFeint bosses (e.g. Céfalo) collapse on their current sprite.
+        if (boss.def && boss.def.key && String(boss.def.key).startsWith('galahad')) {
+          boss.setTexture(spriteKey('galahad_cadaver'));
+          boss.setDisplaySize(128, 64);
+          boss.scaleY = boss.scaleX;
+        }
         boss.setAlpha(0.85);
-        // Restore scaleY to 1 relative to the new display size (setDisplaySize already locked it).
-        boss.scaleY = boss.scaleX;
       });
     } else {
       boss.setAlpha(0.3); // brief dim during transform telegraph (legacy path)
@@ -474,9 +477,12 @@ export default class GameScene extends Phaser.Scene {
         // Galahad's real death (deathFeint gate): show corpse → fire/fade → then onClear.
         if (enemy.def && (enemy.def.deathFeint || (enemy.def.key && String(enemy.def.key).startsWith('galahad')))) {
           enemy._untargetable = true; // prevent any stray hit from double-firing
-          // Swap to the prone corpse sprite.
-          enemy.setTexture(spriteKey('galahad_cadaver'));
-          enemy.setDisplaySize(128, 64);
+          // Galahad-only: swap to his prone vampire-corpse sprite (128×64 2:1 texture).
+          // Non-Galahad deathFeint bosses (e.g. Céfalo) fade out on their current sprite.
+          if (enemy.def && enemy.def.key && String(enemy.def.key).startsWith('galahad')) {
+            enemy.setTexture(spriteKey('galahad_cadaver'));
+            enemy.setDisplaySize(128, 64);
+          }
           enemy.setAlpha(1);
           // Fire flash: instant large ring.
           this.flashCircle(enemy.x, enemy.y, 80, COLORS.fireball);
