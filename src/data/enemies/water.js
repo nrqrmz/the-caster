@@ -126,7 +126,7 @@ export const WATER_ENEMIES = {
   // #14 — Tiburón Joven: burrow movement (submerge → emerge telegrafado → surface vulnerable).
   // While submerged/emerging: invulnerable + hidden. Surfaced ~2.5s with dashStrike disponible.
   tiburon_joven: { key: 'tiburon_joven', tex: TEX.archer, color: COLORS.sharkYoung,
-    hp: 180, speed: 110, damage: 18, radius: 17,
+    hp: 180, speed: 110, damage: 18, radius: 24,
     movement: { type: 'burrow', submergeMs: 1500, emergeMs: 450, surfaceMs: 2500 },
     attacks: [{ type: 'dashStrike' }] },
 

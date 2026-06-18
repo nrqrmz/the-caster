@@ -64,7 +64,7 @@ export const SAPO_DESOVADOR = {
 // the recovery.
 export const TIBURON_ABISAL = {
   key: 'tiburon_abisal', tex: TEX.miniboss, color: COLORS.caster,
-  hp: 520, speed: 85, damage: 30, radius: 28,
+  hp: 520, speed: 85, damage: 30, radius: 38,
   elite: true,
   movement: { type: 'burrow', submergeMs: 1600, emergeMs: 450, surfaceMs: 2500 },
   phases: [
@@ -161,7 +161,7 @@ const DAMA_MAGA = {
 
 const DAMA_TIBURON = {
   key: 'dama_tiburon', tex: TEX.boss, color: COLORS.caster,
-  hp: 460, speed: 90, damage: 20, radius: 28, resist: 0.10,
+  hp: 460, speed: 90, damage: 20, radius: 38, resist: 0.10,
   elite: true, iceImmune: true,
   movement: { type: 'burrow', submergeMs: 1400, emergeMs: 450, surfaceMs: 2200 },
   phases: [
@@ -209,6 +209,8 @@ const DAMA_BALLENA = {
     { from: 1.0, sequence: [
       { do: 'lobAoe', radius: 90, dps: 28, duration: 4000, telegraph: 550, dur: 1000 }, // tidal wave
       { do: 'wait', dur: 600 },
+      { do: 'shootSpread', count: 3, arc: 40, speed: 210, damage: 14, telegraph: 400, dur: 700 }, // 3 esquirlas hacia la jugadora
+      { do: 'wait', dur: 600 },
       { do: 'nova', count: 16, speed: 190, damage: 14, telegraph: 420, dur: 800 },      // pressure burst
       { do: 'wait', dur: 700 },
     ] },
@@ -217,6 +219,7 @@ const DAMA_BALLENA = {
       { do: 'summon', spawnType: 'ahogado', count: 3, telegraph: 350, dur: 800 },        // summons drowned adds (uncapped)
       { do: 'summon', spawnType: 'cangrejo_acorazado', count: 2, cap: 2, respawnMs: 15000, dur: 800 },
       { do: 'summon', spawnType: 'pez_globo', count: 2, cap: 2, respawnMs: 15000, dur: 800 },
+      { do: 'shootSpread', count: 3, arc: 46, speed: 230, damage: 15, telegraph: 340, dur: 650 }, // frenzy: spread más rápido
       { do: 'nova', count: 18, speed: 200, damage: 15, telegraph: 380, dur: 750 },
       { do: 'wait', dur: 500 },
     ] },
