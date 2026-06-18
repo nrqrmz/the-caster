@@ -226,6 +226,13 @@ export default class GameScene extends Phaser.Scene {
       // Bootstrap the boss def to the first form.
       this._applyBossForm(this.boss, 0);
     }
+    if (def.coBoss) {
+      const co = new Boss(this, GAME_WIDTH / 2 + 70, -40, scaleEnemyDef(def.coBoss, this.diff));
+      this.enemies.add(co);
+      this.bosses.push(co);
+      if (def.coBossKillsMaster) co._linkKillMaster = this.boss; // co dies → master dies (Ent → Dríada)
+      if (def.gateUntilCoBossDead) this.boss._gateGuard = co;    // master untargetable until co dies (Céfalo ← Lélaps)
+    }
     return this.boss;
   }
 
@@ -522,6 +529,13 @@ export default class GameScene extends Phaser.Scene {
       if (wasGroup) for (const b of this.bosses) b.enrageMul = (b.enrageMul || 1) * 1.25; // "¡Hermana!"
     }
     enemy.destroy();
+    if (enemy._linkKillMaster && enemy._linkKillMaster.active) {
+      const master = enemy._linkKillMaster;
+      this.onEnemyDeath(master);
+      this.bosses = this.bosses.filter((b) => b !== master);
+      if (master === this.boss) this.boss = null;
+      master.destroy();
+    }
     this.checkPhaseCleared();
   }
 
@@ -1052,6 +1066,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateWhirlpool(delta);
     this.updateTornado(delta);
     this.updateRitual(delta);
+    this.updateBossGates();
     this.updateAuras(delta);
     if (this.debug) this.debug.setText(`${this.regionId} L${this.levelIndex + 1}  x${this.mult.toFixed(2)}  ${this.runner.phase}  e:${liveEnemies.length}`);
     for (const b of this.bosses) { if (b && b.active && !b._burrowed) b.drawBar(); else if (b && b._burrowed) b.bar.clear(); }
@@ -1273,6 +1288,12 @@ export default class GameScene extends Phaser.Scene {
 
     if (w.mode === 'cooldown') {
       if (w.t <= 0) this.tornado = null; // boss re-triggers via the spawnTornado hook
+    }
+  }
+
+  updateBossGates() {
+    for (const b of this.bosses) {
+      if (b && b.active && b._gateGuard && !b._gateGuard.active) b._untargetable = false;
     }
   }
 
