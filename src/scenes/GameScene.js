@@ -8,7 +8,7 @@ import {
   LAVA_RIVER_COOLDOWN_MS, LAVA_RIVER_TELEGRAPH_MS, LAVA_RIVER_ACTIVE_MS, LAVA_RIVER_DPS,
   MELEE_CONTACT_CD, SPAWN_SAFE_DIST,
   TORNADO_RADIUS, TORNADO_ACTIVE_MS, TORNADO_COOLDOWN_MS, TORNADO_TELEGRAPH_MS, TORNADO_ENEMY_PULL,
-  CASTER_STUN_MS, CASTER_LIFT_MS, PUSH_FORCE, PUSH_MS,
+  CASTER_STUN_MS, CASTER_LIFT_MS, CASTER_ROOT_MS, PUSH_FORCE, PUSH_MS,
   RITUAL_FILL_MS,
 } from '../data/tuning.js';
 import { tickRitual, ritualFraction } from '../systems/RitualMeter.js';
@@ -140,6 +140,8 @@ export default class GameScene extends Phaser.Scene {
       if (slow) this.applyCasterSlowFx(slow.factor ?? 0.6, slow.ms ?? 1200);
       const stun = findModifier(enemy.def, 'onHitStun');
       if (stun) applyCasterCc(this.caster, stun.kind === 'lift' ? 'lift' : 'stun', stun.ms ?? (stun.kind === 'lift' ? 500 : 300));
+      const root = findModifier(enemy.def, 'onHitRoot');
+      if (root) applyCasterCc(this.caster, 'root', root.ms ?? CASTER_ROOT_MS);
       const push = findModifier(enemy.def, 'onHitPush');
       if (push) {
         const a = Math.atan2(this.caster.y - enemy.y, this.caster.x - enemy.x);
@@ -163,6 +165,7 @@ export default class GameScene extends Phaser.Scene {
       if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
       if (shot.poisonDps > 0) this.applyCasterPoison(shot.poisonDps, shot.poisonMs);
       if (shot.stunMs) applyCasterCc(this.caster, shot.liftKind ? 'lift' : 'stun', shot.stunMs);
+      if (shot.rootMs) applyCasterCc(this.caster, 'root', shot.rootMs);
       if (shot.pushForce) {
         const a = Math.atan2(this.caster.y - shot.y, this.caster.x - shot.x);
         applyCasterPush(this.caster, Math.cos(a) * shot.pushForce, Math.sin(a) * shot.pushForce, shot.pushMs ?? 250);
@@ -673,6 +676,7 @@ export default class GameScene extends Phaser.Scene {
         style: water ? 'water' : 'fire',
         casterLiftMs: att.lift ? CASTER_LIFT_MS : 0,
         casterStunMs: att.stun ? CASTER_STUN_MS : 0,
+        casterRootMs: att.root ? (att.rootMs ?? CASTER_ROOT_MS) : 0,
       });
       return;
     }
@@ -753,6 +757,7 @@ export default class GameScene extends Phaser.Scene {
       if (att.lift) { shot.stunMs = att.liftMs ?? CASTER_LIFT_MS; shot.liftKind = true; }
       else if (att.stun) { shot.stunMs = att.stunMs ?? CASTER_STUN_MS; shot.liftKind = false; }
       if (att.push) { shot.pushForce = att.pushForce ?? PUSH_FORCE; shot.pushMs = att.pushMs ?? PUSH_MS; }
+      if (att.root) shot.rootMs = att.rootMs ?? CASTER_ROOT_MS;
     }
   }
 
@@ -922,7 +927,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateCasterBurn(delta);
     this.updateCasterPoison(delta);
     this.caster.moveBy(this.joystick.vector);
-    if (this.caster.liftRemaining > 0 || this.caster.stunRemaining > 0) this.caster.setTint(COLORS.lightning);
+    if (this.caster.liftRemaining > 0 || this.caster.stunRemaining > 0 || this.caster.rootRemaining > 0) this.caster.setTint(COLORS.poison);
     else if (this.caster.slowRemaining === 0) this.caster.clearTint();
     const liveEnemies = this.enemies.getChildren().filter((e) => e.active);
     this.caster.updateAutoAim(time, delta, liveEnemies, (t) => this.fireOrb(t));
@@ -1323,6 +1328,7 @@ export default class GameScene extends Phaser.Scene {
       }
       if (casterIn && z.casterLiftMs) applyCasterCc(this.caster, 'lift', z.casterLiftMs);
       if (casterIn && z.casterStunMs) applyCasterCc(this.caster, 'stun', z.casterStunMs);
+      if (casterIn && z.casterRootMs) applyCasterCc(this.caster, 'root', z.casterRootMs);
       if (z.enemyDps) {
         // Snapshot (filter returns a new array) so a kill mid-loop can't skip an enemy.
         const live = this.enemies.getChildren().filter((e) => e.active);

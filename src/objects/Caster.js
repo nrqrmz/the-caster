@@ -18,6 +18,7 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
     this.slowFactor = 1;
     this.stunRemaining = 0;
     this.liftRemaining = 0;
+    this.rootRemaining = 0;
     this.ccImmuneRemaining = 0;
     this.pushX = 0;
     this.pushY = 0;
@@ -28,7 +29,7 @@ export default class Caster extends Phaser.Physics.Arcade.Sprite {
   }
 
   moveBy(vector) {
-    const locked = this.stunRemaining > 0 || this.liftRemaining > 0;
+    const locked = this.stunRemaining > 0 || this.liftRemaining > 0 || this.rootRemaining > 0;
     const mul = this.slowRemaining > 0 ? this.slowFactor : 1;
     const baseX = locked ? 0 : vector.x * this.stats.moveSpeed * mul;
     const baseY = locked ? 0 : vector.y * this.stats.moveSpeed * mul;
