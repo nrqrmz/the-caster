@@ -15,11 +15,11 @@ export default {
     caster: 'The Caster',
     unknown: '???',
     galahad: 'Sir Galahad',
-    mage: { fire: 'Mago del Fuego', water: 'Madame Le Fay', air: 'Mago del Aire', earth: 'Mago de la Tierra' },
+    mage: { fire: 'Mago del Fuego', water: 'Madame Le Fay', air: 'Mago del Aire', earth: 'Guardián del Jardín' },
   },
   region: {
     fire: { name: 'El Volcán' }, water: { name: 'El Lago' }, air: { name: 'La Montaña' },
-    earth: { name: 'El Bosque' }, castle: { name: 'El Castillo' },
+    earth: { name: 'El Jardín de Circe' }, castle: { name: 'El Castillo' },
   },
   hud: { levelCleared: 'Nivel superado. +{reward} punto(s) de habilidad, +{gold} oro.' },
   map: {
@@ -81,9 +81,9 @@ export default {
                           2: 'Descansa, caballero. Tu tormento termina donde empieza mi venganza.' } },
     },
     earth: {
-      intro: { 0: 'El bosque esconde al más viejo del Consejo, el que envenenó el oído del Rey.' },
-      mage: { 0: 'Yo le susurré al Rey que tu familia era una amenaza. Y me creyó.',
-              1: 'El Rey ya no te servirá de nada. Lo verás tú misma.' },
+      intro: { 0: 'Cruzas el umbral de un jardín que respira. Las flores te miran. Algo aquí convierte a los hombres en bestias.' },
+      mage: { 0: 'Llegaste lejos, princesa. Pero este jardín es de Circe, y Circe no perdona a los de tu especie.',
+              1: 'Toma el veneno de estas tierras. Que la ponzoña que ella cultiva sea ahora tu arma.' },
     },
     castle: {
       intro: { 0: 'Las puertas del castillo se abren. Los que amaban a quienes mataste te esperan.' },
