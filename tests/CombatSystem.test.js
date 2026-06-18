@@ -109,7 +109,7 @@ import {
 import { CASTER_STUN_MS, CASTER_LIFT_MS, CC_IMMUNE_MS, CASTER_ROOT_MS } from '../src/data/tuning.js';
 
 function freshCc() {
-  return { stunRemaining: 0, liftRemaining: 0, ccImmuneRemaining: 0 };
+  return { stunRemaining: 0, liftRemaining: 0, rootRemaining: 0, ccImmuneRemaining: 0 };
 }
 
 test('applyCasterCc sets stun and returns true on a fresh state', () => {

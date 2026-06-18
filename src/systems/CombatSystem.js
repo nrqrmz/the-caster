@@ -49,7 +49,7 @@ export function applyResist(damage, resist) {
 }
 
 // --- Air: caster control-loss (stun/lift) with anti-chain immunity ---
-// state: { stunRemaining, liftRemaining, ccImmuneRemaining }  (fields live on Caster)
+// state: { stunRemaining, liftRemaining, rootRemaining, ccImmuneRemaining }  (fields live on Caster)
 
 // Apply a control-loss effect. Returns false (no-op) while the immunity window is up
 // so a swarm can't perma-lock the player. kind: 'stun' | 'lift' | 'root'.
