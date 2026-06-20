@@ -267,6 +267,14 @@ const WOLF     = [{ name: 'wolf_body' }, { name: 'wolf_legs' }, { name: 'wolf_he
 const WEREWOLF = [{ name: 'werewolf_body' }, { name: 'werewolf_head' }, { name: 'werewolf_eyes', palette: 'glow' }];
 const BOAR     = [{ name: 'boar_body' }, { name: 'boar_legs' }, { name: 'boar_head' }, { name: 'boar_tusks', palette: 'bone' }, { name: 'boar_eyes', palette: 'glow' }];
 const BEAR     = [{ name: 'bear_body' }, { name: 'bear_eyes', palette: 'glow' }];
+// Earth: Lote C — Flora + Fey
+const MUSHROOM = [{ name: 'mush_stem' }, { name: 'mush_cap' }, { name: 'mush_spores', palette: 'sporeglow' }];
+const BRAMBLE  = [{ name: 'bramble_body' }, { name: 'bramble_thorns', palette: 'bone' }, { name: 'bramble_eyes', palette: 'glow' }];
+const VINE     = [{ name: 'vine_body' }, { name: 'vine_leaves', palette: 'leafgreen' }, { name: 'vine_eyes', palette: 'glow' }];
+const VINE_CRIA = [{ name: 'vinecria_body' }, { name: 'vinecria_leaf', palette: 'leafgreen' }, { name: 'vinecria_eye', palette: 'glow' }];
+const FLOWER   = [{ name: 'flower_stem' }, { name: 'flower_petals' }, { name: 'flower_maw', palette: 'shadow' }, { name: 'flower_eyes', palette: 'sporeglow' }];
+const PIXIE    = [{ name: 'pixie_wings' }, { name: 'pixie_body' }, { name: 'pixie_glow', palette: 'sporeglow' }];
+const GOBLIN   = [{ name: 'goblin_body' }, { name: 'goblin_head' }, { name: 'goblin_eyes', palette: 'glow' }];
 
 export const RECIPES = {
   hero: {
@@ -437,6 +445,15 @@ export const RECIPES = {
   hombre_lobo:{ archetype: 'beast', size: 64, baseColor: 0x5d4037, parts: WEREWOLF },             // beastFur (bípedo, sin flip)
   jabali:     { archetype: 'beast', size: 64, baseColor: 0x795548, parts: BOAR, flip: true },     // mudBrown
   oso_jardin: { archetype: 'beast', gridW: 40, gridH: 28, scale: 2, baseColor: 0x5d4037, parts: BEAR, flip: true }, // beastFur — landscape bear profile 80×56
+  // Lote C — Flora + Fey (transmutados / criaturas del jardín)
+  hongo_esporario:      { archetype: 'blob',     size: 32, baseColor: 0x8e24aa, parts: MUSHROOM }, // sporeViolet
+  brote_pustula:        { archetype: 'blob',     size: 32, baseColor: 0x33691e, parts: MUSHROOM }, // vineGreen recolor
+  zarza_estranguladora: { archetype: 'blob',     size: 32, baseColor: 0x33691e, parts: BRAMBLE },  // vineGreen
+  enredadera_reptante:  { archetype: 'beast',    size: 32, baseColor: 0x33691e, parts: VINE },     // vineGreen (repta)
+  enredadera_cria:      { archetype: 'beast',    size: 32, baseColor: 0x33691e, parts: VINE_CRIA },// vineGreen, más chica
+  flor_carnivora:       { archetype: 'blob',     size: 32, baseColor: 0x558b2f, parts: FLOWER },   // mossGreen
+  pixie:                { archetype: 'floating', size: 32, baseColor: 0x8e24aa, parts: PIXIE },    // sporeViolet
+  duende_ladron:        { archetype: 'humanoid', size: 32, baseColor: 0x558b2f, parts: GOBLIN },   // mossGreen
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }

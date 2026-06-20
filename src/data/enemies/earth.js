@@ -50,7 +50,6 @@ export const EARTH_ENEMIES = {
   // --- Flora / hongos: terreno + veneno, estáticos/lentos ---
   hongo_esporario: { key: 'hongo_esporario', tex: TEX.villager, color: COLORS.sporeViolet,
     hp: 40, speed: 0, damage: 6, radius: 16,
-    geometric: true,
     movement: { type: 'static' },
     attacks: [],
     modifiers: [
@@ -60,25 +59,21 @@ export const EARTH_ENEMIES = {
 
   brote_pustula: { key: 'brote_pustula', tex: TEX.villager, color: COLORS.vineGreen,
     hp: 50, speed: 0, damage: 0, radius: 16,
-    geometric: true,
     movement: { type: 'static' },
     attacks: [{ type: 'lobAoe', every: 3200, radius: 60, dps: 30, duration: 4000 }] },
 
   zarza_estranguladora: { key: 'zarza_estranguladora', tex: TEX.villager, color: COLORS.vineGreen,
     hp: 70, speed: 0, damage: 8, radius: 18,
-    geometric: true,
     movement: { type: 'static' },
     attacks: [{ type: 'lobAoe', every: 3000, radius: 50, duration: 1500, root: true, telegraph: 500 }] },
 
   flor_carnivora: { key: 'flor_carnivora', tex: TEX.villager, color: COLORS.mossGreen,
     hp: 60, speed: 0, damage: 9, radius: 18,
-    geometric: true,
     movement: { type: 'static' },
     attacks: [{ type: 'shootHoming', every: 2600, speed: 120, telegraph: 350 }] },
 
   enredadera_reptante: { key: 'enredadera_reptante', tex: TEX.villager, color: COLORS.vineGreen,
     hp: 45, speed: 45, damage: 10, radius: 16,
-    geometric: true,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
     modifiers: [
@@ -88,7 +83,6 @@ export const EARTH_ENEMIES = {
 
   enredadera_cria: { key: 'enredadera_cria', tex: TEX.villager, color: COLORS.vineGreen,
     hp: 22, speed: 55, damage: 8, radius: 12,
-    geometric: true,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'onHitSlow', factor: 0.7, ms: 900 }] },
@@ -96,14 +90,12 @@ export const EARTH_ENEMIES = {
   // --- Fey pequeños: rápidos / enjambre ---
   pixie: { key: 'pixie', tex: TEX.villager, color: COLORS.sporeViolet,
     hp: 16, speed: 135, damage: 5, radius: 12,
-    geometric: true,
     flying: true,
     movement: { type: 'erratic' },
     attacks: [{ type: 'melee' }] },
 
   duende_ladron: { key: 'duende_ladron', tex: TEX.villager, color: COLORS.mossGreen,
     hp: 24, speed: 110, damage: 9, radius: 14,
-    geometric: true,
     movement: { type: 'erratic' },
     attacks: [{ type: 'melee' }] },
 
