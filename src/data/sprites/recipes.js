@@ -418,6 +418,14 @@ export const RECIPES = {
   galahad_murcielago: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x4a148c, parts: GALAHAD_BAT }, // bespoke colossal symmetric bat — native 2:1 (64×32 → 128×64)
   galahad_cadaver:    { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x1a0e12, parts: GALAHAD_CADAVER }, // prone dead count — native 2:1 (64×32 → 128×64)
   galahad_final:      { archetype: 'boss', size: 96, parts: GALAHAD_FINAL },  // Count ashen/dying: grey cloth, death-pale skin, dim eyes (true death)
+
+  // --- Earth: humanos cautivos + fodder de reuso (El Jardín de Circe) ---
+  // Cautivos = humanos comunes (paleta carne pálida "encantada"); su transmute a bestia es la mecánica firma.
+  naufrago_encantado:  { archetype: 'humanoid', size: 32, baseColor: 0xe0c0a0, parts: VILLAGER('hair') },      // fleshPale
+  acolito_cautivo:     { archetype: 'humanoid', size: 32, baseColor: 0xe0c0a0, parts: MAGE_ARCHER },           // fleshPale, dispara
+  sierva_jardin:       { archetype: 'humanoid', size: 32, baseColor: 0xe0c0a0, parts: VILLAGER('blondhair') }, // fleshPale, huye
+  ninfa_transmutadora: { archetype: 'humanoid', size: 32, baseColor: 0x8e24aa, parts: MAGE_CASTER('blackhair') }, // sporeViolet
+  fuego_fatuo_pantano: { archetype: 'blob',     size: 32, baseColor: 0x558b2f, parts: BRASA },                 // mossGreen wisp
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }

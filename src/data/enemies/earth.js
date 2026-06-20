@@ -7,21 +7,18 @@ export const EARTH_ENEMIES = {
   // --- Cautivos: víctimas humanas (fodder de transmutación, frágiles) ---
   naufrago_encantado: { key: 'naufrago_encantado', tex: TEX.villager, color: COLORS.fleshPale,
     hp: 18, speed: 90, damage: 8, radius: 16,
-    geometric: true,
     captive: true, transmuteTo: 'lobo',
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }] },
 
   acolito_cautivo: { key: 'acolito_cautivo', tex: TEX.archer, color: COLORS.fleshPale,
     hp: 16, speed: 70, damage: 7, radius: 16,
-    geometric: true,
     captive: true, transmuteTo: 'jabali',
     movement: { type: 'kite', range: 200 },
     attacks: [{ type: 'shootStraight', every: 1600, speed: 210 }] },
 
   sierva_jardin: { key: 'sierva_jardin', tex: TEX.villager, color: COLORS.fleshPale,
     hp: 14, speed: 85, damage: 0, radius: 14,
-    geometric: true,
     captive: true, transmuteTo: 'pixie',
     movement: { type: 'flee' },
     attacks: [],
@@ -116,7 +113,6 @@ export const EARTH_ENEMIES = {
 
   fuego_fatuo_pantano: { key: 'fuego_fatuo_pantano', tex: TEX.villager, color: COLORS.mossGreen,
     hp: 26, speed: 80, damage: 7, radius: 14,
-    geometric: true,
     flying: true,
     movement: { type: 'erratic' },
     attacks: [],
@@ -165,7 +161,6 @@ export const EARTH_ENEMIES = {
   // --- Élite del jardín: la fuente de la mecánica firma ---
   ninfa_transmutadora: { key: 'ninfa_transmutadora', tex: TEX.archer, color: COLORS.sporeViolet,
     hp: 70, speed: 70, damage: 6, radius: 16,
-    geometric: true,
     movement: { type: 'kite', range: 230 },
     attacks: [{ type: 'transmute', every: 5000, speed: 150 }] },
 };
