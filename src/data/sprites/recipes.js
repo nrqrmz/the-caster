@@ -265,6 +265,7 @@ const STORM_ELEM = [{ name: 'storm_body' }, { name: 'storm_bolts', palette: 'wis
 // Earth: Lote E2 — jefes planta (silueta propia por jefe)
 const DRYAD = [{ name: 'dryad_body' }, { name: 'dryad_hair', palette: 'leafgreen' }, { name: 'dryad_skin', palette: 'skin' }, { name: 'dryad_bloom', palette: 'sporeglow' }];
 const ENT   = [{ name: 'ent_trunk' }, { name: 'ent_canopy', palette: 'leafgreen' }, { name: 'ent_face', palette: 'shadow' }, { name: 'ent_eyes', palette: 'sporeglow' }];
+const GRIFFIN = [{ name: 'griffin_wings' }, { name: 'griffin_body' }, { name: 'griffin_talons', palette: 'gold' }, { name: 'griffin_head' }, { name: 'griffin_beak', palette: 'bone' }, { name: 'griffin_eyes', palette: 'glow' }];
 
 // Earth: Lote E1 — jefes bestia (silueta propia por jefe)
 const ALPHAWOLF = [{ name: 'alpha_body' }, { name: 'alpha_mane' }, { name: 'alpha_head' }, { name: 'alpha_eyes', palette: 'vampglow' }];
@@ -488,6 +489,7 @@ export const RECIPES = {
   cefalo_felino: { archetype: 'boss', size: 96, baseColor: 0xc9a24a, parts: FELINE, flip: true },    // león tawny/amarillento (felino, nv5)
   driada:        { archetype: 'boss', size: 96, baseColor: 0x558b2f, parts: DRYAD },                  // mossGreen (hechicera planta, nv6)
   ent_guardian:  { archetype: 'boss', size: 192, baseColor: 0x6d4c41, parts: ENT },                   // barkBrown (árbol guardián gigante, nv6 tank)
+  grifo:         { archetype: 'boss', size: 128, baseColor: 0x6d4c41, parts: GRIFFIN, flip: true },   // barkBrown (águila-león alado, nv7 levelboss)
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
