@@ -1,25 +1,13 @@
-import { COLORS, TEX, spriteKey, frameKey } from '../config.js';
-import { RECIPES, paletteFor } from '../data/sprites/recipes.js';
-import { PARTS } from '../data/sprites/parts.js';
-import { forge } from '../systems/SpriteForge.js';
-import { ENEMY_TYPES } from '../data/enemies/index.js';
-import { derivePalette, NAMED_PALETTES } from '../data/sprites/palettes.js';
-
-// Mirror every composed frame of a forged sprite horizontally (reverse each row of the
-// pixel grid). Used for `flip:true` recipes whose art was drawn facing left. Operates on
-// the final composed grids, so part anchors/positions need no adjustment.
-function mirrorFrames(out) {
-  for (const frames of Object.values(out.anims)) {
-    for (let i = 0; i < frames.length; i++) {
-      frames[i] = frames[i].map((row) => [...row].reverse());
-    }
-  }
-}
+// src/scenes/BootScene.js
+import { COLORS, TEX } from '../config.js';
+import { RECIPES } from '../data/sprites/recipes.js';
+import { bakeSprites } from './spriteBaker.js';
 
 export default class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
 
   create() {
+    // Geometric primitives (the original circle/diamond fallbacks).
     this.makeCircle(TEX.caster, COLORS.caster, 16);
     this.makeCircle(TEX.orb, COLORS.orb, 6);
     this.makeCircle(TEX.fireball, COLORS.fireball, 12);
@@ -31,72 +19,8 @@ export default class BootScene extends Phaser.Scene {
     this.makeCircle(TEX.boss, COLORS.boss, 30);
     this.makeDiamond(TEX.temple, COLORS.temple, 26);
 
-    this.buildSprites();
-    this.scene.start('Menu');
-  }
-
-  buildSprites() {
-    for (const [key, recipe] of Object.entries(RECIPES)) {
-      // Per-creature color: explicit recipe.baseColor (projectiles) > the enemy def's color
-      // > caster fallback. The hero uses a named palette, so its baseColor is ignored.
-      const baseColor = recipe.baseColor ?? ENEMY_TYPES[key]?.color ?? COLORS.caster;
-      const palette = paletteFor(key, baseColor);
-      const out = forge(recipe, PARTS, palette, (ref) => this.resolvePartPalette(ref));
-      // Some animal art was authored facing LEFT, but the convention (and FacingController)
-      // is side = facing RIGHT (left via flipX). `flip:true` recipes mirror every composed
-      // frame horizontally at build time so the stored texture obeys the convention.
-      if (recipe.flip) mirrorFrames(out);
-      this.paintForged(key, out);
-    }
-  }
-
-  // A part-ref may name its own palette ({name, palette:'skin'}) or a base color
-  // ({name, color:0x2e8b57, accent?:0x..}). Returns a 5-role palette or null (use recipe palette).
-  resolvePartPalette(ref) {
-    if (typeof ref !== 'object') return null;
-    if (ref.palette) {
-      const p = NAMED_PALETTES[ref.palette];
-      if (!p) throw new Error(`BootScene: unknown part palette '${ref.palette}'`);
-      return p;
-    }
-    if (ref.color != null) return derivePalette(ref.color, ref.accent != null ? { accent: ref.accent } : {});
-    return null;
-  }
-
-  // Paint every frame to its own texture, register one anim per `${key}-${animName}`,
-  // and register the base texture spriteKey(key) = idle-down frame 0.
-  paintForged(key, out) {
-    for (const [animName, frames] of Object.entries(out.anims)) {
-      const frameKeys = [];
-      for (let i = 0; i < frames.length; i++) {
-        const tkey = frameKey(key, animName, i);
-        this.paintGrid(tkey, frames[i]);
-        frameKeys.push({ key: tkey });
-      }
-      this.anims.create({
-        key: `${key}-${animName}`,
-        frames: frameKeys,
-        frameRate: out.fps,
-        repeat: animName.startsWith('attack') ? 0 : -1, // attacks play once
-      });
-    }
-    // Base texture for object constructors.
-    this.paintGrid(spriteKey(key), out.anims['idle-down'][0]);
-  }
-
-  // grid = 2D array of color ints or null (transparent).
-  paintGrid(texKey, grid) {
-    const g = this.add.graphics();
-    for (let y = 0; y < grid.length; y++) {
-      for (let x = 0; x < grid[y].length; x++) {
-        const c = grid[y][x];
-        if (c == null) continue;
-        g.fillStyle(c, 1);
-        g.fillRect(x, y, 1, 1);
-      }
-    }
-    g.generateTexture(texKey, grid[0].length, grid.length);
-    g.destroy();
+    // Forge every sprite, then enter the menu. (Task 4 narrows this to CORE.)
+    bakeSprites(this, Object.keys(RECIPES)).then(() => this.scene.start('Menu'));
   }
 
   makeCircle(key, color, radius) {
