@@ -262,6 +262,47 @@ const WHIRL = [{ name: 'whirl_body' }];
 // and THREE glaring eyes (glow) across the left/center/right puffs.
 const STORM_ELEM = [{ name: 'storm_body' }, { name: 'storm_bolts', palette: 'wispglow' }, { name: 'storm_eyes', palette: 'glow' }];
 
+// Earth: Lote E2 — jefes planta (silueta propia por jefe)
+const DRYAD = [{ name: 'dryad_body' }, { name: 'dryad_hair', palette: 'leafgreen' }, { name: 'dryad_skin', palette: 'skin' }, { name: 'dryad_bloom', palette: 'sporeglow' }];
+const ENT   = [{ name: 'ent_trunk' }, { name: 'ent_canopy', palette: 'leafgreen' }, { name: 'ent_face', palette: 'shadow' }, { name: 'ent_eyes', palette: 'sporeglow' }];
+const GRIFFIN = [{ name: 'griffin_wings' }, { name: 'griffin_body' }, { name: 'griffin_talons', palette: 'gold' }, { name: 'griffin_head' }, { name: 'griffin_beak', palette: 'bone' }, { name: 'griffin_eyes', palette: 'glow' }];
+const CIRCE = [
+  { name: 'circe_throne', palette: 'petrified' }, { name: 'circe_throne_gold', palette: 'gold' },
+  { name: 'circe_staff', palette: 'wood' }, { name: 'circe_orb', palette: 'sporeglow' },
+  { name: 'circe_gown' }, { name: 'circe_hair', palette: 'blackhair' }, { name: 'circe_skin', palette: 'skin' },
+  { name: 'circe_crown', palette: 'glow' }, { name: 'circe_field', palette: 'sporeglow' },
+];
+
+// Earth: Lote E1 — jefes bestia (silueta propia por jefe)
+const ALPHAWOLF = [{ name: 'alpha_body' }, { name: 'alpha_mane' }, { name: 'alpha_head' }, { name: 'alpha_eyes', palette: 'vampglow' }];
+const LELAPS_P  = [{ name: 'lelaps_body' }, { name: 'lelaps_legs' }, { name: 'lelaps_head' }, { name: 'lelaps_eyes', palette: 'glow' }];
+const HUNTER    = [{ name: 'hunter_body' }, { name: 'hunter_head' }, { name: 'hunter_javelin', palette: 'wood' }, { name: 'hunter_javelin_tip', palette: 'steel' }];
+const FELINE    = [{ name: 'feline_body' }, { name: 'feline_legs' }, { name: 'feline_head' }, { name: 'feline_eyes', palette: 'glow' }];
+
+// Earth: El Jardín de Circe — fodder beasts (quadruped/biped)
+const WOLF     = [{ name: 'wolf_body' }, { name: 'wolf_legs' }, { name: 'wolf_head' }, { name: 'wolf_eyes', palette: 'glow' }];
+const WEREWOLF = [{ name: 'werewolf_body' }, { name: 'werewolf_head' }, { name: 'werewolf_eyes', palette: 'glow' }];
+const BOAR     = [{ name: 'boar_body' }, { name: 'boar_legs' }, { name: 'boar_head' }, { name: 'boar_tusks', palette: 'bone' }, { name: 'boar_eyes', palette: 'glow' }];
+const BEAR     = [{ name: 'bear_body' }, { name: 'bear_eyes', palette: 'glow' }];
+// Earth: Lote C — Flora + Fey
+const MUSHROOM = [{ name: 'mush_stem' }, { name: 'mush_cap' }, { name: 'mush_spores', palette: 'sporeglow' }];
+const BRAMBLE  = [{ name: 'bramble_body' }, { name: 'bramble_thorns', palette: 'bone' }, { name: 'bramble_eyes', palette: 'glow' }];
+const VINE     = [{ name: 'vine_body' }, { name: 'vine_leaves', palette: 'leafgreen' }, { name: 'vine_eyes', palette: 'glow' }];
+const VINE_CRIA = [{ name: 'vinecria_body' }, { name: 'vinecria_leaf', palette: 'leafgreen' }, { name: 'vinecria_eye', palette: 'glow' }];
+const FLOWER   = [{ name: 'flower_stem' }, { name: 'flower_petals' }, { name: 'flower_maw', palette: 'shadow' }, { name: 'flower_eyes', palette: 'sporeglow' }];
+const PIXIE    = [{ name: 'pixie_wings' }, { name: 'pixie_body' }, { name: 'pixie_glow', palette: 'sporeglow' }];
+const GOBLIN   = [{ name: 'goblin_body' }, { name: 'goblin_head' }, { name: 'goblin_eyes', palette: 'glow' }];
+// Earth: Lote D — Gólems (siluetas DISTINTAS) + Tótem de Espinas
+// mud golem: ROUNDED/DRIPPY — round blobs, sagging drips, soft silhouette
+// mud golem child: tiny simple blob, one eye — clearly smaller/simpler than parent
+const GOLEM_MUDCRIA = [{ name: 'mudcria_body' }, { name: 'mudcria_eye', palette: 'glow' }];
+// stone golem: ANGULAR/BLOCKY — rectangular slabs, hard edges, crack lines
+const GOLEM_STONE   = [{ name: 'stone_body' }, { name: 'stone_cracks', palette: 'shadow' }, { name: 'stone_eyes', palette: 'glow' }];
+// moss colossus: MASSIVE/BOULDER — fills the canvas, enormous arms, mossy highlights
+const COLOSSUS      = [{ name: 'colossus_body' }, { name: 'colossus_eyes', palette: 'glow' }];
+// thorn totem: tall column, NOT humanoid — distinct body shape entirely
+const THORNTOTEM    = [{ name: 'thorntotem_body' }, { name: 'thorntotem_face', palette: 'shadow' }, { name: 'thorntotem_thorns', palette: 'bone' }, { name: 'thorntotem_eye', palette: 'sporeglow' }];
+
 export const RECIPES = {
   hero: {
     // The redheaded princess. Each part composes against its own palette (per-part
@@ -418,6 +459,44 @@ export const RECIPES = {
   galahad_murcielago: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x4a148c, parts: GALAHAD_BAT }, // bespoke colossal symmetric bat — native 2:1 (64×32 → 128×64)
   galahad_cadaver:    { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x1a0e12, parts: GALAHAD_CADAVER }, // prone dead count — native 2:1 (64×32 → 128×64)
   galahad_final:      { archetype: 'boss', size: 96, parts: GALAHAD_FINAL },  // Count ashen/dying: grey cloth, death-pale skin, dim eyes (true death)
+
+  // --- Earth: humanos cautivos + fodder de reuso (El Jardín de Circe) ---
+  // Cautivos = humanos comunes (paleta carne pálida "encantada"); su transmute a bestia es la mecánica firma.
+  naufrago_encantado:  { archetype: 'humanoid', size: 32, baseColor: 0xe0c0a0, parts: VILLAGER('hair') },      // fleshPale
+  acolito_cautivo:     { archetype: 'humanoid', size: 32, baseColor: 0xe0c0a0, parts: MAGE_ARCHER },           // fleshPale, dispara
+  sierva_jardin:       { archetype: 'humanoid', size: 32, baseColor: 0xe0c0a0, parts: VILLAGER('blondhair') }, // fleshPale, huye
+  ninfa_transmutadora: { archetype: 'humanoid', size: 32, baseColor: 0x8e24aa, parts: MAGE_CASTER('blackhair') }, // sporeViolet
+  fuego_fatuo_pantano: { archetype: 'blob',     size: 32, baseColor: 0x558b2f, parts: BRASA },                 // mossGreen wisp
+  // Bestias fodder (Lote B) — transmutados de Circe
+  lobo:       { archetype: 'beast', size: 64, baseColor: 0x5d4037, parts: WOLF, flip: true },     // beastFur
+  hombre_lobo:{ archetype: 'beast', size: 64, baseColor: 0x5d4037, parts: WEREWOLF },             // beastFur (bípedo, sin flip)
+  jabali:     { archetype: 'beast', size: 64, baseColor: 0x795548, parts: BOAR, flip: true },     // mudBrown
+  oso_jardin: { archetype: 'beast', gridW: 40, gridH: 28, scale: 2, baseColor: 0x5d4037, parts: BEAR, flip: true }, // beastFur — landscape bear profile 80×56
+  // Lote C — Flora + Fey (transmutados / criaturas del jardín)
+  hongo_esporario:      { archetype: 'blob',     size: 32, baseColor: 0x8e24aa, parts: MUSHROOM }, // sporeViolet
+  brote_pustula:        { archetype: 'blob',     size: 32, baseColor: 0x33691e, parts: MUSHROOM }, // vineGreen recolor
+  zarza_estranguladora: { archetype: 'blob',     size: 32, baseColor: 0x33691e, parts: BRAMBLE },  // vineGreen
+  enredadera_reptante:  { archetype: 'beast',    size: 32, baseColor: 0x33691e, parts: VINE },     // vineGreen (repta)
+  enredadera_cria:      { archetype: 'beast',    size: 32, baseColor: 0x33691e, parts: VINE_CRIA },// vineGreen, más chica
+  flor_carnivora:       { archetype: 'blob',     size: 32, baseColor: 0x558b2f, parts: FLOWER },   // mossGreen
+  pixie:                { archetype: 'floating', size: 32, baseColor: 0x8e24aa, parts: PIXIE },    // sporeViolet
+  duende_ladron:        { archetype: 'humanoid', size: 32, baseColor: 0x558b2f, parts: GOBLIN },   // mossGreen
+  // Lote D — Gólems + Tótem de Espinas (siluetas distintas)
+  golem_lodo:      { archetype: 'beast',    size: 64, baseColor: 0x795548, parts: GOLEM_STONE },    // mudBrown — same blocky golem as piedra, mud-colored
+  golem_lodo_cria: { archetype: 'beast',    size: 32, baseColor: 0x795548, parts: GOLEM_MUDCRIA },  // mudBrown — tiny simple blob
+  golem_piedra:    { archetype: 'beast',    size: 64, baseColor: 0x9e9e9e, parts: GOLEM_STONE },    // stoneGrey — ANGULAR/BLOCKY
+  coloso_musgoso:  { archetype: 'beast',    size: 80, baseColor: 0x558b2f, parts: COLOSSUS },       // mossGreen — MASSIVE/BOULDER
+  totem_espinas:   { archetype: 'floating', size: 64, baseColor: 0x6d4c41, parts: THORNTOTEM },     // barkBrown — column totem
+
+  // --- Earth bosses (silueta propia por jefe) ---
+  senor_lobo:    { archetype: 'boss', size: 96, baseColor: 0x5d4037, parts: ALPHAWOLF },             // beastFur (Alfa Licántropo, nv4)
+  lelaps:        { archetype: 'boss', size: 96, baseColor: 0x9e9e9e, parts: LELAPS_P, flip: true },  // stoneGrey (sabueso, nv5)
+  cefalo_humano: { archetype: 'boss', size: 96, baseColor: 0x6d4c41, parts: HUNTER },                // barkBrown (cazador, nv5)
+  cefalo_felino: { archetype: 'boss', size: 96, baseColor: 0xc9a24a, parts: FELINE, flip: true },    // león tawny/amarillento (felino, nv5)
+  driada:        { archetype: 'boss', size: 96, baseColor: 0x558b2f, parts: DRYAD },                  // mossGreen (hechicera planta, nv6)
+  ent_guardian:  { archetype: 'boss', size: 192, baseColor: 0x6d4c41, parts: ENT },                   // barkBrown (árbol guardián gigante, nv6 tank)
+  grifo:         { archetype: 'boss', size: 128, baseColor: 0x6d4c41, parts: GRIFFIN, flip: true },   // barkBrown (águila-león alado, nv7 levelboss)
+  circe:         { archetype: 'boss', size: 128, baseColor: 0x8e24aa, parts: CIRCE },                 // sporeViolet (reina entronizada, nv8 templeboss)
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }

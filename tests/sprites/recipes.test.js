@@ -113,6 +113,24 @@ test('every air boss + form has a recipe with a forgeable base', () => {
   }
 });
 
+test('every earth boss + form has a recipe with known parts', () => {
+  const keys = ['senor_lobo','lelaps','cefalo_humano','cefalo_felino','driada','ent_guardian','grifo','circe'];
+  for (const key of keys) {
+    assert.ok(hasRecipe(key), `earth boss '${key}' has no recipe`);
+    for (const ref of getRecipe(key).parts) {
+      const name = typeof ref === 'string' ? ref : ref.name;
+      assert.ok(PARTS[name], `recipe '${key}' references unknown part '${name}'`);
+    }
+  }
+});
+
+import { EARTH_ENEMIES } from '../../src/data/enemies/earth.js';
+
+test('no earth enemy retains geometric:true (world fully spritted)', () => {
+  const stillGeometric = Object.keys(EARTH_ENEMIES).filter((k) => EARTH_ENEMIES[k].geometric);
+  assert.deepEqual(stillGeometric, [], `earth enemies still geometric: ${stillGeometric.join(', ')}`);
+});
+
 // GLOBAL parity: every registered enemy type the game can spawn must have a sprite recipe.
 import { ENEMY_TYPES } from '../../src/data/enemies.js';
 

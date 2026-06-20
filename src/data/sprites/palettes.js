@@ -79,4 +79,10 @@ export const NAMED_PALETTES = {
   ashen_skin: derivePalette(0xc8c4be, { base: 0xc8c4be, highlight: 0xe8e6e2, shade: 0x8a8882, outline: 0x40403c }),
   // Galahad final — dim fading eyes (ghost-grey glow, the last light going out).
   ashen_glow: derivePalette(0x9090a0, { base: 0x9090a0, highlight: 0xc8c8d8, shade: 0x585868, outline: 0x282832 }),
+  // Earth — petrified stone-grey (Lélaps petrificado, acentos pétreos de gólems).
+  petrified: derivePalette(0x8a8a8a, { base: 0x9e9e9e, highlight: 0xd0d0d0, shade: 0x5e5e5e, outline: 0x2a2a2a }),
+  // Earth — sickly poison/spore glow (ojos, esporas, fauces venenosas) verde-lima.
+  sporeglow: derivePalette(0xaed581, { base: 0xaed581, highlight: 0xe6ffcc, shade: 0x689f38, outline: 0x33691e }),
+  // Earth — follaje (copa del Ent, pelo/hojas de la Dríada) verde hoja distinto del cuerpo.
+  leafgreen: derivePalette(0x4a8a2a, { base: 0x4a8a2a, highlight: 0x8bc34a, shade: 0x2e5a18, outline: 0x14300a }),
 };
