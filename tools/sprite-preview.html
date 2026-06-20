@@ -10,7 +10,7 @@
   h1 { font-size:15px; font-weight:600; }
 </style></head>
 <body>
-<h1>Air sprite preview — <span id="count"></span></h1>
+<h1>Earth sprite preview — <span id="count"></span></h1>
 <div class="grid" id="grid"></div>
 <script type="module">
 // Cache-busted dynamic imports: this is a dev preview reloaded after every
@@ -22,14 +22,13 @@ const { getRecipe, paletteFor, hasRecipe } = await import('../src/data/sprites/r
 const { PARTS } = await import('../src/data/sprites/parts.js' + _v);
 const { derivePalette, NAMED_PALETTES } = await import('../src/data/sprites/palettes.js' + _v);
 
-// Keys to review. Edit this list per batch; defaults to the full Air roster.
+// Keys to review. Edit this list per batch; defaults to the full Earth roster.
 const KEYS = new URLSearchParams(location.search).get('keys')?.split(',') ?? [
-  'siervo_torre','duelista_nocturno','acolito_trueno','heraldo_rayo','sacerdote_sangre',
-  'guardia_nocturno','hechicero_viento','vastago_vampirico','murcielago','arpia',
-  'espiritu_tormenta','fuego_fatuo','vampiro_alado','gargola_pararrayos','centinela_piedra',
-  'torbellino_errante','tronador','cultista','cultista_canalizador','guardian_rito',
-  'caballero_sangre','bruja_vendaval','elemental_tormenta','lider_cultista',
-  'galahad_humano','galahad_rage','galahad_rage2','galahad_murcielago','galahad_final',
+  'naufrago_encantado','acolito_cautivo','sierva_jardin','ninfa_transmutadora','fuego_fatuo_pantano',
+  'lobo','hombre_lobo','jabali','oso_jardin',
+  'hongo_esporario','brote_pustula','zarza_estranguladora','enredadera_reptante','enredadera_cria','flor_carnivora','pixie','duende_ladron',
+  'golem_lodo','golem_lodo_cria','golem_piedra','coloso_musgoso','totem_espinas',
+  'senor_lobo','lelaps','cefalo_humano','cefalo_felino','driada','ent_guardian','grifo','circe',
 ];
 const SCALE = 8;
 const grid = document.getElementById('grid');
