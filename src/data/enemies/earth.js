@@ -112,7 +112,6 @@ export const EARTH_ENEMIES = {
   // --- Golems / pétreos: muro, lentos, golpes pesados ---
   golem_lodo: { key: 'golem_lodo', tex: TEX.warrior, color: COLORS.mudBrown,
     hp: 90, speed: 50, damage: 12, radius: 20,
-    geometric: true,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
     modifiers: [
@@ -122,27 +121,23 @@ export const EARTH_ENEMIES = {
 
   golem_lodo_cria: { key: 'golem_lodo_cria', tex: TEX.warrior, color: COLORS.mudBrown,
     hp: 45, speed: 60, damage: 10, radius: 14,
-    geometric: true,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'onHitSlow', factor: 0.7, ms: 900 }] },
 
   golem_piedra: { key: 'golem_piedra', tex: TEX.warrior, color: COLORS.stoneGrey,
     hp: 220, speed: 45, damage: 14, radius: 22,
-    geometric: true,
     movement: { type: 'chase' },
     attacks: [{ type: 'lobAoe', every: 2600, radius: 55, dps: 22, duration: 1500, telegraph: 450 }],
     modifiers: [{ type: 'shielded', reduce: 0.3 }] },
 
   totem_espinas: { key: 'totem_espinas', tex: TEX.warrior, color: COLORS.barkBrown,
     hp: 120, speed: 0, damage: 10, radius: 20,
-    geometric: true,
     movement: { type: 'static' },
     attacks: [{ type: 'shootSpread', count: 3, arc: 40, every: 2200, speed: 200 }] },
 
   coloso_musgoso: { key: 'coloso_musgoso', tex: TEX.warrior, color: COLORS.mossGreen,
     hp: 300, speed: 40, damage: 18, radius: 24,
-    geometric: true,
     movement: { type: 'chase' },
     attacks: [{ type: 'lobAoe', every: 3000, radius: 55, duration: 1500, root: true, telegraph: 550 }] },
 

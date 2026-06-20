@@ -275,6 +275,16 @@ const VINE_CRIA = [{ name: 'vinecria_body' }, { name: 'vinecria_leaf', palette: 
 const FLOWER   = [{ name: 'flower_stem' }, { name: 'flower_petals' }, { name: 'flower_maw', palette: 'shadow' }, { name: 'flower_eyes', palette: 'sporeglow' }];
 const PIXIE    = [{ name: 'pixie_wings' }, { name: 'pixie_body' }, { name: 'pixie_glow', palette: 'sporeglow' }];
 const GOBLIN   = [{ name: 'goblin_body' }, { name: 'goblin_head' }, { name: 'goblin_eyes', palette: 'glow' }];
+// Earth: Lote D — Gólems (siluetas DISTINTAS) + Tótem de Espinas
+// mud golem: ROUNDED/DRIPPY — round blobs, sagging drips, soft silhouette
+// mud golem child: tiny simple blob, one eye — clearly smaller/simpler than parent
+const GOLEM_MUDCRIA = [{ name: 'mudcria_body' }, { name: 'mudcria_eye', palette: 'glow' }];
+// stone golem: ANGULAR/BLOCKY — rectangular slabs, hard edges, crack lines
+const GOLEM_STONE   = [{ name: 'stone_body' }, { name: 'stone_cracks', palette: 'shadow' }, { name: 'stone_eyes', palette: 'glow' }];
+// moss colossus: MASSIVE/BOULDER — fills the canvas, enormous arms, mossy highlights
+const COLOSSUS      = [{ name: 'colossus_body' }, { name: 'colossus_eyes', palette: 'glow' }];
+// thorn totem: tall column, NOT humanoid — distinct body shape entirely
+const THORNTOTEM    = [{ name: 'thorntotem_body' }, { name: 'thorntotem_face', palette: 'shadow' }, { name: 'thorntotem_thorns', palette: 'bone' }, { name: 'thorntotem_eye', palette: 'sporeglow' }];
 
 export const RECIPES = {
   hero: {
@@ -454,6 +464,12 @@ export const RECIPES = {
   flor_carnivora:       { archetype: 'blob',     size: 32, baseColor: 0x558b2f, parts: FLOWER },   // mossGreen
   pixie:                { archetype: 'floating', size: 32, baseColor: 0x8e24aa, parts: PIXIE },    // sporeViolet
   duende_ladron:        { archetype: 'humanoid', size: 32, baseColor: 0x558b2f, parts: GOBLIN },   // mossGreen
+  // Lote D — Gólems + Tótem de Espinas (siluetas distintas)
+  golem_lodo:      { archetype: 'beast',    size: 64, baseColor: 0x795548, parts: GOLEM_STONE },    // mudBrown — same blocky golem as piedra, mud-colored
+  golem_lodo_cria: { archetype: 'beast',    size: 32, baseColor: 0x795548, parts: GOLEM_MUDCRIA },  // mudBrown — tiny simple blob
+  golem_piedra:    { archetype: 'beast',    size: 64, baseColor: 0x9e9e9e, parts: GOLEM_STONE },    // stoneGrey — ANGULAR/BLOCKY
+  coloso_musgoso:  { archetype: 'beast',    size: 80, baseColor: 0x558b2f, parts: COLOSSUS },       // mossGreen — MASSIVE/BOULDER
+  totem_espinas:   { archetype: 'floating', size: 64, baseColor: 0x6d4c41, parts: THORNTOTEM },     // barkBrown — column totem
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
