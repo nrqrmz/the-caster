@@ -124,6 +124,13 @@ test('every earth boss + form has a recipe with known parts', () => {
   }
 });
 
+import { EARTH_ENEMIES } from '../../src/data/enemies/earth.js';
+
+test('no earth enemy retains geometric:true (world fully spritted)', () => {
+  const stillGeometric = Object.keys(EARTH_ENEMIES).filter((k) => EARTH_ENEMIES[k].geometric);
+  assert.deepEqual(stillGeometric, [], `earth enemies still geometric: ${stillGeometric.join(', ')}`);
+});
+
 // GLOBAL parity: every registered enemy type the game can spawn must have a sprite recipe.
 import { ENEMY_TYPES } from '../../src/data/enemies.js';
 

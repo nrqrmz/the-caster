@@ -266,6 +266,12 @@ const STORM_ELEM = [{ name: 'storm_body' }, { name: 'storm_bolts', palette: 'wis
 const DRYAD = [{ name: 'dryad_body' }, { name: 'dryad_hair', palette: 'leafgreen' }, { name: 'dryad_skin', palette: 'skin' }, { name: 'dryad_bloom', palette: 'sporeglow' }];
 const ENT   = [{ name: 'ent_trunk' }, { name: 'ent_canopy', palette: 'leafgreen' }, { name: 'ent_face', palette: 'shadow' }, { name: 'ent_eyes', palette: 'sporeglow' }];
 const GRIFFIN = [{ name: 'griffin_wings' }, { name: 'griffin_body' }, { name: 'griffin_talons', palette: 'gold' }, { name: 'griffin_head' }, { name: 'griffin_beak', palette: 'bone' }, { name: 'griffin_eyes', palette: 'glow' }];
+const CIRCE = [
+  { name: 'circe_throne', palette: 'petrified' }, { name: 'circe_throne_gold', palette: 'gold' },
+  { name: 'circe_staff', palette: 'wood' }, { name: 'circe_orb', palette: 'sporeglow' },
+  { name: 'circe_gown' }, { name: 'circe_hair', palette: 'blackhair' }, { name: 'circe_skin', palette: 'skin' },
+  { name: 'circe_crown', palette: 'glow' }, { name: 'circe_field', palette: 'sporeglow' },
+];
 
 // Earth: Lote E1 — jefes bestia (silueta propia por jefe)
 const ALPHAWOLF = [{ name: 'alpha_body' }, { name: 'alpha_mane' }, { name: 'alpha_head' }, { name: 'alpha_eyes', palette: 'vampglow' }];
@@ -490,6 +496,7 @@ export const RECIPES = {
   driada:        { archetype: 'boss', size: 96, baseColor: 0x558b2f, parts: DRYAD },                  // mossGreen (hechicera planta, nv6)
   ent_guardian:  { archetype: 'boss', size: 192, baseColor: 0x6d4c41, parts: ENT },                   // barkBrown (árbol guardián gigante, nv6 tank)
   grifo:         { archetype: 'boss', size: 128, baseColor: 0x6d4c41, parts: GRIFFIN, flip: true },   // barkBrown (águila-león alado, nv7 levelboss)
+  circe:         { archetype: 'boss', size: 128, baseColor: 0x8e24aa, parts: CIRCE },                 // sporeViolet (reina entronizada, nv8 templeboss)
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
