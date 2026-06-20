@@ -262,6 +262,12 @@ const WHIRL = [{ name: 'whirl_body' }];
 // and THREE glaring eyes (glow) across the left/center/right puffs.
 const STORM_ELEM = [{ name: 'storm_body' }, { name: 'storm_bolts', palette: 'wispglow' }, { name: 'storm_eyes', palette: 'glow' }];
 
+// Earth: Lote E1 — jefes bestia (silueta propia por jefe)
+const ALPHAWOLF = [{ name: 'alpha_body' }, { name: 'alpha_mane' }, { name: 'alpha_head' }, { name: 'alpha_eyes', palette: 'vampglow' }];
+const LELAPS_P  = [{ name: 'lelaps_body' }, { name: 'lelaps_legs' }, { name: 'lelaps_head' }, { name: 'lelaps_eyes', palette: 'glow' }];
+const HUNTER    = [{ name: 'hunter_body' }, { name: 'hunter_head' }, { name: 'hunter_javelin', palette: 'wood' }, { name: 'hunter_javelin_tip', palette: 'steel' }];
+const FELINE    = [{ name: 'feline_body' }, { name: 'feline_legs' }, { name: 'feline_head' }, { name: 'feline_eyes', palette: 'glow' }];
+
 // Earth: El Jardín de Circe — fodder beasts (quadruped/biped)
 const WOLF     = [{ name: 'wolf_body' }, { name: 'wolf_legs' }, { name: 'wolf_head' }, { name: 'wolf_eyes', palette: 'glow' }];
 const WEREWOLF = [{ name: 'werewolf_body' }, { name: 'werewolf_head' }, { name: 'werewolf_eyes', palette: 'glow' }];
@@ -470,6 +476,12 @@ export const RECIPES = {
   golem_piedra:    { archetype: 'beast',    size: 64, baseColor: 0x9e9e9e, parts: GOLEM_STONE },    // stoneGrey — ANGULAR/BLOCKY
   coloso_musgoso:  { archetype: 'beast',    size: 80, baseColor: 0x558b2f, parts: COLOSSUS },       // mossGreen — MASSIVE/BOULDER
   totem_espinas:   { archetype: 'floating', size: 64, baseColor: 0x6d4c41, parts: THORNTOTEM },     // barkBrown — column totem
+
+  // --- Earth bosses (silueta propia por jefe) ---
+  senor_lobo:    { archetype: 'boss', size: 96, baseColor: 0x5d4037, parts: ALPHAWOLF },             // beastFur (Alfa Licántropo, nv4)
+  lelaps:        { archetype: 'boss', size: 96, baseColor: 0x9e9e9e, parts: LELAPS_P, flip: true },  // stoneGrey (sabueso, nv5)
+  cefalo_humano: { archetype: 'boss', size: 96, baseColor: 0x6d4c41, parts: HUNTER },                // barkBrown (cazador, nv5)
+  cefalo_felino: { archetype: 'boss', size: 96, baseColor: 0xc9a24a, parts: FELINE, flip: true },    // león tawny/amarillento (felino, nv5)
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
