@@ -27,26 +27,22 @@ export const EARTH_ENEMIES = {
   // --- Bestias: fauna / resultado del transmute ---
   lobo: { key: 'lobo', tex: TEX.villager, color: COLORS.beastFur,
     hp: 30, speed: 130, damage: 11, radius: 16,
-    geometric: true,
     movement: { type: 'evade', range: 110 },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'mutateOnDeath', spawnType: 'sierva_jardin' }] },
 
   jabali: { key: 'jabali', tex: TEX.warrior, color: COLORS.mudBrown,
     hp: 60, speed: 100, damage: 16, radius: 18,
-    geometric: true,
     movement: { type: 'charge', windup: 450, dash: 340, recover: 500, dashMul: 3.0 },
     attacks: [{ type: 'melee' }] },
 
   oso_jardin: { key: 'oso_jardin', tex: TEX.warrior, color: COLORS.beastFur,
     hp: 150, speed: 70, damage: 20, radius: 22,
-    geometric: true,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }] },
 
   hombre_lobo: { key: 'hombre_lobo', tex: TEX.warrior, color: COLORS.beastFur,
     hp: 110, speed: 120, damage: 18, radius: 19,
-    geometric: true,
     movement: { type: 'evade', range: 140 },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'drain', heal: 6 }] },

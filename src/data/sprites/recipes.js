@@ -262,6 +262,12 @@ const WHIRL = [{ name: 'whirl_body' }];
 // and THREE glaring eyes (glow) across the left/center/right puffs.
 const STORM_ELEM = [{ name: 'storm_body' }, { name: 'storm_bolts', palette: 'wispglow' }, { name: 'storm_eyes', palette: 'glow' }];
 
+// Earth: El Jardín de Circe — fodder beasts (quadruped/biped)
+const WOLF     = [{ name: 'wolf_body' }, { name: 'wolf_legs' }, { name: 'wolf_head' }, { name: 'wolf_eyes', palette: 'glow' }];
+const WEREWOLF = [{ name: 'werewolf_body' }, { name: 'werewolf_head' }, { name: 'werewolf_eyes', palette: 'glow' }];
+const BOAR     = [{ name: 'boar_body' }, { name: 'boar_legs' }, { name: 'boar_head' }, { name: 'boar_tusks', palette: 'bone' }, { name: 'boar_eyes', palette: 'glow' }];
+const BEAR     = [{ name: 'bear_body' }, { name: 'bear_eyes', palette: 'glow' }];
+
 export const RECIPES = {
   hero: {
     // The redheaded princess. Each part composes against its own palette (per-part
@@ -426,6 +432,11 @@ export const RECIPES = {
   sierva_jardin:       { archetype: 'humanoid', size: 32, baseColor: 0xe0c0a0, parts: VILLAGER('blondhair') }, // fleshPale, huye
   ninfa_transmutadora: { archetype: 'humanoid', size: 32, baseColor: 0x8e24aa, parts: MAGE_CASTER('blackhair') }, // sporeViolet
   fuego_fatuo_pantano: { archetype: 'blob',     size: 32, baseColor: 0x558b2f, parts: BRASA },                 // mossGreen wisp
+  // Bestias fodder (Lote B) — transmutados de Circe
+  lobo:       { archetype: 'beast', size: 64, baseColor: 0x5d4037, parts: WOLF, flip: true },     // beastFur
+  hombre_lobo:{ archetype: 'beast', size: 64, baseColor: 0x5d4037, parts: WEREWOLF },             // beastFur (bípedo, sin flip)
+  jabali:     { archetype: 'beast', size: 64, baseColor: 0x795548, parts: BOAR, flip: true },     // mudBrown
+  oso_jardin: { archetype: 'beast', gridW: 40, gridH: 28, scale: 2, baseColor: 0x5d4037, parts: BEAR, flip: true }, // beastFur — landscape bear profile 80×56
 };
 
 export function hasRecipe(key) { return Object.prototype.hasOwnProperty.call(RECIPES, key); }
