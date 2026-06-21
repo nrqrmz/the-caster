@@ -1,6 +1,6 @@
 // src/scenes/BootScene.js
 import { COLORS, TEX } from '../config.js';
-import { RECIPES } from '../data/sprites/recipes.js';
+import { CORE_SPRITE_KEYS } from '../data/spriteManifest.js';
 import { bakeSprites } from './spriteBaker.js';
 
 export default class BootScene extends Phaser.Scene {
@@ -19,8 +19,8 @@ export default class BootScene extends Phaser.Scene {
     this.makeCircle(TEX.boss, COLORS.boss, 30);
     this.makeDiamond(TEX.temple, COLORS.temple, 26);
 
-    // Forge every sprite, then enter the menu. (Task 4 narrows this to CORE.)
-    bakeSprites(this, Object.keys(RECIPES)).then(() => this.scene.start('Menu'));
+    // Forge only CORE sprites, then enter the menu. Worlds forge their sets on demand.
+    bakeSprites(this, CORE_SPRITE_KEYS).then(() => this.scene.start('Menu'));
   }
 
   makeCircle(key, color, radius) {
