@@ -30,7 +30,7 @@ export default class MapScene extends Phaser.Scene {
       const y = 200 + row * 150;
       const region = REGIONS[id];
       const complete = isRegionComplete(save, region);
-      this.portal(x, y, t(region.name), PORTAL_ICON[id], complete, true, () => this.scene.start('Branch', { regionId: id }));
+      this.portal(x, y, t(region.name), PORTAL_ICON[id], complete, true, () => this.scene.start('Intro', { regionId: id }));
     });
 
     // Castle portal (gated by all 4 elements).

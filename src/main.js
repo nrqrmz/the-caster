@@ -1,6 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, DEBUG } from './config.js';
 import BootScene from './scenes/BootScene.js';
 import MenuScene from './scenes/MenuScene.js';
+import IntroScene from './scenes/IntroScene.js';
 import GameScene from './scenes/GameScene.js';
 import UIScene from './scenes/UIScene.js';
 import DialogueScene from './scenes/DialogueScene.js';
@@ -30,7 +31,7 @@ const config = {
     default: 'arcade',
     arcade: { debug: false },
   },
-  scene: [BootScene, MenuScene, GameScene, MapScene, BranchScene, UIScene, DialogueScene, SkillTreeScene, ShopScene, PauseScene, GameOverScene],
+  scene: [BootScene, MenuScene, IntroScene, GameScene, MapScene, BranchScene, UIScene, DialogueScene, SkillTreeScene, ShopScene, PauseScene, GameOverScene],
 };
 
 const game = new Phaser.Game(config);
