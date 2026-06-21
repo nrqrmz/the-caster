@@ -251,7 +251,7 @@ export function buildProjectiles(att, ctx) {
   } else if (att.type === 'shootBurst') {
     out.push({ angle: base, speed, damage });
   } else if (att.type === 'giantFireball') {
-    out.push({ angle: base, speed, damage, big: true });
+    out.push({ angle: base, speed, damage, big: true, size: att.size });
   }
   // melee and not-yet-implemented types produce no projectiles.
   return out;
