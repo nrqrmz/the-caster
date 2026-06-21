@@ -838,8 +838,9 @@ export default class GameScene extends Phaser.Scene {
       shot.setTint(spec.tint); // disparos enemigos distinguibles del orbe cian del jugador
       if (att.tint != null) shot.setTint(att.tint); // step-level tint override (Céfalo's wood javelin)
       if (p.big) {
-        shot.setDisplaySize(60, 60);                 // bola enorme reusando TEX.fireball (32px)
-        if (shot.body) shot.body.setCircle(28); // hitbox grande
+        const s = p.size ?? 60;                       // bola enorme reusando TEX.fireball (32px); size por fase
+        shot.setDisplaySize(s, s);
+        if (shot.body) shot.body.setCircle(Math.round(s * 0.46)); // hitbox ~ mitad del diámetro visual
       }
       if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; shot.homingLife = HOMING_TTL_MS; }
       if (eff && eff.kind === 'burn') { shot.burnDps = burnMod?.dps ?? eff.dps; shot.burnMs = burnMod?.ms ?? eff.ms; }

@@ -6,6 +6,7 @@ import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config.js';
 import { t } from '../i18n/index.js';
 import { REGIONS } from '../data/regions.js';
 import { regionSpriteKeys } from '../data/spriteManifest.js';
+import { SaveSystem } from '../systems/SaveSystem.js';
 import { bakeSprites } from './spriteBaker.js';
 
 export default class IntroScene extends Phaser.Scene {
@@ -17,15 +18,28 @@ export default class IntroScene extends Phaser.Scene {
     const region = REGIONS[this.regionId];
     this.cameras.main.setBackgroundColor(COLORS.bg);
 
+    // Show the lore only the first time this world is entered (persisted in save).
+    // The forge still runs every session, so a return visit becomes a silent
+    // load-and-advance screen instead of repeating the intro.
+    this.save = new SaveSystem(window.localStorage);
+    const state = this.save.load();
+    this.firstVisit = !(state.seenIntros || []).includes(this.regionId);
+    if (this.firstVisit) {
+      state.seenIntros = [...(state.seenIntros || []), this.regionId];
+      this.save.write(state);
+    }
+
     this.add.text(GAME_WIDTH / 2, 70, t(region.name), {
       fontFamily: 'sans-serif', fontSize: '26px', color: '#ffd54f', fontStyle: 'bold',
     }).setOrigin(0.5, 0);
 
-    const lore = (region.intro || []).map((l) => t(l.text)).join('\n\n');
-    this.add.text(GAME_WIDTH / 2, 140, lore, {
-      fontFamily: 'sans-serif', fontSize: '17px', color: '#ffffff',
-      align: 'center', wordWrap: { width: GAME_WIDTH - 60 }, lineSpacing: 6,
-    }).setOrigin(0.5, 0);
+    if (this.firstVisit) {
+      const lore = (region.intro || []).map((l) => t(l.text)).join('\n\n');
+      this.add.text(GAME_WIDTH / 2, 140, lore, {
+        fontFamily: 'sans-serif', fontSize: '17px', color: '#ffffff',
+        align: 'center', wordWrap: { width: GAME_WIDTH - 60 }, lineSpacing: 6,
+      }).setOrigin(0.5, 0);
+    }
 
     this.btn = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 90, 220, 56, 0x4fc3f7, 0.2)
       .setStrokeStyle(2, 0x4fc3f7).setInteractive();
@@ -44,6 +58,10 @@ export default class IntroScene extends Phaser.Scene {
     }).then(() => { this.baked = true; });
 
     this.btn.on('pointerdown', () => this.proceed());
+
+    // Return visit: don't make the player tap through lore they've read — auto-proceed
+    // (which reveals the loading bar and advances as soon as the forge finishes).
+    if (!this.firstVisit) this.proceed();
   }
 
   proceed() {

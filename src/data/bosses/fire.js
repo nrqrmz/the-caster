@@ -6,8 +6,9 @@ import { COLORS, TEX } from '../../config.js';
 
 // Pyra — daño: ráfagas en cono + el suelo se llena de lava. Kite a media distancia.
 export const PYRA = {
-  key: 'pyra', tex: TEX.boss, color: COLORS.emberDeep, hp: 500, speed: 55, damage: 20, radius: 24,
+  key: 'pyra', tex: TEX.boss, color: COLORS.emberDeep, hp: 1000, speed: 55, damage: 30, radius: 24,
   elite: true, movement: { type: 'kite', range: 240 },
+  modifiers: [{ type: 'shielded', reduce: 0.10 }],
   phases: [
     { from: 1.0, sequence: [
       { do: 'shootSpread', count: 5, arc: 80, speed: 230, damage: 12, telegraph: 320, dur: 700 },
@@ -24,9 +25,9 @@ export const PYRA = {
 
 // Vesta — tanque/melee: embiste (charge), su contacto quema (onHitBurn), escudo.
 export const VESTA = {
-  key: 'vesta', tex: TEX.boss, color: COLORS.magma, hp: 680, speed: 80, damage: 36, radius: 26,
+  key: 'vesta', tex: TEX.boss, color: COLORS.magma, hp: 2000, speed: 100, damage: 40, radius: 32,
   elite: true, movement: { type: 'charge', windup: 600, dash: 420, recover: 700, dashMul: 3 },
-  modifiers: [{ type: 'onHitBurn', dps: 10, ms: 2500 }, { type: 'shielded', reduce: 0.3 }],
+  modifiers: [{ type: 'onHitBurn', dps: 10, ms: 2500 }, { type: 'shielded', reduce: 0.35 }],
   phases: [
     { from: 1.0, sequence: [
       { do: 'wait', dur: 1300 },
@@ -41,7 +42,7 @@ export const VESTA = {
 
 // Favilla — summoner/healer: invoca adds y cura (healAllies); huye, protegida.
 export const FAVILLA = {
-  key: 'favilla', tex: TEX.boss, color: COLORS.totemFire, hp: 500, speed: 70, damage: 10, radius: 24,
+  key: 'favilla', tex: TEX.boss, color: COLORS.totemFire, hp: 1000, speed: 70, damage: 20, radius: 24,
   elite: true, movement: { type: 'erratic' },
   modifiers: [{ type: 'healAllies', hps: 14, radius: 160 }],
   phases: [
@@ -84,13 +85,13 @@ const trio = (def, hp, movement, seq, soloSequence) => ({
 });
 const SOLO_LAVA = { do: 'lobAoe', radius: 64, dps: 22, duration: 3500, telegraph: 500, dur: 900 };
 export const SISTERS_TRIO = [
-  trio(PYRA, 360, { type: 'kite', range: 240 },
+  trio(PYRA, 720, { type: 'kite', range: 240 },
     calmTrio(stripFloorAndAdds(PYRA.phases[0].sequence)),
     [SOLO_LAVA, { do: 'shootSpread', count: 6, arc: 90, speed: 240, damage: 14, telegraph: 320, dur: 700 }]),
-  trio(VESTA, 480, { type: 'chase' },
+  trio(VESTA, 1200, { type: 'chase' },
     calmTrio(stripFloorAndAdds(VESTA.phases[0].sequence)),
     [SOLO_LAVA, { do: 'shootStraight', speed: 260, damage: 12, telegraph: 250, dur: 600 }]),
-  trio(FAVILLA, 300, { type: 'kite', range: 240 },
+  trio(FAVILLA, 600, { type: 'kite', range: 240 },
     calmTrio(stripFloorAndAdds(FAVILLA.phases[1].sequence)),
     [SOLO_LAVA, { do: 'nova', count: 12, speed: 200, damage: 10, telegraph: 400, dur: 800 }]),
 ];
@@ -99,26 +100,26 @@ export const SISTERS_TRIO = [
 // secuenciador; las fases 2/3 rompen el suelo en lava (enter: spawnLavaFloor).
 // (El beam rotatorio de la fase 3 se aproxima con nova+lobAoe densos.)
 export const IGNATIUS = {
-  key: 'ignatius', tex: TEX.boss, color: COLORS.fireball, hp: 1300, speed: 55, damage: 22, radius: 30,
+  key: 'ignatius', tex: TEX.boss, color: COLORS.fireball, hp: 2700, speed: 55, damage: 22, radius: 30,
   elite: true, movement: { type: 'kite', range: 220 },
   modifiers: [{ type: 'onHitBurn', dps: 12, ms: 2500 }],
   phases: [
     { from: 1.0, sequence: [
       { do: 'shootSpread', count: 6, arc: 90, speed: 240, damage: 14, telegraph: 320, dur: 700 },
-      { do: 'giantFireball', projectile: 'fire', speed: 120, damage: 28, telegraph: 600, dur: 900 },
+      { do: 'giantFireball', projectile: 'fire', size: 60, speed: 120, damage: 40, telegraph: 600, dur: 900 },
       { do: 'shootHoming', speed: 130, damage: 12, telegraph: 350, dur: 900 },
       { do: 'wait', dur: 400 },
     ] },
-    { from: 0.66, enter: ['spawnLavaFloor', 'startLavaRiver'], sequence: [
+    { from: 0.70, enter: ['spawnLavaFloor', 'startLavaRiver'], sequence: [
       { do: 'nova', count: 12, speed: 220, damage: 13, telegraph: 350, dur: 700 },
-      { do: 'summon', spawnTypes: ['brasa_errante', 'elemental_fuego', 'espiritu_ceniza'], count: 1, cap: 3, respawnMs: 20000, capKey: 'ignatius_adds', dur: 900 },
-      { do: 'giantFireball', projectile: 'fire', speed: 120, damage: 30, telegraph: 550, dur: 900 },
+      { do: 'summon', spawnTypes: ['brasa_errante', 'elemental_fuego', 'espiritu_ceniza'], count: 2, cap: 5, respawnMs: 20000, capKey: 'ignatius_adds', dur: 900 },
+      { do: 'giantFireball', projectile: 'fire', size: 90, speed: 120, damage: 50, telegraph: 550, dur: 900 },
       { do: 'shootSpread', count: 8, arc: 120, speed: 250, damage: 14, telegraph: 300, dur: 700 },
     ] },
-    { from: 0.33, speedMul: 1.35, enter: ['spawnLavaFloor', 'startLavaRiver'], sequence: [
+    { from: 0.35, speedMul: 1.35, enter: ['spawnLavaFloor', 'startLavaRiver'], sequence: [
       { do: 'nova', count: 16, speed: 240, damage: 14, telegraph: 280, dur: 600 },
-      { do: 'summon', spawnTypes: ['brasa_errante', 'elemental_fuego', 'espiritu_ceniza'], count: 1, cap: 3, respawnMs: 20000, capKey: 'ignatius_adds', dur: 800 },
-      { do: 'giantFireball', projectile: 'fire', speed: 130, damage: 32, telegraph: 450, dur: 800 },
+      { do: 'summon', spawnTypes: ['brasa_errante', 'elemental_fuego', 'espiritu_ceniza'], count: 2, cap: 5, respawnMs: 20000, capKey: 'ignatius_adds', dur: 800 },
+      { do: 'giantFireball', projectile: 'fire', size: 120, speed: 130, damage: 60, telegraph: 450, dur: 800 },
       { do: 'shootHoming', speed: 150, damage: 13, telegraph: 250, dur: 600 },
     ] },
   ],

@@ -19,10 +19,11 @@ test('fire: includes wave enemies, bosses, and transitive summons', () => {
   assert.ok(fire.has('brasa_errante'), 'expected transitive summon brasa_errante');
 });
 
-test('fire: excludes defs no wave or boss references', () => {
+test('fire: includes formerly-unused defs now placed in waves', () => {
+  // encapuchado_pira (nv3), portaestandarte (nv4), fenix_menor (nv5), coloso_magma (nv6)
   const fire = regionSpriteKeys(REGIONS.fire);
   for (const k of ['encapuchado_pira', 'portaestandarte', 'coloso_magma', 'fenix_menor']) {
-    assert.ok(!fire.has(k), `expected fire to exclude unused ${k}`);
+    assert.ok(fire.has(k), `expected fire to include now-placed ${k}`);
   }
 });
 

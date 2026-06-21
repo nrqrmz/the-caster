@@ -28,17 +28,57 @@ function interWaves(tier) {
 }
 
 // Fire waves: denser, mostly ranged, with a melee rusher that forces movement.
+// Escalonado por tier (como agua/aire/tierra): cada nivel presenta criaturas
+// nuevas para que ningún nivel repita el mismo roster.
+// Regla de oleadas (fuego): cada ola consecutiva es MÁS grande que la anterior;
+// toda ola mezcla ≥3 tipos; la ola 3 es el clímax (más cantidad, más variedad y
+// las criaturas más duras del nivel). El roster crece por tier (intro escalonada).
 function fireWaves(tier) {
+  if (tier === 1) {
+    // Nv1: introductorio — acólito (ancla a distancia) + iniciado_veloz (rusher) + salamandra.
+    return [
+      wave(620, [{ type: 'acolito_brasa', count: 4 }, { type: 'iniciado_veloz', count: 2 }, { type: 'salamandra', count: 2 }]),
+      wave(540, [{ type: 'acolito_brasa', count: 4 }, { type: 'salamandra', count: 4 }, { type: 'iniciado_veloz', count: 3 }]),
+      wave(470, [{ type: 'acolito_brasa', count: 5 }, { type: 'salamandra', count: 5 }, { type: 'iniciado_veloz', count: 5 }]),
+    ];
+  }
+  if (tier === 2) {
+    // Nv2: añade lanzabrasas (abanico), larva_magma (explota), espíritu_ceniza.
+    return [
+      wave(600, [{ type: 'acolito_brasa', count: 4 }, { type: 'lanzabrasas', count: 3 }, { type: 'iniciado_veloz', count: 2 }, { type: 'larva_magma', count: 2 }]),
+      wave(520, [{ type: 'lanzabrasas', count: 4 }, { type: 'salamandra', count: 4 }, { type: 'espiritu_ceniza', count: 3 }, { type: 'larva_magma', count: 3 }]),
+      wave(450, [{ type: 'acolito_brasa', count: 4 }, { type: 'lanzabrasas', count: 4 }, { type: 'larva_magma', count: 4 }, { type: 'espiritu_ceniza', count: 3 }, { type: 'salamandra', count: 3 }]),
+    ];
+  }
+  // Nv3: añade piromante (ráfaga), pirovidente (homing), encapuchado_pira (charcos) + sacerdote_llama (healer) en el clímax.
   return [
-    wave(560, [{ type: 'acolito_brasa', count: ramp(3, tier) }, { type: 'iniciado_veloz', count: ramp(2, tier) }, { type: 'lanzabrasas', count: tier }]),
-    wave(520, [{ type: 'lanzabrasas', count: ramp(2, tier) }, { type: 'salamandra', count: ramp(2, tier) }, { type: 'larva_magma', count: tier }]),
-    wave(480, [{ type: 'piromante', count: tier + 1 }, { type: 'pirovidente', count: tier }, { type: 'espiritu_ceniza', count: ramp(2, tier) }]),
+    wave(580, [{ type: 'piromante', count: 3 }, { type: 'lanzabrasas', count: 3 }, { type: 'iniciado_veloz', count: 3 }, { type: 'salamandra', count: 4 }]),
+    wave(500, [{ type: 'piromante', count: 4 }, { type: 'pirovidente', count: 3 }, { type: 'encapuchado_pira', count: 2 }, { type: 'larva_magma', count: 4 }, { type: 'iniciado_veloz', count: 3 }]),
+    wave(430, [{ type: 'sacerdote_llama', count: 1 }, { type: 'piromante', count: 4 }, { type: 'pirovidente', count: 3 }, { type: 'encapuchado_pira', count: 3 }, { type: 'larva_magma', count: 4 }, { type: 'espiritu_ceniza', count: 3 }]),
   ];
 }
 function fireInterWaves(tier) {
+  // Intermedios: densos y retadores (≥36 enemigos entre ola 1 y 2, antes del
+  // miniboss) y escalando nv4 < nv5 < nv6. Combos duros: healers que hay que
+  // matar primero, blindados/tanques que aguantan, enjambres y homing simultáneos.
+  if (tier === 2) {
+    // Nv4 (~36): muro de blindados + healer + estandarte que potencia el aura. Foco: el sacerdote.
+    return [
+      wave(520, [{ type: 'caballero_brasa', count: 3 }, { type: 'sacerdote_llama', count: 1 }, { type: 'can_lava', count: 3 }, { type: 'acolito_brasa', count: 6 }, { type: 'piromante', count: 3 }]),
+      wave(440, [{ type: 'portaestandarte', count: 1 }, { type: 'caballero_brasa', count: 3 }, { type: 'sacerdote_llama', count: 2 }, { type: 'can_lava', count: 4 }, { type: 'piromante', count: 5 }, { type: 'acolito_brasa', count: 5 }]),
+    ];
+  }
+  if (tier === 3) {
+    // Nv5 (~42): doble fénix (revive) sostenido por doble healer + enjambre + homing. Puzzle de prioridad.
+    return [
+      wave(500, [{ type: 'elemental_fuego', count: 1 }, { type: 'sacerdote_llama', count: 1 }, { type: 'avispa_brasa', count: 6 }, { type: 'piromante', count: 5 }, { type: 'pirovidente', count: 5 }]),
+      wave(420, [{ type: 'fenix_menor', count: 2 }, { type: 'elemental_fuego', count: 2 }, { type: 'sacerdote_llama', count: 2 }, { type: 'avispa_brasa', count: 8 }, { type: 'piromante', count: 6 }, { type: 'pirovidente', count: 4 }]),
+    ];
+  }
+  // Nv6 (~48): clímax — doble coloso (tanque blindado) + torretas + carga + enjambre denso.
   return [
-    wave(500, [{ type: 'acolito_brasa', count: ramp(3, tier) }, { type: 'caballero_brasa', count: 1 }, { type: 'sacerdote_llama', count: 1 }, { type: 'can_lava', count: tier }]),
-    wave(440, [{ type: 'piromante', count: ramp(2, tier) }, { type: 'elemental_fuego', count: 1 }, { type: 'avispa_brasa', count: ramp(3, tier) }, { type: 'totem_pira', count: 1 }]),
+    wave(480, [{ type: 'coloso_magma', count: 1 }, { type: 'totem_pira', count: 1 }, { type: 'caballero_brasa', count: 4 }, { type: 'can_lava', count: 5 }, { type: 'avispa_brasa', count: 6 }, { type: 'piromante', count: 4 }]),
+    wave(400, [{ type: 'coloso_magma', count: 2 }, { type: 'totem_pira', count: 1 }, { type: 'elemental_fuego', count: 2 }, { type: 'caballero_brasa', count: 3 }, { type: 'can_lava', count: 4 }, { type: 'avispa_brasa', count: 9 }, { type: 'piromante', count: 6 }]),
   ];
 }
 
