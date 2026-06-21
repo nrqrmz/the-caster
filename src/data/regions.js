@@ -219,7 +219,7 @@ function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines
       ? { levelBoss }
       : { levelBoss: lb(650, 24) };
   const levels = [
-    makeLevel(`${id}_1`, id, 'basic', { waves: basic(1), dialogue: { onEnter: intro } }),
+    makeLevel(`${id}_1`, id, 'basic', { waves: basic(1) }),
     makeLevel(`${id}_2`, id, 'basic', { waves: basic(2) }),
     makeLevel(`${id}_3`, id, 'basic', { waves: basic(3) }),
     makeLevel(`${id}_4`, id, 'intermediate', { waves: inter(2), miniboss: minibosses[0] || mb(300, 18) }),
@@ -232,7 +232,7 @@ function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines
       dialogue: { onClear: onClear || mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'speaker.caster' : mageName, text })) },
     }),
   ];
-  return { id, element, name, grantsSkill, locked: false, levels };
+  return { id, element, name, grantsSkill, locked: false, levels, intro };
 }
 
 // The castle: 5 hard levels; final 'temple' phase is the King (puppet) reveal.

@@ -1,6 +1,6 @@
 // English locale. Keys mirror es.js exactly (enforced by tests/i18n.test.js).
 export default {
-  ui: { tap: '▶ tap' },
+  ui: { tap: '▶ tap', continue: 'Continue', loading: 'Forging…' },
   pause: { title: 'PAUSED', resume: '▶  Resume', abandon: '⌂  Abandon level' },
   gameover: { title: 'YOU HAVE FALLEN', retry: '↻  Retry', map: '⌂  Back to map' },
   menu: {
