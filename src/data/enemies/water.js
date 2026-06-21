@@ -108,7 +108,7 @@ export const WATER_ENEMIES = {
   // spawnType 'medusa_cria' is the scaled-down copy: hp×0.75, radius×0.7, same kit
   // minus the splitsOnDeath modifier (Plan 1 sets the no-re-split flag on children).
   medusa: { key: 'medusa', tex: TEX.villager, color: COLORS.jellyfish,
-    hp: 80, speed: 55, damage: 10, radius: 18,
+    hp: 50, speed: 55, damage: 10, radius: 18,
     movement: { type: 'chase' },
     attacks: [],
     modifiers: [
@@ -179,7 +179,7 @@ export const WATER_ENEMIES = {
   // #20 — Tortuga Acorazada: charge + heavy shield + resist (flat damage reduction).
   // resist: 0.35 means incoming damage is multiplied by (1 - 0.35) = 0.65 (Plan 1).
   tortuga_acorazada: { key: 'tortuga_acorazada', tex: TEX.warrior, color: COLORS.turtleGreen,
-    hp: 220, speed: 60, damage: 30, radius: 21,
+    hp: 220, speed: 60, damage: 30, radius: 30,
     movement: { type: 'charge', windup: 600, dash: 450, recover: 750, dashMul: 2.8 },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'shielded', reduce: 0.55 }, { type: 'resist', factor: 0.35 }] },

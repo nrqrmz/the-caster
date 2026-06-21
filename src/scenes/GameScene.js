@@ -200,7 +200,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   spawnBoss(def) {
-    this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.diff));
+    // anchorY (0..1, fracción desde arriba) ancla a un jefe estático en su sitio
+    // (p. ej. el Kraken al 25% = 75% desde abajo). Sin ella, entra desde y=-40.
+    const startY = def.anchorY != null ? GAME_HEIGHT * def.anchorY : -40;
+    this.boss = new Boss(this, GAME_WIDTH / 2, startY, scaleEnemyDef(def, this.diff));
     this.enemies.add(this.boss);
     this.bosses = [this.boss];
     // Oversized single-def bosses (e.g. Elemental de Tormenta, radius 56) need their

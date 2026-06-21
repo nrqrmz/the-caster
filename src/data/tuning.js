@@ -67,8 +67,8 @@ export const BURROW_SURFACE_MS = 2500;        // ventana de superficie/persecuci
 export const BURROW_RECOVER_MS = 600;         // (legacy; ya no usado por el nuevo flujo)
 
 // Frog lifecycle (generational summon).
-export const EGG_HATCH_MS = 2500;             // egg → tadpole (antes 3500)
-export const TADPOLE_GROW_MS = 4000;          // tadpole → adult frog (antes 6000)
+export const EGG_HATCH_MS = 1500;             // egg → tadpole (antes 2500) — desove más agresivo
+export const TADPOLE_GROW_MS = 2500;          // tadpole → adult frog (antes 4000) — madura más rápido
 
 // Río de lava de Ignatius (hazard de línea a pantalla completa).
 export const LAVA_RIVER_COOLDOWN_MS = 13000;  // espera entre activaciones (fases 2-3)
