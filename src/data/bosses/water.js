@@ -10,7 +10,7 @@ import { COLORS, TEX } from '../../config.js';
 // punish the recovery; slow-on-hit makes repositioning expensive.
 export const SOLDADO_HIELO = {
   key: 'soldado_hielo', tex: TEX.miniboss, color: COLORS.ice,
-  hp: 480, speed: 80, damage: 20, radius: 24,
+  hp: 960, speed: 80, damage: 20, radius: 24,
   elite: true,
   movement: { type: 'charge', windup: 700, dash: 440, recover: 800, dashMul: 2.8 },
   modifiers: [
@@ -23,7 +23,7 @@ export const SOLDADO_HIELO = {
       { do: 'dashStrike', damage: 18, range: 60, telegraph: 300, dur: 400 }, // lands onHitSlow via modifier
       { do: 'wait', dur: 800 },                                              // recover (vulnerable window)
       { do: 'shootStraight', speed: 250, damage: 12, telegraph: 280, dur: 600 },
-      { do: 'summon', spawnType: 'guardia_hielo', count: 2, cap: 2, respawnMs: 15000, dur: 800 },
+      { do: 'summon', spawnType: 'guardia_hielo', count: 2, cap: 2, respawnMs: 15000, dur: 800 }, // melee slow squad
     ] },
     { from: 0.5, speedMul: 1.25, sequence: [
       { do: 'wait', dur: 500 },
@@ -32,6 +32,8 @@ export const SOLDADO_HIELO = {
       { do: 'dashStrike', damage: 18, range: 60, telegraph: 240, dur: 350 }, // double charge
       { do: 'wait', dur: 700 },                                              // recover
       { do: 'shootStraight', speed: 270, damage: 13, telegraph: 250, dur: 550 },
+      // Refuerzo a distancia que TAMBIÉN ralentiza: el acólito dispara hielo (slow por proyectil en región agua).
+      { do: 'summon', spawnType: 'acolito_escarcha', count: 2, cap: 3, capKey: 'soldado_acolitos', respawnMs: 12000, dur: 700 },
     ] },
   ],
 };
@@ -41,9 +43,10 @@ export const SOLDADO_HIELO = {
 // passivity. Kill eggs before they mature; CONCURRENCY_CAP (16) is the ceiling.
 export const SAPO_DESOVADOR = {
   key: 'sapo_desovador', tex: TEX.miniboss, color: COLORS.poison,
-  hp: 440, speed: 80, damage: 20, radius: 26,
+  hp: 880, speed: 80, damage: 20, radius: 26,
   elite: true,
   movement: { type: 'strafe', range: 280, strafeSpeed: 55 },
+  modifiers: [{ type: 'shielded', reduce: 0.30 }],
   phases: [
     { from: 1.0, sequence: [
       { do: 'summon', spawnType: 'huevo_sapo', count: 1, telegraph: 400, dur: 800 }, // lays one egg
@@ -64,20 +67,23 @@ export const SAPO_DESOVADOR = {
 // the recovery.
 export const TIBURON_ABISAL = {
   key: 'tiburon_abisal', tex: TEX.miniboss, color: COLORS.caster,
-  hp: 520, speed: 85, damage: 30, radius: 38,
+  hp: 720, speed: 85, damage: 30, radius: 38,
   elite: true,
   movement: { type: 'burrow', submergeMs: 1600, emergeMs: 450, surfaceMs: 2500 },
   phases: [
     { from: 1.0, sequence: [
       { do: 'dashStrike', damage: 22, range: 70, telegraph: 400, dur: 450 }, // telegraphed by emerge ring
       { do: 'wait', dur: 700 },                                               // recover (vulnerable)
-      { do: 'summon', spawnType: 'tiburon_joven', count: 1, cap: 1, respawnMs: 15000, dur: 800 },
+      // Arrastra un cardumen de medusas desde las profundidades (hasta 6, de 2 en 2).
+      { do: 'summon', spawnType: 'medusa', count: 2, cap: 6, capKey: 'abisal_medusas', respawnMs: 9000, dur: 800 },
     ] },
     { from: 0.4, speedMul: 1.3, sequence: [
       { do: 'dashStrike', damage: 22, range: 70, telegraph: 280, dur: 380 }, // frenzy: shorter submerge + faster emerge
       { do: 'wait', dur: 400 },
       { do: 'dashStrike', damage: 22, range: 70, telegraph: 280, dur: 380 }, // double strike
       { do: 'wait', dur: 500 },
+      // Magos de escarcha que disparan hielo (slow a distancia): hasta 4, de 2 en 2.
+      { do: 'summon', spawnType: 'acolito_escarcha', count: 2, cap: 4, capKey: 'abisal_magos', respawnMs: 9000, dur: 700 },
     ] },
   ],
 };
@@ -93,9 +99,11 @@ export const TIBURON_ABISAL = {
 // + invisible, no fin) for a window and summon a deep minion — a DPS-denial beat, not movement.
 export const KRAKEN = {
   key: 'kraken', tex: TEX.boss, color: COLORS.miniboss,
-  hp: 1300, speed: 28, damage: 20, radius: 42, // doubled (was 650) — a true levelBoss, not a miniboss
+  hp: 2000, speed: 28, damage: 20, radius: 42,
   elite: true,
+  modifiers: [{ type: 'shielded', reduce: 0.20 }], // setpiece masivo: aguanta
   movement: { type: 'static' }, // anchored — the whirlpool, tentacles and submerges do the work
+  anchorY: 0.25, // se ancla al 25% desde arriba (≡ 75% desde abajo), no pegado al borde superior
   phases: [
     // p1: sustained whirlpool + tentacles + jellyfish adds (capped). No submerge yet.
     { from: 1.0, enter: ['sustainWhirlpool'], sequence: [
@@ -134,14 +142,14 @@ export const KRAKEN = {
 // All forms carry elite: true; FormSequencer enforces CC immunity.
 //
 // HP per form (starting values, tuned in playtest):
-//   maga=340  tiburon=460  kraken=580  ballena=720  maga_final=20
+//   maga=410  tiburon=560  kraken=700  ballena=870  maga_final=390 (+20% ceil-decena)
 //
 // resist per form (0 = no reduction, 1 = immune):
 //   maga=0  tiburon=0.10  kraken=0.20  ballena=0.30  maga_final=0
 
 const DAMA_MAGA = {
   key: 'dama_maga', tex: TEX.boss, color: COLORS.ice,
-  hp: 340, speed: 70, damage: 14, radius: 26, resist: 0,
+  hp: 410, speed: 70, damage: 14, radius: 26, resist: 0,
   elite: true, iceImmune: true, // Madame Le Fay — immune to ice (her own element)
   movement: { type: 'kite', range: 240 },
   phases: [
@@ -161,7 +169,7 @@ const DAMA_MAGA = {
 
 const DAMA_TIBURON = {
   key: 'dama_tiburon', tex: TEX.boss, color: COLORS.caster,
-  hp: 460, speed: 90, damage: 20, radius: 38, resist: 0.10,
+  hp: 560, speed: 90, damage: 20, radius: 38, resist: 0.10,
   elite: true, iceImmune: true,
   movement: { type: 'burrow', submergeMs: 1400, emergeMs: 450, surfaceMs: 2200 },
   phases: [
@@ -180,7 +188,7 @@ const DAMA_TIBURON = {
 
 const DAMA_KRAKEN = {
   key: 'dama_kraken', tex: TEX.boss, color: COLORS.miniboss,
-  hp: 580, speed: 30, damage: 18, radius: 38, resist: 0.20,
+  hp: 700, speed: 30, damage: 18, radius: 38, resist: 0.20,
   elite: true, iceImmune: true,
   movement: { type: 'static' },
   phases: [
@@ -202,7 +210,7 @@ const DAMA_KRAKEN = {
 
 const DAMA_BALLENA = {
   key: 'dama_ballena', tex: TEX.boss, color: COLORS.boss,
-  hp: 720, speed: 22, damage: 24, radius: 50, resist: 0.30,
+  hp: 870, speed: 22, damage: 24, radius: 50, resist: 0.30,
   elite: true, iceImmune: true,
   movement: { type: 'chase' }, // slow chase — the wall
   phases: [
@@ -230,7 +238,7 @@ const DAMA_BALLENA = {
 // FormSequencer revert-to-maga on ballena death produces this form.
 const DAMA_MAGA_FINAL = {
   key: 'dama_maga_final', tex: TEX.boss, color: COLORS.ice,
-  hp: 320, speed: 55, damage: 10, radius: 24, resist: 0,
+  hp: 390, speed: 55, damage: 10, radius: 24, resist: 0,
   elite: true, iceImmune: true,
   movement: { type: 'kite', range: 240 },
   phases: [
@@ -246,7 +254,7 @@ const DAMA_MAGA_FINAL = {
 // defaults used before the sequencer is active (first form takes over on init).
 export const DAMA_LAGO = {
   key: 'dama_lago', tex: TEX.boss, color: COLORS.ice,
-  hp: 340, speed: 70, damage: 14, radius: 26,
+  hp: 410, speed: 70, damage: 14, radius: 26,
   elite: true, iceImmune: true, // Madame Le Fay — immune to ice (her own element)
   scaleForms: true, // forms' hp/damage scale with difficulty (temple-boss tier), like every other boss
   movement: { type: 'kite', range: 240 },

@@ -17,7 +17,9 @@ export const CORE_SPRITE_KEYS = [
 ];
 
 function addSummons(step, out, queue) {
-  for (const k of [step.spawnType, ...(step.spawnTypes || [])]) {
+  // spawnType(s) plus growType (a summoned creature that MATURES into another,
+  // e.g. Náyade's renacuajo → sapo_escupidor) all need forging.
+  for (const k of [step.spawnType, step.growType, ...(step.spawnTypes || [])]) {
     if (k && !out.has(k)) { out.add(k); queue.push(k); }
   }
 }
@@ -62,6 +64,12 @@ export function regionSpriteKeys(region) {
   while (queue.length) {
     const def = ENEMY_TYPES[queue.pop()];
     if (!def) continue;
+    // Generational lifecycle: an egg hatches (_hatchType) and a tadpole matures
+    // (_growType) into creatures that are never spawned directly — forge them too,
+    // else the matured form (e.g. sapo_adulto from the Sapo Desovador) is missing.
+    for (const k of [def._hatchType, def._growType]) {
+      if (k && !out.has(k)) { out.add(k); queue.push(k); }
+    }
     for (const att of def.attacks || []) if (att.type === 'summon') addSummons(att, out, queue);
   }
 

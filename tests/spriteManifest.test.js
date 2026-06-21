@@ -42,6 +42,16 @@ test('castle needs no forged sprite beyond core', () => {
   }
 });
 
+test('water: generational lifecycle forms are forged (egg→tadpole→adult + Náyade grow)', () => {
+  const water = regionSpriteKeys(REGIONS.water);
+  // Sapo Desovador summons huevo_sapo → hatches renacuajo → matures sapo_adulto.
+  for (const k of ['huevo_sapo', 'renacuajo', 'sapo_adulto']) {
+    assert.ok(water.has(k), `expected water lifecycle form ${k} (else missing sprite at runtime)`);
+  }
+  // Náyade's renacuajos mature into sapo_escupidor via summon growType.
+  assert.ok(water.has('sapo_escupidor'), 'expected Náyade grow target sapo_escupidor');
+});
+
 test('shapeshifter forms are included (water Dama, air Galahad, earth Cefalo)', () => {
   const water = regionSpriteKeys(REGIONS.water);
   for (const k of ['dama_lago', 'dama_maga', 'dama_tiburon', 'dama_kraken', 'dama_ballena', 'dama_maga_final']) {

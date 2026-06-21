@@ -82,58 +82,57 @@ function fireInterWaves(tier) {
   ];
 }
 
-// Water waves: control + attrition (more HP, healers, mobility threats).
-// Composition rule — anchor (healer/slower) + filler (ahogados/renacuajos)
-//                  + mobility threat (burrow shark or charger).
-// Tier 1 = only nv1 introductory creatures; tiers 2–3 add healers + frogs;
-// tiers 4–6 add heavy beasts. See spec §3.4 intro schedule.
+// Regla de oleadas (agua): cada ola consecutiva es MÁS grande que la anterior;
+// toda ola mezcla ≥3 tipos; la ola 3 es el clímax. El roster crece por tier.
+// La cadena generacional (huevo→renacuajo→sapo_adulto) es EXCLUSIVA del Sapo
+// Desovador (nv5 miniboss): el renacuajo ya no es relleno de oleadas.
 function waterWaves(tier) {
   if (tier === 1) {
-    // Nv1: Ahogado filler + Acólito (slow anchor). No mobility threat yet.
+    // Nv1: introductorio — Ahogado (relleno) + Acólito (ancla a distancia) + Lanzahielos.
     return [
-      wave(700, [{ type: 'ahogado', count: ramp(4, tier) }, { type: 'acolito_escarcha', count: ramp(2, tier) }]),
-      wave(650, [{ type: 'ahogado', count: ramp(3, tier) }, { type: 'lanzahielos', count: tier }]),
-      wave(600, [{ type: 'acolito_escarcha', count: ramp(2, tier) }, { type: 'lanzahielos', count: tier }, { type: 'ahogado', count: ramp(2, tier) }]),
+      wave(620, [{ type: 'ahogado', count: 4 }, { type: 'acolito_escarcha', count: 2 }, { type: 'lanzahielos', count: 2 }]),
+      wave(540, [{ type: 'ahogado', count: 5 }, { type: 'acolito_escarcha', count: 3 }, { type: 'lanzahielos', count: 3 }]),
+      wave(470, [{ type: 'ahogado', count: 6 }, { type: 'acolito_escarcha', count: 4 }, { type: 'lanzahielos', count: 4 }]),
     ];
   }
   if (tier === 2) {
-    // Nv2: Introduce Sacerdotisa (anchor/kill-priority) + Renacuajo filler.
+    // Nv2: introduce Sacerdotisa (healer / prioridad de kill).
     return [
-      wave(670, [{ type: 'ahogado', count: ramp(3, tier) }, { type: 'acolito_escarcha', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(2, tier) }]),
-      wave(630, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: ramp(3, tier) }, { type: 'lanzahielos', count: tier }]),
-      wave(580, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'acolito_escarcha', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(3, tier) }]),
+      wave(600, [{ type: 'ahogado', count: 5 }, { type: 'acolito_escarcha', count: 3 }, { type: 'lanzahielos', count: 3 }]),
+      wave(520, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: 6 }, { type: 'acolito_escarcha', count: 3 }, { type: 'lanzahielos', count: 3 }]),
+      wave(450, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: 6 }, { type: 'acolito_escarcha', count: 4 }, { type: 'lanzahielos', count: 5 }]),
     ];
   }
-  // Tier 3: Nv3 — introduce Vidente (forcing dodge), Sapo Escupidor, Rana Saltarina.
+  // Nv3: introduce Vidente (homing), Rana Saltarina (rápida), Sapo Escupidor (veneno a distancia).
   return [
-    wave(640, [{ type: 'ahogado', count: ramp(3, tier) }, { type: 'vidente_marea', count: tier }, { type: 'rana_saltarina', count: ramp(2, tier) }]),
-    wave(600, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'sapo_escupidor', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(2, tier) }]),
-    wave(550, [{ type: 'lanzahielos', count: tier }, { type: 'vidente_marea', count: tier }, { type: 'rana_saltarina', count: ramp(2, tier) }, { type: 'ahogado', count: ramp(2, tier) }]),
+    wave(580, [{ type: 'ahogado', count: 4 }, { type: 'lanzahielos', count: 3 }, { type: 'vidente_marea', count: 3 }, { type: 'rana_saltarina', count: 3 }]),
+    wave(500, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: 4 }, { type: 'vidente_marea', count: 3 }, { type: 'rana_saltarina', count: 4 }, { type: 'sapo_escupidor', count: 4 }]),
+    wave(430, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: 4 }, { type: 'vidente_marea', count: 4 }, { type: 'rana_saltarina', count: 4 }, { type: 'sapo_escupidor', count: 3 }, { type: 'acolito_escarcha', count: 3 }]),
   ];
 }
 
 function waterInterWaves(tier) {
+  // Intermedios: densos y retadores (≥36 entre ola 1 y 2, antes del miniboss),
+  // escalando nv4 < nv5 < nv6. Combos duros: healers (Sacerdotisa/Náyade) que hay
+  // que matar primero, blindados/tanques que aguantan, torretas y enjambres.
   if (tier <= 2) {
-    // Nv4: introduce Guardia de Hielo (slow charger, mobility threat), Cangrejo (tank), Pez Globo.
-    // Anchor = Sacerdotisa. Filler = Ahogados. Threat = Guardia de Hielo.
+    // Nv4 (~36): muro blindado (Guardia/Cangrejo) + torreta (Tótem de Escarcha) + explosivos (Pez Globo).
     return [
-      wave(580, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: ramp(3, tier) }, { type: 'guardia_hielo', count: 1 }, { type: 'acolito_escarcha', count: tier }]),
-      wave(530, [{ type: 'cangrejo_acorazado', count: 1 }, { type: 'pez_globo', count: ramp(2, tier) }, { type: 'vidente_marea', count: tier }, { type: 'ahogado', count: ramp(2, tier) }]),
+      wave(540, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: 5 }, { type: 'guardia_hielo', count: 2 }, { type: 'acolito_escarcha', count: 4 }, { type: 'vidente_marea', count: 4 }]),
+      wave(450, [{ type: 'totem_escarcha', count: 1 }, { type: 'sacerdotisa_lago', count: 1 }, { type: 'cangrejo_acorazado', count: 2 }, { type: 'guardia_hielo', count: 2 }, { type: 'pez_globo', count: 5 }, { type: 'ahogado', count: 5 }, { type: 'acolito_escarcha', count: 4 }]),
     ];
   }
   if (tier === 3) {
-    // Nv5: introduce Corista del Abismo (aura kill-priority), Serpiente Marina, Burbuja Gélida.
-    // Anchor = Sacerdotisa + Corista. Filler = Renacuajos/Ahogados. Threat = Guardia de Hielo.
+    // Nv5 (~42): DOBLE healer (Sacerdotisa + Náyade que invoca escupidores) + aura (Corista) + torreta.
     return [
-      wave(540, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: ramp(3, tier) }, { type: 'guardia_hielo', count: 1 }, { type: 'burbuja_gelida', count: tier }]),
-      wave(490, [{ type: 'corista_abismo', count: 1 }, { type: 'serpiente_marina', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(3, tier) }, { type: 'pez_globo', count: tier }]),
+      wave(520, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'ahogado', count: 5 }, { type: 'guardia_hielo', count: 2 }, { type: 'burbuja_gelida', count: 4 }, { type: 'serpiente_marina', count: 4 }, { type: 'corista_abismo', count: 2 }]),
+      wave(440, [{ type: 'nayade', count: 1 }, { type: 'totem_escarcha', count: 1 }, { type: 'corista_abismo', count: 1 }, { type: 'guardia_hielo', count: 2 }, { type: 'serpiente_marina', count: 5 }, { type: 'pez_globo', count: 5 }, { type: 'burbuja_gelida', count: 5 }, { type: 'ahogado', count: 4 }]),
     ];
   }
-  // Tier 4 (inter(4) = Nv6): introduce Medusa (splitsOnDeath), Tiburón Joven (burrow), Tortuga Acorazada.
-  // Anchor = Sacerdotisa. Filler = Ahogados/Renacuajos. Threat = Tiburón Joven (burrow).
+  // Nv6 (~48): clímax — DOBLE healer + doble Tortuga (tanque 55%) + Tiburón joven (burrow) + Medusas que se dividen + torreta.
   return [
-    wave(510, [{ type: 'sacerdotisa_lago', count: 1 }, { type: 'medusa', count: tier }, { type: 'ahogado', count: ramp(3, tier) }, { type: 'tiburon_joven', count: 1 }]),
-    wave(460, [{ type: 'tortuga_acorazada', count: 1 }, { type: 'serpiente_marina', count: ramp(2, tier) }, { type: 'renacuajo', count: ramp(3, tier) }, { type: 'burbuja_gelida', count: tier }]),
+    wave(500, [{ type: 'nayade', count: 1 }, { type: 'medusa', count: 3 }, { type: 'ahogado', count: 6 }, { type: 'tiburon_joven', count: 1 }, { type: 'serpiente_marina', count: 5 }, { type: 'burbuja_gelida', count: 5 }]),
+    wave(420, [{ type: 'nayade', count: 1 }, { type: 'sacerdotisa_lago', count: 1 }, { type: 'totem_escarcha', count: 1 }, { type: 'tortuga_acorazada', count: 2 }, { type: 'medusa', count: 3 }, { type: 'tiburon_joven', count: 1 }, { type: 'serpiente_marina', count: 6 }, { type: 'burbuja_gelida', count: 6 }, { type: 'ahogado', count: 6 }]),
   ];
 }
 
