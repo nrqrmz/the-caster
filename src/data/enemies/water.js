@@ -179,7 +179,7 @@ export const WATER_ENEMIES = {
   // #20 — Tortuga Acorazada: charge + heavy shield + resist (flat damage reduction).
   // resist: 0.35 means incoming damage is multiplied by (1 - 0.35) = 0.65 (Plan 1).
   tortuga_acorazada: { key: 'tortuga_acorazada', tex: TEX.warrior, color: COLORS.turtleGreen,
-    hp: 220, speed: 60, damage: 30, radius: 30,
+    hp: 220, speed: 60, damage: 30, radius: 32,
     movement: { type: 'charge', windup: 600, dash: 450, recover: 750, dashMul: 2.8 },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'shielded', reduce: 0.55 }, { type: 'resist', factor: 0.35 }] },

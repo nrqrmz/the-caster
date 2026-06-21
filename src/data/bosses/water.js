@@ -142,14 +142,14 @@ export const KRAKEN = {
 // All forms carry elite: true; FormSequencer enforces CC immunity.
 //
 // HP per form (starting values, tuned in playtest):
-//   maga=340  tiburon=460  kraken=580  ballena=720  maga_final=20
+//   maga=410  tiburon=560  kraken=700  ballena=870  maga_final=390 (+20% ceil-decena)
 //
 // resist per form (0 = no reduction, 1 = immune):
 //   maga=0  tiburon=0.10  kraken=0.20  ballena=0.30  maga_final=0
 
 const DAMA_MAGA = {
   key: 'dama_maga', tex: TEX.boss, color: COLORS.ice,
-  hp: 340, speed: 70, damage: 14, radius: 26, resist: 0,
+  hp: 410, speed: 70, damage: 14, radius: 26, resist: 0,
   elite: true, iceImmune: true, // Madame Le Fay — immune to ice (her own element)
   movement: { type: 'kite', range: 240 },
   phases: [
@@ -169,7 +169,7 @@ const DAMA_MAGA = {
 
 const DAMA_TIBURON = {
   key: 'dama_tiburon', tex: TEX.boss, color: COLORS.caster,
-  hp: 460, speed: 90, damage: 20, radius: 38, resist: 0.10,
+  hp: 560, speed: 90, damage: 20, radius: 38, resist: 0.10,
   elite: true, iceImmune: true,
   movement: { type: 'burrow', submergeMs: 1400, emergeMs: 450, surfaceMs: 2200 },
   phases: [
@@ -188,7 +188,7 @@ const DAMA_TIBURON = {
 
 const DAMA_KRAKEN = {
   key: 'dama_kraken', tex: TEX.boss, color: COLORS.miniboss,
-  hp: 580, speed: 30, damage: 18, radius: 38, resist: 0.20,
+  hp: 700, speed: 30, damage: 18, radius: 38, resist: 0.20,
   elite: true, iceImmune: true,
   movement: { type: 'static' },
   phases: [
@@ -210,7 +210,7 @@ const DAMA_KRAKEN = {
 
 const DAMA_BALLENA = {
   key: 'dama_ballena', tex: TEX.boss, color: COLORS.boss,
-  hp: 720, speed: 22, damage: 24, radius: 50, resist: 0.30,
+  hp: 870, speed: 22, damage: 24, radius: 50, resist: 0.30,
   elite: true, iceImmune: true,
   movement: { type: 'chase' }, // slow chase — the wall
   phases: [
@@ -238,7 +238,7 @@ const DAMA_BALLENA = {
 // FormSequencer revert-to-maga on ballena death produces this form.
 const DAMA_MAGA_FINAL = {
   key: 'dama_maga_final', tex: TEX.boss, color: COLORS.ice,
-  hp: 320, speed: 55, damage: 10, radius: 24, resist: 0,
+  hp: 390, speed: 55, damage: 10, radius: 24, resist: 0,
   elite: true, iceImmune: true,
   movement: { type: 'kite', range: 240 },
   phases: [
@@ -254,7 +254,7 @@ const DAMA_MAGA_FINAL = {
 // defaults used before the sequencer is active (first form takes over on init).
 export const DAMA_LAGO = {
   key: 'dama_lago', tex: TEX.boss, color: COLORS.ice,
-  hp: 340, speed: 70, damage: 14, radius: 26,
+  hp: 410, speed: 70, damage: 14, radius: 26,
   elite: true, iceImmune: true, // Madame Le Fay — immune to ice (her own element)
   scaleForms: true, // forms' hp/damage scale with difficulty (temple-boss tier), like every other boss
   movement: { type: 'kite', range: 240 },
