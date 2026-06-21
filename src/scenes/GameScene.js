@@ -407,7 +407,7 @@ export default class GameScene extends Phaser.Scene {
     // Respect CONCURRENCY_CAP.
     if (this.enemies.countActive(true) >= CONCURRENCY_CAP) { enemy.destroy(); return; }
     const typeKey = toLifecycle === LIFECYCLE.TADPOLE ? (enemy.def._hatchType || 'tadpole')
-                                                       : (enemy.def._growType  || 'adultFrog');
+                                                       : (enemy._growOverride || enemy.def._growType || 'adultFrog');
     const def = ENEMY_TYPES[typeKey];
     if (!def) { enemy.destroy(); return; }
     const scaled = scaleEnemyDef(def, this.diff);
@@ -419,6 +419,16 @@ export default class GameScene extends Phaser.Scene {
     }
     this.enemies.add(e);
     enemy.destroy();
+  }
+
+  // Arms a freshly-summoned creature with the TADPOLE lifecycle so it matures
+  // into a shooter via promoteEnemy (e.g. Náyade's renacuajos → sapo_escupidor).
+  // growType overrides the def's default _growType for this instance only.
+  armGrowth(enemy, growType) {
+    if (!enemy || !enemy.brainState) return;
+    enemy.brainState.lifecycle = LIFECYCLE.TADPOLE;
+    enemy.brainState.lifecycleTimer = 0;
+    if (growType) enemy._growOverride = growType;
   }
 
   spawnPetrifyBlock(x, y) {
@@ -774,12 +784,16 @@ export default class GameScene extends Phaser.Scene {
           child._summonedBy = enemy;
           child._summonCapKey = key;
           child._summonRespawnMs = att.respawnMs ?? 15000;
+          if (att.grow) this.armGrowth(child, att.growType);
           tr.alive += 1;
         }
       } else {
         // Sin tope: comportamiento histórico (acotado solo por CONCURRENCY_CAP).
         const def = ENEMY_TYPES[att.spawnType];
-        if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
+        if (def) for (let i = 0; i < (att.count ?? 2); i++) {
+          const child = this.spawnEnemy(def);
+          if (att.grow) this.armGrowth(child, att.growType);
+        }
       }
       return;
     }

@@ -57,8 +57,9 @@ export const WATER_ENEMIES = {
   // #8 — Renacuajo: zigzag melee add; spawned by Huevo de Sapo and Náyade.
   // _growType wires the generational chain: a renacuajo HATCHED from an egg carries
   // brainState.lifecycle = TADPOLE (set by promoteEnemy) and matures into sapo_adulto.
-  // Plain summoned renacuajos (Náyade, wave filler) spawn WITHOUT lifecycle state, so
-  // they never tick/promote and stay tadpoles — _growType is inert for them.
+  // Náyade summons with grow:true + growType:'sapo_escupidor', so HER tadpoles mature
+  // into spitters (per-instance _growOverride). Plain wave-filler renacuajos spawn
+  // WITHOUT lifecycle state, so they never tick/promote and stay tadpoles.
   renacuajo: { key: 'renacuajo', tex: TEX.villager, color: COLORS.tadpole,
     hp: 20, speed: 70, damage: 5, radius: 16,
     movement: { type: 'zigzag' },
@@ -136,15 +137,17 @@ export const WATER_ENEMIES = {
     movement: { type: 'kite', range: 230 },
     attacks: [{ type: 'shootSpread', count: 3, arc: 40, every: 1900, speed: 225 }] },
 
-  // #16 — Náyade: erratic + ice shots + summon tadpoles + healAllies. Dual kill-priority threat.
+  // #16 — Náyade: ninfa de agua. Healer-ancla de DESGASTE y prioridad de kill: strafe
+  // a media distancia (cubre al grupo con su aura sin quedarse quieta), dispara hielo,
+  // cura fuerte y desova renacuajos que MADURAN en sapo_escupidor (crías que disparan).
   nayade: { key: 'nayade', tex: TEX.archer, color: COLORS.lakeGreen,
-    hp: 100, speed: 70, damage: 10, radius: 17,
-    movement: { type: 'erratic' },
+    hp: 160, speed: 72, damage: 10, radius: 17,
+    movement: { type: 'strafe', range: 150 },
     attacks: [
       { type: 'shootStraight', projectile: 'ice', every: 1800, speed: 230 },
-      { type: 'summon', spawnType: 'renacuajo', count: 2, every: 2400 },
+      { type: 'summon', spawnType: 'renacuajo', count: 2, every: 2400, grow: true, growType: 'sapo_escupidor' },
     ],
-    modifiers: [{ type: 'healAllies', hps: 14, radius: 130 }] },
+    modifiers: [{ type: 'shielded', reduce: 0.05 }, { type: 'healAllies', hps: 14, radius: 160 }] },
 
   // === Invocados / ambientales ===
 
@@ -157,7 +160,7 @@ export const WATER_ENEMIES = {
 
   // #18 — Tótem de Escarcha: static turret — slow nova + aura. Fixed hazard.
   totem_escarcha: { key: 'totem_escarcha', tex: TEX.warrior, color: COLORS.frostTotem,
-    hp: 250, speed: 0, damage: 8, radius: 18,
+    hp: 250, speed: 0, damage: 9, radius: 36,
     movement: { type: 'static' },
     attacks: [{ type: 'nova', count: 8, every: 3200, speed: 170, telegraph: 550 }],
     modifiers: [{ type: 'shielded', reduce: 0.25 }, { type: 'auraDamage', dps: 7, radius: 52 }] },
