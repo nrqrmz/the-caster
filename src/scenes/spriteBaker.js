@@ -79,6 +79,9 @@ function bakeOne(scene, key) {
   paintForged(scene, key, out);
 }
 
+// Yield between chunks via the SCENE clock (not requestAnimationFrame): the wait
+// is tied to the scene's lifecycle, so it pauses/cancels cleanly if the scene
+// shuts down mid-forge. Lets the IntroScene render/handle input between chunks.
 const nextFrame = (scene) => new Promise((resolve) => scene.time.delayedCall(0, resolve));
 
 // Forge `keys` (those with a recipe, not already forged), chunked across frames.

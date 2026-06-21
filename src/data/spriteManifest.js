@@ -48,6 +48,8 @@ export function regionSpriteKeys(region) {
   }
 
   // Boss summons live in the boss object's phase sequences (+ trio soloSequence).
+  // This pass only SEEDS the queue with what bosses summon; the fixpoint loop
+  // below drains the queue (including these), so order between the two is safe.
   for (const boss of bossObjs) {
     const steps = [];
     for (const ph of boss.phases || []) steps.push(...(ph.sequence || []));
@@ -55,7 +57,8 @@ export function regionSpriteKeys(region) {
     for (const step of steps) if (step.do === 'summon') addSummons(step, out, queue);
   }
 
-  // Enemy summons live in attack defs; resolve transitively to a fixpoint.
+  // Enemy summons live in attack defs; resolve transitively to a fixpoint
+  // (drains everything seeded above plus any summon-of-a-summon).
   while (queue.length) {
     const def = ENEMY_TYPES[queue.pop()];
     if (!def) continue;

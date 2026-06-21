@@ -47,7 +47,7 @@ test('shapeshifter forms are included (water Dama, air Galahad, earth Cefalo)', 
     assert.ok(water.has(k), `expected water Dama form ${k}`);
   }
   const air = regionSpriteKeys(REGIONS.air);
-  for (const k of ['galahad_humano', 'galahad_rage', 'galahad_murcielago', 'galahad_final']) {
+  for (const k of ['galahad_humano', 'galahad_rage', 'galahad_rage2', 'galahad_murcielago', 'galahad_final']) {
     assert.ok(air.has(k), `expected air Galahad form ${k}`);
   }
   // runtime corpse swap declared via extraSprites
