@@ -800,6 +800,38 @@ export default class GameScene extends Phaser.Scene {
       shot.homingSpeed = att.speed ?? 150;
       return;
     }
+    if (att.type === 'blinkStorm') {
+      const dur = att.duration ?? 3600;
+      // Tell + desaparece en el sitio.
+      this.verticalBolt(enemy.x, enemy.y);
+      enemy._untargetable = true;
+      enemy.setVisible(false);
+      if (enemy.body) enemy.body.enable = false;
+      // Siembra espíritus de tormenta en el punto de desaparición (respeta el cap).
+      const sdef = ENEMY_TYPES['espiritu_tormenta'];
+      for (let i = 0; i < (att.spiritCount ?? 4); i++) {
+        if (!sdef || this.enemies.countActive(true) >= CONCURRENCY_CAP) break;
+        const s = this.spawnEnemy(sdef);
+        s.x = Phaser.Math.Clamp(enemy.x + Phaser.Math.Between(-40, 40), 20, GAME_WIDTH - 20);
+        s.y = Phaser.Math.Clamp(enemy.y + Phaser.Math.Between(-40, 40), 20, GAME_HEIGHT - 20);
+      }
+      const bx = enemy.x, by = enemy.y;
+      this.time.delayedCall(dur, () => {
+        if (!enemy.active) return;
+        // Reubicar en un punto aleatorio lejos de la princesa.
+        let nx = Phaser.Math.Between(60, GAME_WIDTH - 60);
+        let ny = Phaser.Math.Between(120, GAME_HEIGHT - 200);
+        const safe = pushOutsideRing({ x: nx, y: ny }, this.caster, SPAWN_SAFE_DIST + 60);
+        nx = Phaser.Math.Clamp(safe.x, 40, GAME_WIDTH - 40);
+        ny = Phaser.Math.Clamp(safe.y, 100, GAME_HEIGHT - 180);
+        enemy.x = nx; enemy.y = ny;
+        this.verticalBolt(nx, ny);
+        enemy._untargetable = false;
+        enemy.setVisible(true);
+        if (enemy.body) enemy.body.enable = true;
+      });
+      return;
+    }
     if (att.type === 'submerge') {
       // Dive deep: vanish completely (untargetable + invisible, no fin) for a window and
       // summon a minion from the depths. A DPS-denial beat — it stays put, never moves.
@@ -1004,6 +1036,12 @@ export default class GameScene extends Phaser.Scene {
     }
     this.flashCircle(center.x, center.y, this.stats.freezeRadius, COLORS.ice);
     return true;
+  }
+
+  // Pilar de rayo vertical: tell del teleport de la Bruja (cae desde arriba al punto).
+  verticalBolt(x, y) {
+    this.drawZap([{ x, y: 0 }, { x, y }], COLORS.lightning);
+    this.flashCircle(x, y, 30, COLORS.lightning);
   }
 
   drawZap(points, color = COLORS.lightning) {
