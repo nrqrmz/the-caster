@@ -72,12 +72,12 @@ test('Bruja del Vendaval: escurridiza (640hp, shielded 0.15, speed 100), Blink +
   assert.ok(summons.includes('arpia'), 'invoca arpías');
 });
 
-test('Elemental de Tormenta: static, big (r56), resist .20, 3 phases', () => {
-  assert.equal(ELEMENTAL_TORMENTA.movement.type, 'static');
-  assert.equal(ELEMENTAL_TORMENTA.radius, 56);
-  assert.equal(ELEMENTAL_TORMENTA.resist, 0.20);
-  assert.equal(ELEMENTAL_TORMENTA.hp, 680);
-  assert.equal(ELEMENTAL_TORMENTA.phases.length, 3);
+test('Elemental de Tormenta: esponja 2000hp, shielded 0.25, radius 100, anchorY 0.375', () => {
+  assert.equal(ELEMENTAL_TORMENTA.hp, 2000);
+  assert.equal(ELEMENTAL_TORMENTA.radius, 100);
+  assert.equal(ELEMENTAL_TORMENTA.anchorY, 0.375);
+  assert.equal(ELEMENTAL_TORMENTA.modifiers.find((m) => m.type === 'shielded').reduce, 0.25);
+  assert.equal(ELEMENTAL_TORMENTA.resist, undefined, 'resist reemplazado por shielded');
 });
 
 test('Elemental phase thresholds 1.0/0.6/0.3; P2 and P3 enter spawnTornado', () => {

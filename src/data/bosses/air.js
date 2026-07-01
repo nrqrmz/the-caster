@@ -77,20 +77,22 @@ export const BRUJA_VENDAVAL = {
 };
 
 // ─── nv6 MINIBOSS ────────────────────────────────────────────────────────────
-// Elemental de Tormenta — the tornado-eye setpiece. STATIC, oversized (radius 56
-// → GameScene setDisplaySize 112, the world's HP wall despite the miniboss slot,
+// Elemental de Tormenta — the tornado-eye setpiece. STATIC, oversized (radius 100
+// → GameScene setDisplaySize 256×128, the world's HP wall despite the miniboss slot,
 // because nv7's ritual is full of short-lived enemies). Three phases: P1 lifting
 // tornaditos + stun nova + bats; P2 (<60%) enter spawnTornado (the great eye) +
 // faster stun bolts; P3 (<30%) frenzy (stronger pull via _tornadoPhase bump,
 // more tornaditos, summons arpías). Damage-the-boss = a positioning loop: it's
 // anchored at top, your auto-fire hits the nearest, so you must push UP into the
 // tornado/lightning field to make it your nearest target. The low summon cap
-// leaves a lane to climb. resist 0.20.
+// leaves a lane to climb. shielded 0.25 mitiga daño.
 export const ELEMENTAL_TORMENTA = {
   key: 'elemental_tormenta', tex: TEX.miniboss, color: COLORS.ash,
-  hp: 680, speed: 0, damage: 18, radius: 56, resist: 0.20,
+  hp: 2000, speed: 0, damage: 18, radius: 100,
+  anchorY: 0.375, // 3ª banda vertical desde abajo, centrado (x = GAME_WIDTH/2)
   elite: true,
   movement: { type: 'static' },
+  modifiers: [{ type: 'shielded', reduce: 0.25 }],
   phases: [
     { from: 1.0, sequence: [
       { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 150, telegraph: 0, dur: 700 }, // tornado recto que eleva
