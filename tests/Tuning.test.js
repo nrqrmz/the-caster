@@ -67,7 +67,8 @@ test('Air tuning constants are defined and in-range', () => {
   assert.ok(EVADE_DODGE_MUL > 1);
 
   assert.ok(TORNADO_RADIUS > 0);
-  assert.equal(TORNADO_EYE_PULL, 0.7);
+  assert.equal(TORNADO_EYE_PULL, 0.9);
+  assert.equal(TORNADO_TELEGRAPH_MS, 800);
   assert.ok(TORNADO_EYE_RADIUS_FRAC > 0 && TORNADO_EYE_RADIUS_FRAC < 1);
   assert.ok(TORNADO_ENEMY_PULL >= 0 && TORNADO_ENEMY_PULL < TORNADO_EYE_PULL);
 

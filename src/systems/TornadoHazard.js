@@ -33,6 +33,6 @@ export function forceAt(center, radius, pos, speed) {
 
 // Phase scaling: stronger pull / smaller safe space in later boss phases.
 export function scaleForPhase(phase) {
-  const table = [1.0, 1.0, 1.25, 1.6];
+  const table = [1.0, 1.0, 1.25, 1.9];
   return table[Math.min(phase, table.length - 1)] ?? 1.0;
 }
