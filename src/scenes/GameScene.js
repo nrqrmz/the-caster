@@ -348,7 +348,7 @@ export default class GameScene extends Phaser.Scene {
       boss.setAlpha(0.3); // brief dim during transform telegraph (legacy path)
     }
 
-    this.time.delayedCall(1000, () => { // ~1000ms telegraph/invuln window
+    this.time.delayedCall(3600, () => { // yace muerto+unreachable 3600ms antes de levantarse
       if (!boss.active) return;
       boss._transforming = false;
       boss.setAlpha(1);
