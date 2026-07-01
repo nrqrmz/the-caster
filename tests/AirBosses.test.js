@@ -157,6 +157,13 @@ test('Elemental: horda escalando, SOLO no-humanoides, más tipos por fase', () =
   assert.ok(summonsByPhase[2].length >= summonsByPhase[0].length + 2, 'P3 tiene más tipos que P1');
 });
 
+test('Líder Cultista: el canal invoca casters humanoides variados + healer, cap alto', () => {
+  const p0 = LIDER_CULTISTA.phases[0].sequence.filter((s) => s.do === 'summon').map((s) => s.spawnType);
+  for (const k of ['acolito_trueno','heraldo_rayo','hechicero_viento','tronador','sacerdote_sangre']) {
+    assert.ok(p0.includes(k), `invoca ${k}`);
+  }
+});
+
 test('every boss summon spawnType is a registered enemy', () => {
   const defs = [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, ...GALAHAD.forms];
   for (const def of defs) {

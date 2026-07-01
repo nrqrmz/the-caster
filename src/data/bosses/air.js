@@ -146,9 +146,11 @@ export const LIDER_CULTISTA = {
     // Phase 0 — channel. forcedPhase stays 0 (untargetable) until the bar fills.
     // from:1.0 so it is the default hp-fraction pick before the meter forces phase 1.
     { from: 1.0, sequence: [
-      { do: 'summon', spawnType: 'cultista_canalizador', count: 1, cap: 3, respawnMs: 9000, dur: 900 },
-      { do: 'summon', spawnType: 'guardian_rito', count: 1, cap: 2, respawnMs: 11000, dur: 900 },
-      { do: 'summon', spawnType: 'cultista', count: 2, cap: 6, respawnMs: 7000, dur: 800 },
+      { do: 'summon', spawnType: 'acolito_trueno', count: 2, cap: 4, capKey: 'rite_acolyte', respawnMs: 5000, dur: 700 },
+      { do: 'summon', spawnType: 'heraldo_rayo', count: 2, cap: 4, capKey: 'rite_herald', respawnMs: 6000, dur: 700 },
+      { do: 'summon', spawnType: 'hechicero_viento', count: 1, cap: 2, capKey: 'rite_windmage', respawnMs: 9000, dur: 700 },
+      { do: 'summon', spawnType: 'tronador', count: 2, cap: 3, capKey: 'rite_thunder', respawnMs: 6000, dur: 700 },
+      { do: 'summon', spawnType: 'sacerdote_sangre', count: 1, cap: 2, capKey: 'rite_priest', respawnMs: 12000, dur: 700 },
       { do: 'wait', dur: 700 },
     ] },
     // Phase 1 — fight. Reached ONLY via forcedPhase=1 (meter full), never by hp.
