@@ -149,6 +149,14 @@ test('last Galahad form is galahad_final with low hp + minimal kit', () => {
   assert.equal(last.phases.length, 1, 'final has one phase (minimal kit)');
 });
 
+test('Elemental: horda escalando, SOLO no-humanoides, más tipos por fase', () => {
+  const HUMANOID = ['siervo_torre','duelista_nocturno','acolito_trueno','heraldo_rayo','sacerdote_sangre','guardia_nocturno','hechicero_viento','vastago_vampirico','cultista','cultista_canalizador','guardian_rito'];
+  const summonsByPhase = ELEMENTAL_TORMENTA.phases.map(
+    (p) => p.sequence.filter((s) => s.do === 'summon').map((s) => s.spawnType));
+  summonsByPhase.flat().forEach((t) => assert.ok(!HUMANOID.includes(t), `${t} no-humanoide`));
+  assert.ok(summonsByPhase[2].length >= summonsByPhase[0].length + 2, 'P3 tiene más tipos que P1');
+});
+
 test('every boss summon spawnType is a registered enemy', () => {
   const defs = [CABALLERO_SANGRE, BRUJA_VENDAVAL, ELEMENTAL_TORMENTA, LIDER_CULTISTA, ...GALAHAD.forms];
   for (const def of defs) {

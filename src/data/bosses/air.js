@@ -97,20 +97,28 @@ export const ELEMENTAL_TORMENTA = {
     { from: 1.0, sequence: [
       { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 150, telegraph: 0, dur: 700 }, // tornado recto que eleva
       { do: 'nova', count: 8, speed: 240, damage: 12, stun: true, telegraph: 380, dur: 700 },        // nova de rayos
-      { do: 'summon', spawnType: 'murcielago', count: 2, cap: 4, respawnMs: 12000, dur: 700 },
+      { do: 'summon', spawnType: 'murcielago', count: 3, cap: 5, capKey: 'ele_bat', respawnMs: 7000, dur: 400 },
+      { do: 'summon', spawnType: 'espiritu_tormenta', count: 2, cap: 3, capKey: 'ele_spirit', respawnMs: 7000, dur: 400 },
       { do: 'wait', dur: 500 },
     ] },
     { from: 0.6, enter: ['spawnTornado'], sequence: [
       { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 160, telegraph: 0, dur: 650 }, // tornado recto
       { do: 'shootHoming', speed: 150, damage: 13, stun: true, telegraph: 320, dur: 700 },           // rayos aturdidores más rápidos
       { do: 'nova', count: 10, speed: 250, damage: 12, stun: true, telegraph: 340, dur: 650 },
+      { do: 'summon', spawnType: 'murcielago', count: 3, cap: 5, capKey: 'ele_bat', respawnMs: 5000, dur: 350 },
+      { do: 'summon', spawnType: 'arpia', count: 2, cap: 4, capKey: 'ele_harpy', respawnMs: 5000, dur: 350 },
+      { do: 'summon', spawnType: 'torbellino_errante', count: 1, cap: 2, capKey: 'ele_whirl', respawnMs: 8000, dur: 350 },
       { do: 'wait', dur: 400 },
     ] },
     { from: 0.3, speedMul: 1.0, enter: ['spawnTornado'], sequence: [
       { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 170, telegraph: 0, dur: 620 }, // frenesí: tornado recto…
       { do: 'shootHoming',   projectile: 'tornado', lift: true, damage: 12, speed: 120, telegraph: 0, dur: 620 }, // …y tornado homing
       { do: 'shootHoming', speed: 160, damage: 14, stun: true, telegraph: 280, dur: 620 },
-      { do: 'summon', spawnType: 'arpia', count: 2, cap: 4, respawnMs: 12000, dur: 650 },
+      { do: 'summon', spawnType: 'murcielago', count: 3, cap: 5, capKey: 'ele_bat', respawnMs: 4000, dur: 300 },
+      { do: 'summon', spawnType: 'espiritu_tormenta', count: 2, cap: 3, capKey: 'ele_spirit', respawnMs: 4000, dur: 300 },
+      { do: 'summon', spawnType: 'fuego_fatuo', count: 2, cap: 3, capKey: 'ele_wisp', respawnMs: 5000, dur: 300 },
+      { do: 'summon', spawnType: 'arpia', count: 2, cap: 3, capKey: 'ele_harpy', respawnMs: 4000, dur: 300 },
+      { do: 'summon', spawnType: 'torbellino_errante', count: 1, cap: 2, capKey: 'ele_whirl', respawnMs: 8000, dur: 300 },
       { do: 'wait', dur: 300 },
     ] },
   ],
