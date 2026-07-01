@@ -21,6 +21,7 @@ import { VirtualJoystick } from '../systems/InputSystem.js';
 import {
   applyDamage, applyCasterSlow, tickCasterSlow, applyResist, tryMeleeContact,
   applyCasterCc, tickCasterCc, applyCasterPush, tickCasterPush, applyDrain,
+  tryDrainBite,
 } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, difficultyContext, scaleEnemyDef } from '../systems/Difficulty.js';
@@ -1116,6 +1117,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateLavaRiver(delta);
     this.updateWhirlpool(delta);
     this.updateTornado(delta);
+    this.updateDrainBite(delta);
     this.updateRitual(delta);
     this.updateBossGates();
     this.updateGriffin(delta);
@@ -1341,6 +1343,37 @@ export default class GameScene extends Phaser.Scene {
 
     if (w.mode === 'cooldown') {
       if (w.t <= 0) this.tornado = null; // boss re-triggers via the spawnTornado hook
+    }
+  }
+
+  // Air: sifón de sangre a distancia (drainBite). Cada frame, cada enemigo/jefe con
+  // el modificador muerde a la princesa si está dentro de `range` y su cooldown está
+  // listo (por instancia). Transferencia: la princesa pierde `amount`, el vampiro se
+  // cura lo mismo. Tether de rayo rojo + "−N" flotante. Un mordisco por cooldown (sin spam).
+  updateDrainBite(delta) {
+    if (!this.caster || this.caster.hp <= 0) return;
+    const now = this.time.now;
+    const all = [...this.liveEnemies(), ...this.bosses.filter((b) => b && b.active)];
+    for (const e of all) {
+      if (!e.active || !e.def || e._untargetable) continue;
+      const mod = findModifier(e.def, 'drainBite');
+      if (!mod) continue;
+      const range = mod.range ?? 130;
+      const dist = Phaser.Math.Distance.Between(e.x, e.y, this.caster.x, this.caster.y);
+      if (dist > range) continue;
+      if (!tryDrainBite(e, now, mod.cooldown ?? 1800)) continue;
+      const amount = mod.amount ?? 6;
+      this.damageCaster(amount);
+      // Cura al vampiro: en Galahad, la forma activa; si no, la instancia.
+      if (e._formSeq) {
+        const cap = e._formSeq.activeForm().hp;
+        e._formSeq.currentHp = Math.min(cap, e._formSeq.currentHp + amount);
+        e.hp = e._formSeq.currentHp;
+      } else {
+        applyDrain(e, amount);
+      }
+      this.drawZap([{ x: e.x, y: e.y }, { x: this.caster.x, y: this.caster.y }], COLORS.bloodDrain);
+      this.floatText(this.caster.x, this.caster.y - 20, `-${amount}`);
     }
   }
 
