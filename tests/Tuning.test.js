@@ -74,3 +74,7 @@ test('Air tuning constants are defined and in-range', () => {
 
   assert.ok(RITUAL_FILL_MS > 0);
 });
+
+test('el rito dura 3 minutos', () => {
+  assert.equal(RITUAL_FILL_MS, 180000);
+});
