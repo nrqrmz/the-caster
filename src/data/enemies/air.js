@@ -76,12 +76,12 @@ export const AIR_ENEMIES = {
     movement: { type: 'charge', windup: 450, dash: 320, recover: 500, dashMul: 3.2 },
     attacks: [{ type: 'dashStrike' }] },
 
-  // #11 — Espíritu de Tormenta: ranged flyer. Drifts erratically, fires straight lightning.
+  // #11 — Espíritu de Tormenta: ranged flyer. Drifts erratically, fires straight plasma (slow).
   espiritu_tormenta: { key: 'espiritu_tormenta', tex: TEX.archer, color: COLORS.stormGrey,
     hp: 30, speed: 80, damage: 8, radius: 16,
     flying: true,
     movement: { type: 'erratic' },
-    attacks: [{ type: 'shootStraight', every: 1800, speed: 240 }] },
+    attacks: [{ type: 'shootStraight', projectile: 'plasma', every: 1800, speed: 240 }] },
 
   // #12 — Fuego Fatuo: erratic flyer with a damage aura; brushing it stuns you (0.3 s). No direct attack.
   fuego_fatuo: { key: 'fuego_fatuo', tex: TEX.villager, color: COLORS.wispYellow,
@@ -108,11 +108,11 @@ export const AIR_ENEMIES = {
     attacks: [{ type: 'nova', count: 8, every: 3200, speed: 200, telegraph: 550, stun: true }],
     modifiers: [{ type: 'shielded', reduce: 0.25 }] },
 
-  // #15 — Centinela de Piedra: static homing turret. Fixed hazard that tracks you.
+  // #15 — Centinela de Piedra: static homing turret. Fires spark that tracks and petrifies (root 600ms).
   centinela_piedra: { key: 'centinela_piedra', tex: TEX.warrior, color: COLORS.sentinelStone,
     hp: 60, speed: 0, damage: 10, radius: 18,
     movement: { type: 'static' },
-    attacks: [{ type: 'shootHoming', every: 2600, speed: 120, telegraph: 350 }] },
+    attacks: [{ type: 'shootHoming', projectile: 'stoneSpark', root: true, rootMs: 600, every: 2600, speed: 120, telegraph: 350 }] },
 
   // #16 — Torbellino Errante: 0-damage ambient hazard. Pushes you and briefly lifts (0.5 s) on contact.
   torbellino_errante: { key: 'torbellino_errante', tex: TEX.archer, color: COLORS.whirlGrey,
@@ -121,11 +121,11 @@ export const AIR_ENEMIES = {
     attacks: [],
     modifiers: [{ type: 'onHitPush', force: 220, ms: 250 }, { type: 'onHitStun', kind: 'lift', ms: 500 }] },
 
-  // #17 — Tronador: kite spread ranged. Area-denial — 3 lightning bolts in a 36° arc.
+  // #17 — Tronador: kite spread ranged. Area-denial — 3 lightning bolts in a 36° arc that push.
   tronador: { key: 'tronador', tex: TEX.archer, color: COLORS.stormGrey,
     hp: 30, speed: 64, damage: 8, radius: 16,
     movement: { type: 'kite', range: 230 },
-    attacks: [{ type: 'shootSpread', count: 3, arc: 36, every: 1900, speed: 230 }] },
+    attacks: [{ type: 'shootSpread', count: 3, arc: 36, push: true, every: 1900, speed: 230 }] },
 
   // === Fodder del ritual (nv7) — summoned by the cultist leader (Plan 3) ===
 

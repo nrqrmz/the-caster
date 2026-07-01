@@ -170,3 +170,13 @@ test('drainBite: ya no queda el modificador legacy "drain" en Air', () => {
     assert.equal((def.modifiers || []).some((m) => m.type === 'drain'), false, def.key);
   }
 });
+
+// ── 11. Task 8: proyectiles de casters ────────────────────────────────────────
+test('proyectiles de casters: espíritu=plasma, centinela=stoneSpark+petrify(root 600ms), tronador=push', () => {
+  assert.equal(AIR_ENEMIES.espiritu_tormenta.attacks[0].projectile, 'plasma');
+  const cen = AIR_ENEMIES.centinela_piedra.attacks[0];
+  assert.equal(cen.projectile, 'stoneSpark');
+  assert.equal(cen.root, true);
+  assert.equal(cen.rootMs, 600);
+  assert.equal(AIR_ENEMIES.tronador.attacks[0].push, true);
+});
