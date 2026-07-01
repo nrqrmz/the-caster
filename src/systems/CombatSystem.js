@@ -16,6 +16,15 @@ export function tryMeleeContact(state, now, cooldownMs) {
   return true;
 }
 
+// Mordisco de drain a distancia (Blood Omen). Gate de cooldown por instancia,
+// independiente de tryMeleeContact para que ambos coexistan. Devuelve true y arma
+// el cooldown si el mordisco está permitido. PURE (solo muta state.drainReadyAt).
+export function tryDrainBite(state, now, cooldownMs) {
+  if ((state.drainReadyAt ?? 0) > now) return false;
+  state.drainReadyAt = now + cooldownMs;
+  return true;
+}
+
 // state: { slowRemaining, slowFactor }  (fields live on Caster instance)
 export function applyCasterSlow(state, factor, ms) {
   // Clamp factor to floor so no enemy can freeze the caster.
