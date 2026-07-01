@@ -169,6 +169,7 @@ export default class GameScene extends Phaser.Scene {
       this.damageCaster(shot.damage);
       if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
       if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
+      if (shot.slowChance && Math.random() < shot.slowChance) this.applyCasterSlowFx(shot.slowChanceFactor, shot.slowChanceMs);
       if (shot.poisonDps > 0) this.applyCasterPoison(shot.poisonDps, shot.poisonMs);
       if (shot.stunMs) applyCasterCc(this.caster, shot.liftKind ? 'lift' : 'stun', shot.stunMs);
       if (shot.rootMs) applyCasterCc(this.caster, 'root', shot.rootMs);
@@ -852,6 +853,7 @@ export default class GameScene extends Phaser.Scene {
       else if (att.stun) { shot.stunMs = att.stunMs ?? CASTER_STUN_MS; shot.liftKind = false; }
       if (att.push) { shot.pushForce = att.pushForce ?? PUSH_FORCE; shot.pushMs = att.pushMs ?? PUSH_MS; }
       if (att.root) shot.rootMs = att.rootMs ?? CASTER_ROOT_MS;
+      if (att.slowChance) { shot.slowChance = att.slowChance; shot.slowChanceFactor = att.slowFactor ?? 0.6; shot.slowChanceMs = att.slowMs ?? 1200; }
     }
   }
 
