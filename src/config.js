@@ -73,6 +73,10 @@ export const COLORS = {
   sentinelStone: 0x78909c,  // Centinela de Piedra — paler statue grey
   whirlGrey: 0xb0bec5,      // Torbellino Errante — pale dust-devil grey
   cultRobe: 0x4a148c,       // Cultista, Cultista Canalizador, Guardián del Rito — dark ritual purple
+  bloodDrain: 0xd50000,     // rojo sangre — EXCLUSIVO del tether del drainBite
+  bloodMagic: 0x8e24aa,     // violeta — dardos de sangre (Caballero de Sangre, Galahad)
+  plasmaBolt: 0xb3e5fc,     // azul-blanco — esfera de plasma del Espíritu de Tormenta
+  stoneSpark: 0x7e57c2,     // violeta-piedra — chispa rastreadora del Centinela (petrify)
   // Earth world palette — El Jardín de Circe (forest greens/browns, stone, spore violet, captive flesh)
   barkBrown:   0x6d4c41,
   mossGreen:   0x558b2f,
