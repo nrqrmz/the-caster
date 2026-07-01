@@ -296,9 +296,9 @@ export default class GameScene extends Phaser.Scene {
     } else if (form.color) {
       boss.setTint(form.color);
     }
-    // galahad_murcielago is a native 2:1 texture (128×64); all other forms are square.
+    // galahad_murcielago: textura 2:1 gigante (forma clímax); las demás formas son cuadradas.
     if (form.key === 'galahad_murcielago') {
-      boss.setDisplaySize(128, 64);
+      boss.setDisplaySize(200, 100);
     } else if (form.radius) {
       boss.setDisplaySize(form.radius * 2, form.radius * 2);
     }
