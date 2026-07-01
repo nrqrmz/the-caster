@@ -528,25 +528,24 @@ export default class GameScene extends Phaser.Scene {
             enemy.setDisplaySize(128, 64);
           }
           enemy.setAlpha(1);
-          // Fire flash: instant large ring.
-          this.flashCircle(enemy.x, enemy.y, 80, COLORS.fireball);
-          // Overlay burn circle that fades out over the corpse.
-          const burn = this.add.circle(enemy.x, enemy.y, 48, COLORS.fireball, 0.65).setDepth(8);
-          this.tweens.add({ targets: burn, alpha: 0, scale: 1.9, duration: 800, onComplete: () => burn.destroy() });
-          // Fade the corpse itself to zero, then run the normal death/clear path.
-          this.tweens.add({
-            targets: enemy,
-            alpha: 0,
-            duration: 850,
-            ease: 'Quad.easeIn',
-            onComplete: () => {
-              if (!enemy.active) return; // already cleaned up
-              this.onEnemyDeath(enemy);
-              if (enemy === this.boss) this.boss = null;
-              this.bosses = this.bosses.filter((b) => b !== enemy);
-              enemy.destroy();
-              this.checkPhaseCleared();
-            },
+          // Yace muerto 3600ms IDÉNTICO a los feints; NO sabes si se levantará…
+          this.time.delayedCall(3600, () => {
+            if (!enemy.active) return;
+            // …y ENTONCES se enciende en fuego y termina el nivel.
+            this.flashCircle(enemy.x, enemy.y, 80, COLORS.fireball);
+            const burn = this.add.circle(enemy.x, enemy.y, 48, COLORS.fireball, 0.65).setDepth(8);
+            this.tweens.add({ targets: burn, alpha: 0, scale: 1.9, duration: 800, onComplete: () => burn.destroy() });
+            this.tweens.add({
+              targets: enemy, alpha: 0, duration: 850, ease: 'Quad.easeIn',
+              onComplete: () => {
+                if (!enemy.active) return;
+                this.onEnemyDeath(enemy);
+                if (enemy === this.boss) this.boss = null;
+                this.bosses = this.bosses.filter((b) => b !== enemy);
+                enemy.destroy();
+                this.checkPhaseCleared();
+              },
+            });
           });
           return;
         }
