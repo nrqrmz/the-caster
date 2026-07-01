@@ -404,7 +404,7 @@ export default class GameScene extends Phaser.Scene {
       delay: phase.spawnDelay,
       loop: true,
       callback: () => {
-        if (this.enemies.countActive(true) >= CONCURRENCY_CAP) return; // hold; retry next tick
+        if (this.liveWaveCount() >= CONCURRENCY_CAP) return; // hold; retry next tick
         const type = this.spawnQueue.shift();
         if (type) this.spawnEnemy(ENEMY_TYPES[type]);
         if (this.spawnQueue.length === 0) {
@@ -442,7 +442,7 @@ export default class GameScene extends Phaser.Scene {
 
   promoteEnemy(enemy, toLifecycle) {
     // Respect CONCURRENCY_CAP.
-    if (this.enemies.countActive(true) >= CONCURRENCY_CAP) { enemy.destroy(); return; }
+    if (this.liveWaveCount() >= CONCURRENCY_CAP) { enemy.destroy(); return; }
     const typeKey = toLifecycle === LIFECYCLE.TADPOLE ? (enemy.def._hatchType || 'tadpole')
                                                        : (enemy.def._growType  || 'adultFrog');
     const def = ENEMY_TYPES[typeKey];
@@ -469,13 +469,20 @@ export default class GameScene extends Phaser.Scene {
   swapToBeast(captive) {
     const key = transmuteBeastKey(captive.def);
     const def = key ? ENEMY_TYPES[key] : null;
-    if (def && this.enemies.countActive(true) < CONCURRENCY_CAP) {
+    if (def && this.liveWaveCount() < CONCURRENCY_CAP) {
       const e = new Enemy(this, captive.x, captive.y, scaleEnemyDef(def, this.diff));
       this.enemies.add(e);
       if (def.radius) e.setDisplaySize(def.radius * 2, def.radius * 2);
       this.flashCircle(captive.x, captive.y, (def.radius || 20) + 12, COLORS.poison); // transform tell
     }
     captive.destroy();
+  }
+
+  // Enemigos vivos que SÍ cuentan para el cap de oleadas (excluye el setpiece del ritual).
+  liveWaveCount() {
+    let n = 0;
+    this.enemies.getChildren().forEach((e) => { if (e.active && !e._setpieceExempt) n++; });
+    return n;
   }
 
   // No enemy may ever leave the play area — for ANY reason. An escaped enemy never
@@ -591,6 +598,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   onEnemyDeath(enemy) {
+    if (enemy._ritualSlot && this.boss && this.boss.active && this.boss._untargetable) {
+      const slot = enemy._ritualSlot;
+      slot.guard = this.spawnRitualGuard(slot); // nace en borde, corre a la ranura vacía
+    }
     if (enemy.def && enemy.def.petrifyBlock) this.spawnPetrifyBlock(enemy.x, enemy.y);
     // Si era un invocado con tope, libera su slot e inicia el cooldown del padre.
     if (enemy._summonedBy && enemy._summonedBy.active && enemy._summonCapKey) {
@@ -623,7 +634,7 @@ export default class GameScene extends Phaser.Scene {
     const split = buildSplitChildren(enemy.def);
     for (const childDef of split) {
       // Respect CONCURRENCY_CAP: only spawn if there is room.
-      if (this.enemies.countActive(true) >= CONCURRENCY_CAP) break;
+      if (this.liveWaveCount() >= CONCURRENCY_CAP) break;
       const scaled = scaleEnemyDef(childDef, this.diff);
       const e = new Enemy(this, enemy.x + Phaser.Math.Between(-20, 20), enemy.y + Phaser.Math.Between(-20, 20), scaled);
       this.enemies.add(e);
@@ -639,7 +650,7 @@ export default class GameScene extends Phaser.Scene {
           casterDps: mutate.dps,
           color: COLORS.poison, style: 'fire',
         });
-      } else if (mutate.kind === 'enemy' && this.enemies.countActive(true) < CONCURRENCY_CAP) {
+      } else if (mutate.kind === 'enemy' && this.liveWaveCount() < CONCURRENCY_CAP) {
         const def = ENEMY_TYPES[mutate.spawnType];
         if (def) {
           const e = new Enemy(this, enemy.x, enemy.y, scaleEnemyDef(def, this.diff));
@@ -845,7 +856,7 @@ export default class GameScene extends Phaser.Scene {
       // Siembra espíritus de tormenta en el punto de desaparición (respeta el cap).
       const sdef = ENEMY_TYPES['espiritu_tormenta'];
       for (let i = 0; i < (att.spiritCount ?? 4); i++) {
-        if (!sdef || this.enemies.countActive(true) >= CONCURRENCY_CAP) break;
+        if (!sdef || this.liveWaveCount() >= CONCURRENCY_CAP) break;
         const s = this.spawnEnemy(sdef);
         s.x = Phaser.Math.Clamp(enemy.x + Phaser.Math.Between(-40, 40), 20, GAME_WIDTH - 20);
         s.y = Phaser.Math.Clamp(enemy.y + Phaser.Math.Between(-40, 40), 20, GAME_HEIGHT - 20);
@@ -1194,6 +1205,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateTornado(delta);
     this.updateDrainBite(delta);
     this.updateRitual(delta);
+    this.updateRitualGuards();
     this.updateBossGates();
     this.updateGriffin(delta);
     this.updateBossTaunts(delta);
@@ -1468,6 +1480,22 @@ export default class GameScene extends Phaser.Scene {
       if (g.t <= 0) {
         if (g.mode === 'ground') { g.mode = 'flight'; g.t = GRIFFIN_FLIGHT_MS; b._untargetable = true; b.setAlpha(0.6); }
         else { g.mode = 'ground'; g.t = GRIFFIN_GROUND_MS; b._untargetable = false; b.setAlpha(1); }
+      }
+    }
+  }
+
+  updateRitualGuards() {
+    const boss = this.boss;
+    if (!boss || !boss.active || !boss._ritualSlots) return;
+    for (const slot of boss._ritualSlots) {
+      const g = slot.guard;
+      if (!g || !g.active) continue;
+      if (g._atSlot) { if (g.body) g.body.setVelocity(0, 0); continue; }
+      const d = Phaser.Math.Distance.Between(g.x, g.y, slot.x, slot.y);
+      if (d < 8) { g._atSlot = true; g.x = slot.x; g.y = slot.y; if (g.body) { g.body.setVelocity(0, 0); g.body.moves = false; } }
+      else if (g.body) {
+        const a = Phaser.Math.Angle.Between(g.x, g.y, slot.x, slot.y);
+        g.body.setVelocity(Math.cos(a) * 140, Math.sin(a) * 140);
       }
     }
   }
