@@ -117,13 +117,19 @@ test('Galahad form keys in order', () => {
 
 test('Galahad forms have ascending resist across the first four forms, final resets to 0', () => {
   const r = GALAHAD.forms.map((f) => f.resist ?? 0);
-  assert.deepEqual(r, [0, 0.10, 0.20, 0.30, 0]);
+  assert.deepEqual(r, [0.10, 0.15, 0.20, 0.30, 0]);
   for (let i = 1; i < r.length - 1; i++) assert.ok(r[i] > r[i - 1], `resist ascends at ${i}`);
   assert.equal(r[4], 0, 'final form resist resets to 0');
 });
 
-test('Galahad form hp matches spec §4.5 (340/460/560/700/90)', () => {
-  assert.deepEqual(GALAHAD.forms.map((f) => f.hp), [340, 460, 560, 700, 90]);
+test('Galahad: 5 formas, suma 3320, resist trepa 0.1->0.3, drainBite en las 4 de combate', () => {
+  const hp = GALAHAD.forms.map((f) => f.hp);
+  assert.deepEqual(hp, [640, 700, 780, 950, 250]);
+  assert.equal(hp.reduce((a, b) => a + b, 0), 3320);
+  assert.deepEqual(GALAHAD.forms.map((f) => f.speed), [150, 180, 200, 120, 55]);
+  assert.deepEqual(GALAHAD.forms.map((f) => f.resist), [0.10, 0.15, 0.20, 0.30, 0]);
+  const dbAmt = GALAHAD.forms.map((f) => (f.modifiers || []).find((m) => m.type === 'drainBite')?.amount);
+  assert.deepEqual(dbAmt, [20, 24, 28, 30, undefined]);
 });
 
 test('Galahad Humano uses evade; Murcielago is flying with a push gust nova', () => {
@@ -134,18 +140,21 @@ test('Galahad Humano uses evade; Murcielago is flying with a push gust nova', ()
   assert.ok(gust.push.force > 0, 'push has a force');
 });
 
-test('Galahad Rage ×2 doubles Rage cadence/speed (spd 150, halved windup)', () => {
+test('Galahad Rage ×2 escalates speed and windup (spd 180→200, windup 450→225)', () => {
   const rage = GALAHAD.forms[1];
   const rage2 = GALAHAD.forms[2];
-  assert.equal(rage.speed, 110);
-  assert.equal(rage2.speed, 150);
+  assert.equal(rage.speed, 180);
+  assert.equal(rage2.speed, 200);
   assert.ok(rage2.movement.windup < rage.movement.windup, 'rage2 windup is shorter (faster cadence)');
+  assert.equal(rage.movement.windup, 450);
+  assert.equal(rage2.movement.windup, 225);
 });
 
 test('last Galahad form is galahad_final with low hp + minimal kit', () => {
   const last = GALAHAD.forms.at(-1);
   assert.equal(last.key, 'galahad_final');
-  assert.ok(last.hp <= 100, `final hp low, got ${last.hp}`);
+  assert.ok(last.hp <= 300, `final hp low, got ${last.hp}`);
+  assert.equal(last.hp, 250);
   assert.equal(last.phases.length, 1, 'final has one phase (minimal kit)');
 });
 

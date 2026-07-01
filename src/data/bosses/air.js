@@ -181,18 +181,21 @@ export const LIDER_CULTISTA = {
 
 const GALAHAD_HUMANO = {
   key: 'galahad_humano', tex: TEX.boss, color: COLORS.boss,
-  hp: 340, speed: 80, damage: 14, radius: 26, resist: 0,
+  hp: 640, speed: 150, damage: 16, radius: 26, resist: 0.10,
   elite: true,
-  movement: { type: 'evade', range: 240 }, // dodges your orbs — teaches his rhythm
+  movement: { type: 'evade', range: 240 }, // esquiva tus orbes
+  modifiers: [{ type: 'drainBite', amount: 20, range: 300, cooldown: 4000 }], // sifón de largo alcance
   phases: [
     { from: 1.0, sequence: [
-      { do: 'shootStraight', speed: 240, damage: 14, telegraph: 320, dur: 650 }, // blood darts
-      { do: 'shootSpread', count: 3, arc: 50, speed: 230, damage: 12, telegraph: 340, dur: 700 },
+      { do: 'shootStraight', projectile: 'bloodDart', speed: 240, damage: 16, telegraph: 320, dur: 650 },
+      { do: 'shootSpread', projectile: 'bloodDart', count: 3, arc: 50, speed: 230, damage: 13, telegraph: 340, dur: 700 },
       { do: 'wait', dur: 500 },
     ] },
     { from: 0.5, speedMul: 1.15, sequence: [
-      { do: 'shootStraight', speed: 260, damage: 14, telegraph: 280, dur: 580 },
-      { do: 'shootSpread', count: 5, arc: 70, speed: 240, damage: 13, telegraph: 300, dur: 620 },
+      { do: 'shootStraight', projectile: 'bloodDart', speed: 260, damage: 16, telegraph: 280, dur: 580 },
+      { do: 'shootHoming', projectile: 'bloodDart', speed: 150, damage: 14, telegraph: 320, dur: 700 }, // esquirla que persigue
+      { do: 'nova', count: 8, speed: 220, damage: 12, telegraph: 340, dur: 700 },
+      { do: 'shootSpread', projectile: 'bloodDart', count: 5, arc: 70, speed: 240, damage: 14, telegraph: 300, dur: 620 },
       { do: 'wait', dur: 400 },
     ] },
   ],
@@ -200,51 +203,49 @@ const GALAHAD_HUMANO = {
 
 const GALAHAD_RAGE = {
   key: 'galahad_rage', tex: TEX.boss, color: COLORS.boss,
-  hp: 460, speed: 110, damage: 20, radius: 26, resist: 0.10,
+  hp: 700, speed: 180, damage: 20, radius: 30, resist: 0.15,
   elite: true,
   movement: { type: 'charge', windup: 450, dash: 340, recover: 500, dashMul: 3.2 },
-  modifiers: [
-    { type: 'drain', heal: 10 },
-  ],
+  modifiers: [{ type: 'drainBite', amount: 24, range: 150, cooldown: 4000 }],
   phases: [
     { from: 1.0, sequence: [
-      { do: 'wait', dur: 450 },                                              // charge windup
-      { do: 'dashStrike', damage: 20, range: 70, telegraph: 300, dur: 360 }, // drains on contact
+      { do: 'wait', dur: 450 },
+      { do: 'dashStrike', damage: 20, range: 70, telegraph: 300, dur: 360 },
       { do: 'wait', dur: 500 },
       { do: 'summon', spawnType: 'murcielago', count: 2, cap: 4, respawnMs: 12000, dur: 700 },
     ] },
-    { from: 0.5, speedMul: 1.2, sequence: [
-      { do: 'wait', dur: 350 },
+    { from: 0.5, speedMul: 1.2, sequence: [ // triple dash de frenesí
       { do: 'dashStrike', damage: 20, range: 70, telegraph: 240, dur: 320 },
-      { do: 'wait', dur: 300 },
-      { do: 'dashStrike', damage: 20, range: 70, telegraph: 240, dur: 320 }, // double dash
+      { do: 'wait', dur: 200 },
+      { do: 'dashStrike', damage: 20, range: 70, telegraph: 240, dur: 320 },
+      { do: 'wait', dur: 200 },
+      { do: 'dashStrike', damage: 20, range: 70, telegraph: 240, dur: 320 },
       { do: 'wait', dur: 450 },
     ] },
   ],
 };
 
-// Rage ×2 — the Rage kit with cadence/speed DOUBLED (looks superhuman; telegraphs
-// intact so it stays fair). Speed 150, faster windup/dash/recover, halved waits.
 const GALAHAD_RAGE2 = {
   key: 'galahad_rage2', tex: TEX.boss, color: COLORS.boss,
-  hp: 560, speed: 150, damage: 22, radius: 26, resist: 0.20,
+  hp: 780, speed: 200, damage: 22, radius: 30, resist: 0.20,
   elite: true,
   movement: { type: 'charge', windup: 225, dash: 170, recover: 250, dashMul: 3.2 },
-  modifiers: [
-    { type: 'drain', heal: 10 },
-  ],
+  modifiers: [{ type: 'drainBite', amount: 28, range: 150, cooldown: 4000 }],
   phases: [
     { from: 1.0, sequence: [
-      { do: 'wait', dur: 225 },                                              // half windup
+      { do: 'wait', dur: 225 },
       { do: 'dashStrike', damage: 22, range: 70, telegraph: 200, dur: 220 },
       { do: 'wait', dur: 250 },
       { do: 'summon', spawnType: 'murcielago', count: 2, cap: 4, respawnMs: 9000, dur: 500 },
     ] },
-    { from: 0.5, speedMul: 1.2, sequence: [
-      { do: 'wait', dur: 180 },
+    { from: 0.5, speedMul: 1.2, sequence: [ // cuádruple dash
       { do: 'dashStrike', damage: 22, range: 70, telegraph: 180, dur: 200 },
-      { do: 'wait', dur: 180 },
-      { do: 'dashStrike', damage: 22, range: 70, telegraph: 180, dur: 200 }, // double dash, doubled cadence
+      { do: 'wait', dur: 150 },
+      { do: 'dashStrike', damage: 22, range: 70, telegraph: 180, dur: 200 },
+      { do: 'wait', dur: 150 },
+      { do: 'dashStrike', damage: 22, range: 70, telegraph: 180, dur: 200 },
+      { do: 'wait', dur: 150 },
+      { do: 'dashStrike', damage: 22, range: 70, telegraph: 180, dur: 200 },
       { do: 'wait', dur: 250 },
     ] },
   ],
@@ -252,52 +253,47 @@ const GALAHAD_RAGE2 = {
 
 const GALAHAD_MURCIELAGO = {
   key: 'galahad_murcielago', tex: TEX.boss, color: COLORS.miniboss,
-  hp: 700, speed: 100, damage: 24, radius: 48, resist: 0.30,
-  elite: true,
-  flying: true,                                       // immune to ground hazards
-  movement: { type: 'charge', windup: 400, dash: 360, recover: 550, dashMul: 3.0 }, // dive-bombs
+  hp: 950, speed: 120, damage: 24, radius: 72, resist: 0.30,
+  elite: true, flying: true,
+  movement: { type: 'charge', windup: 400, dash: 360, recover: 550, dashMul: 3.0 },
+  modifiers: [{ type: 'drainBite', amount: 30, range: 180, cooldown: 4000 }],
   phases: [
     { from: 1.0, sequence: [
-      { do: 'wait', dur: 400 },                                                                 // dive windup
-      { do: 'dashStrike', damage: 24, range: 80, telegraph: 320, dur: 380 },                    // dive
-      { do: 'nova', count: 10, speed: 230, damage: 14, push: { force: 220, ms: 250 }, telegraph: 380, dur: 700 }, // gust nova (pushes)
-      { do: 'summon', spawnType: 'murcielago', count: 3, cap: 6, respawnMs: 10000, dur: 800 },  // bat nova
+      { do: 'wait', dur: 400 },
+      { do: 'dashStrike', damage: 24, range: 80, telegraph: 320, dur: 380 },
+      { do: 'nova', count: 14, speed: 230, damage: 14, push: { force: 240, ms: 260 }, telegraph: 380, dur: 700 },
+      { do: 'summon', spawnType: 'murcielago', count: 3, cap: 8, respawnMs: 10000, dur: 800 },
       { do: 'wait', dur: 450 },
     ] },
     { from: 0.45, speedMul: 1.1, sequence: [
       { do: 'wait', dur: 320 },
       { do: 'dashStrike', damage: 24, range: 80, telegraph: 260, dur: 340 },
-      { do: 'nova', count: 12, speed: 240, damage: 15, push: { force: 240, ms: 280 }, telegraph: 340, dur: 650 },
-      { do: 'summon', spawnType: 'murcielago', count: 3, cap: 6, respawnMs: 9000, dur: 700 },
+      { do: 'nova', count: 16, speed: 240, damage: 15, push: { force: 260, ms: 280 }, telegraph: 340, dur: 650 },
+      { do: 'summon', spawnType: 'murcielago', count: 3, cap: 8, respawnMs: 9000, dur: 700 },
       { do: 'wait', dur: 350 },
     ] },
   ],
 };
 
-// Final (humano) — a small, mortal last form. Death fires onClear (the closing
-// dialogue) and the themed burn (Task 5). ~90 hp, minimal kit.
 const GALAHAD_FINAL = {
   key: 'galahad_final', tex: TEX.boss, color: COLORS.boss,
-  hp: 90, speed: 55, damage: 10, radius: 24, resist: 0,
+  hp: 250, speed: 55, damage: 10, radius: 24, resist: 0,
   elite: true,
   movement: { type: 'flee' },
   phases: [
     { from: 1.0, sequence: [
-      { do: 'shootStraight', speed: 200, damage: 10, telegraph: 320, dur: 700 }, // one last dart
-      { do: 'wait', dur: 800 },
+      { do: 'shootSpread', projectile: 'bloodDart', count: 3, arc: 60, speed: 210, damage: 10, telegraph: 300, dur: 600 }, // spread violeta desesperado
+      { do: 'wait', dur: 700 },
     ] },
   ],
 };
 
-// Top-level Galahad def. FormSequencer reads `forms` in order; each form runs its
-// own BossBrain phases. The outer hp/speed/etc mirror the first form (Humano) as
-// a safe fallback before the sequencer takes over. deathFeint:true gates the
-// themed collapse→rise transition + final burn (Task 5).
 export const GALAHAD = {
   key: 'galahad', tex: TEX.boss, color: COLORS.boss,
-  hp: 340, speed: 80, damage: 14, radius: 26,
+  hp: 640, speed: 150, damage: 16, radius: 26,
   elite: true,
   deathFeint: true,
   movement: { type: 'evade', range: 240 },
+  extraSprites: ['galahad_cadaver'],
   forms: [GALAHAD_HUMANO, GALAHAD_RAGE, GALAHAD_RAGE2, GALAHAD_MURCIELAGO, GALAHAD_FINAL],
 };
