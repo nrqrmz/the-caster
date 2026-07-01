@@ -36,13 +36,14 @@ test('minibosses have well-formed phases (>=1, each with a sequence array)', () 
   }
 });
 
-test('Caballero de Sangre matches spec stats (hp440/spd110/dmg20/r24) + drain modifier', () => {
-  assert.deepEqual(
-    [CABALLERO_SANGRE.hp, CABALLERO_SANGRE.speed, CABALLERO_SANGRE.damage, CABALLERO_SANGRE.radius],
-    [440, 110, 20, 24],
-  );
-  const drain = CABALLERO_SANGRE.modifiers.find((m) => m.type === 'drain');
-  assert.ok(drain && drain.heal === 10, 'drain heal 10');
+test('Caballero de Sangre: tanque-vampiro (640hp, shielded 0.25, speed 180, drainBite 20/150/4000)', () => {
+  assert.equal(CABALLERO_SANGRE.hp, 640);
+  assert.equal(CABALLERO_SANGRE.speed, 180);
+  assert.equal(CABALLERO_SANGRE.radius, 28);
+  const sh = CABALLERO_SANGRE.modifiers.find((m) => m.type === 'shielded');
+  const db = CABALLERO_SANGRE.modifiers.find((m) => m.type === 'drainBite');
+  assert.equal(sh.reduce, 0.25);
+  assert.deepEqual([db.amount, db.range, db.cooldown], [20, 150, 4000]);
 });
 
 test('Caballero juke decision: charge in P1, evade in P2', () => {

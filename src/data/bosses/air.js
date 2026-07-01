@@ -19,22 +19,25 @@ import { COLORS, TEX } from '../../config.js';
 // the recover. Decision: one movement per phase — charge (P1), evade (P2).
 export const CABALLERO_SANGRE = {
   key: 'caballero_sangre', tex: TEX.miniboss, color: COLORS.boss,
-  hp: 440, speed: 110, damage: 20, radius: 24,
+  hp: 640, speed: 180, damage: 20, radius: 28,
   elite: true,
   movement: { type: 'charge', windup: 450, dash: 340, recover: 500, dashMul: 3.2 },
   modifiers: [
-    { type: 'drain', heal: 10 }, // heals 10 hp when it lands a contact/dash hit
+    { type: 'drainBite', amount: 20, range: 150, cooldown: 4000 }, // muerde a distancia al embestir
+    { type: 'shielded', reduce: 0.25 },
   ],
   phases: [
     { from: 1.0, sequence: [
-      { do: 'wait', dur: 450 },                                              // charge windup (movement drives the dash)
-      { do: 'dashStrike', damage: 20, range: 70, telegraph: 300, dur: 360 }, // drains via modifier on contact
-      { do: 'wait', dur: 500 },                                              // recover (vulnerable window)
+      { do: 'wait', dur: 450 },
+      { do: 'dashStrike', damage: 20, range: 70, telegraph: 300, dur: 360 },
+      { do: 'wait', dur: 500 },
+      // dardo de sangre violeta, muy veloz, ~35% de slow
+      { do: 'shootStraight', projectile: 'bloodDart', speed: 320, damage: 14, slowChance: 0.35, telegraph: 260, dur: 500 },
       { do: 'dashStrike', damage: 20, range: 70, telegraph: 300, dur: 360 },
       { do: 'wait', dur: 500 },
     ] },
     { from: 0.5, speedMul: 1.3, movement: { type: 'evade', range: 120 }, sequence: [
-      { do: 'dashStrike', damage: 20, range: 70, telegraph: 240, dur: 320 }, // double dash, faster
+      { do: 'dashStrike', damage: 20, range: 70, telegraph: 240, dur: 320 },
       { do: 'wait', dur: 300 },
       { do: 'dashStrike', damage: 20, range: 70, telegraph: 240, dur: 320 },
       { do: 'wait', dur: 350 },
