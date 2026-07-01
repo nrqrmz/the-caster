@@ -1003,9 +1003,9 @@ export default class GameScene extends Phaser.Scene {
     return true;
   }
 
-  drawZap(points) {
+  drawZap(points, color = COLORS.lightning) {
     const g = this.add.graphics().setDepth(900);
-    g.lineStyle(3, COLORS.lightning, 1);
+    g.lineStyle(3, color, 1);
     g.beginPath();
     g.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) g.lineTo(points[i].x, points[i].y);
