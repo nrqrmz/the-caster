@@ -11,14 +11,14 @@ export const AIR_ENEMIES = {
     hp: 24, speed: 95, damage: 9, radius: 16,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
-    modifiers: [{ type: 'drain', heal: 4 }] },
+    modifiers: [{ type: 'drainBite', amount: 6, range: 130, cooldown: 1800 }] },
 
   // #2 — Duelista Nocturno: evade movement — dashes to dodge your orbs, hit-and-run dashStrike + drain.
   duelista_nocturno: { key: 'duelista_nocturno', tex: TEX.archer, color: COLORS.duelistSteel,
     hp: 30, speed: 120, damage: 12, radius: 16,
     movement: { type: 'evade', range: 120 },
     attacks: [{ type: 'dashStrike' }],
-    modifiers: [{ type: 'drain', heal: 5 }] },
+    modifiers: [{ type: 'drainBite', amount: 6, range: 130, cooldown: 1800 }] },
 
   // #3 — Acólito del Trueno: base ranged. Kites and fires straight lightning bolts.
   acolito_trueno: { key: 'acolito_trueno', tex: TEX.archer, color: COLORS.stormGrey,
@@ -44,7 +44,7 @@ export const AIR_ENEMIES = {
     hp: 150, speed: 90, damage: 16, radius: 20,
     movement: { type: 'charge', windup: 500, dash: 360, recover: 600, dashMul: 3.0 },
     attacks: [{ type: 'melee' }],
-    modifiers: [{ type: 'drain', heal: 6 }, { type: 'shielded', reduce: 0.4 }] },
+    modifiers: [{ type: 'drainBite', amount: 14, range: 130, cooldown: 1800 }, { type: 'shielded', reduce: 0.4 }] },
 
   // #7 — Hechicero del Viento: ranged lift. Kites and conjures a "tornadito" that lifts (0.5 s).
   hechicero_viento: { key: 'hechicero_viento', tex: TEX.archer, color: COLORS.stormDark,
@@ -57,7 +57,7 @@ export const AIR_ENEMIES = {
     hp: 42, speed: 85, damage: 11, radius: 16,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
-    modifiers: [{ type: 'drain', heal: 5 }, { type: 'reviveOnce' }] },
+    modifiers: [{ type: 'drainBite', amount: 14, range: 130, cooldown: 1800 }, { type: 'reviveOnce' }] },
 
   // === Voladores (flying: inmunes al terreno, rápidos/erráticos) — nv1–6 ===
 
@@ -67,7 +67,7 @@ export const AIR_ENEMIES = {
     flying: true,
     movement: { type: 'erratic' },
     attacks: [{ type: 'melee' }],
-    modifiers: [{ type: 'drain', heal: 3 }] },
+    modifiers: [{ type: 'drainBite', amount: 6, range: 130, cooldown: 1800 }] },
 
   // #10 — Arpía: dive-bomb flyer. Charges in then dashStrikes.
   arpia: { key: 'arpia', tex: TEX.archer, color: COLORS.harpyPlum,
@@ -97,7 +97,7 @@ export const AIR_ENEMIES = {
     flying: true,
     movement: { type: 'charge', windup: 500, dash: 340, recover: 550, dashMul: 3.0 },
     attacks: [{ type: 'dashStrike' }],
-    modifiers: [{ type: 'drain', heal: 8 }] },
+    modifiers: [{ type: 'drainBite', amount: 14, range: 130, cooldown: 1800 }] },
 
   // === Ambientales / torreta — nv3–7 ===
 
