@@ -12,6 +12,7 @@ export const DEFAULT_SAVE = {
   gold: 0,
   inventory: { potion: 0, elixir: 0, phoenix: 0 },
   respecCount: 0,
+  seenIntros: [],
 };
 
 function freshSave() {

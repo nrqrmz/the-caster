@@ -48,7 +48,7 @@ export const FIRE_ENEMIES = {
     movement: { type: 'zigzag' }, attacks: [{ type: 'melee' }] },
   avispa_brasa: { key: 'avispa_brasa', tex: TEX.villager, color: COLORS.salamander, hp: 20, speed: 150, damage: 7, radius: 16,
     movement: { type: 'zigzag' }, attacks: [{ type: 'melee' }] },
-  totem_pira: { key: 'totem_pira', tex: TEX.warrior, color: COLORS.totemFire, hp: 250, speed: 0, damage: 9, radius: 18,
+  totem_pira: { key: 'totem_pira', tex: TEX.warrior, color: COLORS.totemFire, hp: 250, speed: 0, damage: 9, radius: 36,
     movement: { type: 'static' }, attacks: [{ type: 'nova', count: 8, every: 3000, speed: 180, telegraph: 500 }],
     modifiers: [{ type: 'shielded', reduce: 0.25 }, { type: 'auraDamage', dps: 8, radius: 50 }] },
   brasa_errante: { key: 'brasa_errante', tex: TEX.villager, color: COLORS.totemFire, hp: 20, speed: 60, damage: 10, radius: 16,

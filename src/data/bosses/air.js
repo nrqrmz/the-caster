@@ -141,6 +141,7 @@ export const LIDER_CULTISTA = {
   elite: true,
   ritual: true,         // GameScene.updateRitual gates on this
   untargetable: true,   // seeds enemy._untargetable at spawn (channel phase)
+  extraSprites: ['galahad_coffin'], // ataúd del setpiece (forjado para Aire vía manifiesto)
   movement: { type: 'static' },
   phases: [
     // Phase 0 — channel. forcedPhase stays 0 (untargetable) until the bar fills.
@@ -296,6 +297,6 @@ export const GALAHAD = {
   elite: true,
   deathFeint: true,
   movement: { type: 'evade', range: 240 },
-  extraSprites: ['galahad_cadaver'],
+  extraSprites: ['galahad_cadaver'], // runtime death-swap sprite (GameScene sets it on death); not a form
   forms: [GALAHAD_HUMANO, GALAHAD_RAGE, GALAHAD_RAGE2, GALAHAD_MURCIELAGO, GALAHAD_FINAL],
 };

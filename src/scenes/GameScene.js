@@ -202,6 +202,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   spawnBoss(def) {
+    // anchorY (0..1, fracción desde arriba) ancla a un jefe estático en su sitio
+    // (p. ej. el Kraken al 25% = 75% desde abajo, el Elemental al 37.5%). Sin ella, entra desde y=-40.
     const startY = def.anchorY != null ? GAME_HEIGHT * def.anchorY : -40;
     this.boss = new Boss(this, GAME_WIDTH / 2, startY, scaleEnemyDef(def, this.diff));
     this.enemies.add(this.boss);
@@ -249,8 +251,13 @@ export default class GameScene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
     // Líder en la cabecera (norte).
     boss.x = cx; boss.y = 200;
-    // Ataúd vertical sólido (bloque rectangular provisional; sprite bespoke luego).
+    // Ataúd vertical sólido: bloque de colisión que renderiza el sprite bespoke del sarcófago.
     const coffin = new StaticBlock(this, cx, 410, 96, 300, COLORS.stoneGrey);
+    if (hasRecipe('galahad_coffin')) {
+      coffin.setTexture(spriteKey('galahad_coffin'));
+      coffin.clearTint();               // muestra los colores reales (piedra/oro/gema), no el tinte gris
+      coffin.setDisplaySize(96, 300);   // el cuerpo físico (setSize en el constructor) ya quedó en 96×300
+    }
     this.blocks.push(coffin);
     if (this.caster) this.physics.add.collider(this.caster, coffin);
     // 6 ranuras: 3 izquierda (x=150) + 3 derecha (x=330), y = 300/410/520.
@@ -445,7 +452,7 @@ export default class GameScene extends Phaser.Scene {
     // Respect CONCURRENCY_CAP.
     if (this.liveWaveCount() >= CONCURRENCY_CAP) { enemy.destroy(); return; }
     const typeKey = toLifecycle === LIFECYCLE.TADPOLE ? (enemy.def._hatchType || 'tadpole')
-                                                       : (enemy.def._growType  || 'adultFrog');
+                                                       : (enemy._growOverride || enemy.def._growType || 'adultFrog');
     const def = ENEMY_TYPES[typeKey];
     if (!def) { enemy.destroy(); return; }
     const scaled = scaleEnemyDef(def, this.diff);
@@ -457,6 +464,16 @@ export default class GameScene extends Phaser.Scene {
     }
     this.enemies.add(e);
     enemy.destroy();
+  }
+
+  // Arms a freshly-summoned creature with the TADPOLE lifecycle so it matures
+  // into a shooter via promoteEnemy (e.g. Náyade's renacuajos → sapo_escupidor).
+  // growType overrides the def's default _growType for this instance only.
+  armGrowth(enemy, growType) {
+    if (!enemy || !enemy.brainState) return;
+    enemy.brainState.lifecycle = LIFECYCLE.TADPOLE;
+    enemy.brainState.lifecycleTimer = 0;
+    if (growType) enemy._growOverride = growType;
   }
 
   spawnPetrifyBlock(x, y) {
@@ -822,12 +839,16 @@ export default class GameScene extends Phaser.Scene {
           child._summonedBy = enemy;
           child._summonCapKey = key;
           child._summonRespawnMs = att.respawnMs ?? 15000;
+          if (att.grow) this.armGrowth(child, att.growType);
           tr.alive += 1;
         }
       } else {
         // Sin tope: comportamiento histórico (acotado solo por CONCURRENCY_CAP).
         const def = ENEMY_TYPES[att.spawnType];
-        if (def) for (let i = 0; i < (att.count ?? 2); i++) this.spawnEnemy(def);
+        if (def) for (let i = 0; i < (att.count ?? 2); i++) {
+          const child = this.spawnEnemy(def);
+          if (att.grow) this.armGrowth(child, att.growType);
+        }
       }
       return;
     }
@@ -917,8 +938,9 @@ export default class GameScene extends Phaser.Scene {
       shot.setTint(spec.tint); // disparos enemigos distinguibles del orbe cian del jugador
       if (att.tint != null) shot.setTint(att.tint); // step-level tint override (Céfalo's wood javelin)
       if (p.big) {
-        shot.setDisplaySize(60, 60);                 // bola enorme reusando TEX.fireball (32px)
-        if (shot.body) shot.body.setCircle(28); // hitbox grande
+        const s = p.size ?? 60;                       // bola enorme reusando TEX.fireball (32px); size por fase
+        shot.setDisplaySize(s, s);
+        if (shot.body) shot.body.setCircle(Math.round(s * 0.46)); // hitbox ~ mitad del diámetro visual
       }
       if (p.homing) { shot.homing = true; shot.homingSpeed = p.speed; shot.homingLife = HOMING_TTL_MS; }
       if (eff && eff.kind === 'burn') { shot.burnDps = burnMod?.dps ?? eff.dps; shot.burnMs = burnMod?.ms ?? eff.ms; }

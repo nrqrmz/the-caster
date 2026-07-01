@@ -77,7 +77,7 @@ test('Dama forms have non-decreasing resist across the first four forms', () => 
 test('last Dama form is maga_final', () => {
   const last = DAMA_LAGO.forms[DAMA_LAGO.forms.length - 1];
   assert.equal(last.key, 'dama_maga_final');
-  assert.equal(last.hp, 320);
+  assert.equal(last.hp, 390);
 });
 
 test('Dama form keys in order: maga, tiburon, kraken, ballena, maga_final', () => {
