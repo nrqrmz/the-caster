@@ -216,6 +216,7 @@ export default class GameScene extends Phaser.Scene {
       this.boss._ritual = { filled: 0, total: RITUAL_FILL_MS };
       this.boss._ritualTauntT = RITUAL_TAUNT_EVERY;
       this.boss._ritualTaunt = 0;
+      this.setupRitualSetpiece(this.boss);
     }
     if (def.taunts && def.taunts.length) { this.boss._tauntT = BOSS_TAUNT_EVERY; this.boss._tauntI = 0; }
     if (def.forms && def.forms.length) {
@@ -239,6 +240,40 @@ export default class GameScene extends Phaser.Scene {
       if (def.gateUntilCoBossDead) this.boss._gateGuard = co;    // master untargetable until co dies (Céfalo ← Lélaps)
     }
     return this.boss;
+  }
+
+  // nv7: coloca el ataúd sólido central, ancla al líder en la cabecera, siembra 6
+  // cultistas en las ranuras laterales (exentos del cap, reemplazables) y la gárgola al pie.
+  setupRitualSetpiece(boss) {
+    const cx = GAME_WIDTH / 2;
+    // Líder en la cabecera (norte).
+    boss.x = cx; boss.y = 200;
+    // Ataúd vertical sólido (bloque rectangular provisional; sprite bespoke luego).
+    const coffin = new StaticBlock(this, cx, 410, 96, 300, COLORS.stoneGrey);
+    this.blocks.push(coffin);
+    if (this.caster) this.physics.add.collider(this.caster, coffin);
+    // 6 ranuras: 3 izquierda (x=150) + 3 derecha (x=330), y = 300/410/520.
+    boss._ritualSlots = [];
+    for (const sx of [150, 330]) for (const sy of [300, 410, 520]) {
+      const slot = { x: sx, y: sy, guard: null };
+      slot.guard = this.spawnRitualGuard(slot);
+      boss._ritualSlots.push(slot);
+    }
+    // Gárgola al pie (sur), exenta del cap.
+    const g = this.spawnEnemy(ENEMY_TYPES['gargola_pararrayos']);
+    g.x = cx; g.y = 620; g._setpieceExempt = true;
+    if (g.body) { g.body.reset(cx, 620); g.body.moves = false; }
+    boss._ritualGargoyle = g;
+  }
+
+  // Un cultista de ranura: nace en un borde y corre a su ranura (no persigue a la princesa).
+  spawnRitualGuard(slot) {
+    const guard = this.spawnEnemy(ENEMY_TYPES['guardian_rito']);
+    // Nace en un borde aleatorio (spawnEnemy ya lo pone en un borde).
+    guard._setpieceExempt = true;   // no cuenta para el cap de oleadas
+    guard._ritualSlot = slot;       // corre a esta ranura
+    guard._atSlot = false;
+    return guard;
   }
 
   _applyBossForm(boss, formIndex) {
