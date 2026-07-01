@@ -172,12 +172,12 @@ export const LIDER_CULTISTA = {
 // burns — Task 5). His death fires onClear (the world-closing dialogue in
 // regions.js). All forms elite: true; FormSequencer enforces CC immunity.
 //
-// Spec §4.5 stat table:
-//   Humano        hp 340 spd  80 dmg 14 r 26 resist 0    · strafe + blood darts + evade
-//   Rage          hp 460 spd 110 dmg 20 r 26 resist 0.10 · dashStrike + drain + summon bats
-//   Rage ×2       hp 560 spd 150 dmg 22 r 26 resist 0.20 · Rage cadence/speed DOUBLED
-//   Murciélago    hp 700 spd 100 dmg 24 r 48 resist 0.30 · flying + dive (charge) + push gust + bat nova
-//   Final         hp ~90 spd  55 dmg 10 r 24 resist 0    · minimal kit (one last dart)
+// Stat table (tuned 2026-06):
+//   Humano        hp 640 spd 150 dmg 16 r 26 resist 0.10 · evade + blood darts
+//   Rage          hp 700 spd 180 dmg 20 r 30 resist 0.15 · charge + drain + bats
+//   Rage ×2       hp 780 spd 200 dmg 22 r 30 resist 0.20 · double cadence/speed
+//   Murciélago    hp 950 spd 120 dmg 24 r 72 resist 0.30 · flying + dive + push nova + bat swarm
+//   Final         hp 250 spd  55 dmg 10 r 24 resist 0    · flee + spread dart (no drain, no fly)
 
 const GALAHAD_HUMANO = {
   key: 'galahad_humano', tex: TEX.boss, color: COLORS.boss,
@@ -279,6 +279,8 @@ const GALAHAD_FINAL = {
   key: 'galahad_final', tex: TEX.boss, color: COLORS.boss,
   hp: 250, speed: 55, damage: 10, radius: 24, resist: 0,
   elite: true,
+  flying: false,
+  modifiers: [],
   movement: { type: 'flee' },
   phases: [
     { from: 1.0, sequence: [

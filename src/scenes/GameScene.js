@@ -202,7 +202,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   spawnBoss(def) {
-    this.boss = new Boss(this, GAME_WIDTH / 2, -40, scaleEnemyDef(def, this.diff));
+    const startY = def.anchorY != null ? GAME_HEIGHT * def.anchorY : -40;
+    this.boss = new Boss(this, GAME_WIDTH / 2, startY, scaleEnemyDef(def, this.diff));
     this.enemies.add(this.boss);
     this.bosses = [this.boss];
     // Oversized single-def bosses (e.g. Elemental de Tormenta, radius 100) need their
@@ -860,7 +861,6 @@ export default class GameScene extends Phaser.Scene {
         s.x = Phaser.Math.Clamp(enemy.x + Phaser.Math.Between(-40, 40), 20, GAME_WIDTH - 20);
         s.y = Phaser.Math.Clamp(enemy.y + Phaser.Math.Between(-40, 40), 20, GAME_HEIGHT - 20);
       }
-      const bx = enemy.x, by = enemy.y;
       this.time.delayedCall(dur, () => {
         if (!enemy.active) return;
         // Reubicar en un punto aleatorio lejos de la princesa.
@@ -1439,9 +1439,8 @@ export default class GameScene extends Phaser.Scene {
   updateDrainBite(delta) {
     if (!this.caster || this.caster.hp <= 0) return;
     const now = this.time.now;
-    const all = [...this.liveEnemies(), ...this.bosses.filter((b) => b && b.active)];
-    for (const e of all) {
-      if (!e.active || !e.def || e._untargetable) continue;
+    for (const e of this.liveEnemies()) {
+      if (!e.active || !e.def || e._untargetable || e._transforming) continue;
       const mod = findModifier(e.def, 'drainBite');
       if (!mod) continue;
       const range = mod.range ?? 130;
