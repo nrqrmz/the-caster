@@ -41,7 +41,7 @@ export const AIR_ENEMIES = {
 
   // #6 — Guardia Nocturno: fast shielded bruiser; charges, drains, soaks damage.
   guardia_nocturno: { key: 'guardia_nocturno', tex: TEX.warrior, color: COLORS.stormDark,
-    hp: 150, speed: 90, damage: 16, radius: 20,
+    hp: 150, speed: 90, damage: 16, radius: 32,
     movement: { type: 'charge', windup: 500, dash: 360, recover: 600, dashMul: 3.0 },
     attacks: [{ type: 'melee' }],
     modifiers: [{ type: 'drainBite', amount: 14, range: 130, cooldown: 1800 }, { type: 'shielded', reduce: 0.4 }] },
@@ -71,7 +71,7 @@ export const AIR_ENEMIES = {
 
   // #10 — Arpía: dive-bomb flyer. Charges in then dashStrikes.
   arpia: { key: 'arpia', tex: TEX.archer, color: COLORS.harpyPlum,
-    hp: 40, speed: 110, damage: 13, radius: 16,
+    hp: 40, speed: 110, damage: 13, radius: 24,
     flying: true,
     movement: { type: 'charge', windup: 450, dash: 320, recover: 500, dashMul: 3.2 },
     attacks: [{ type: 'dashStrike' }] },
@@ -85,7 +85,7 @@ export const AIR_ENEMIES = {
 
   // #12 — Fuego Fatuo: erratic flyer with a damage aura; brushing it stuns you (0.3 s). No direct attack.
   fuego_fatuo: { key: 'fuego_fatuo', tex: TEX.villager, color: COLORS.wispYellow,
-    hp: 26, speed: 75, damage: 8, radius: 16,
+    hp: 26, speed: 75, damage: 8, radius: 24,
     flying: true,
     movement: { type: 'erratic' },
     attacks: [],
@@ -93,7 +93,7 @@ export const AIR_ENEMIES = {
 
   // #13 — Vampiro Alado: heavy dive flyer. Charges, dashStrikes, drains hard (+8).
   vampiro_alado: { key: 'vampiro_alado', tex: TEX.archer, color: COLORS.bloodRed,
-    hp: 120, speed: 100, damage: 18, radius: 19,
+    hp: 120, speed: 100, damage: 18, radius: 32,
     flying: true,
     movement: { type: 'charge', windup: 500, dash: 340, recover: 550, dashMul: 3.0 },
     attacks: [{ type: 'dashStrike' }],
@@ -103,20 +103,20 @@ export const AIR_ENEMIES = {
 
   // #14 — Gárgola Pararrayos: static turret. Lightning nova whose bolts stun (0.3 s); shielded.
   gargola_pararrayos: { key: 'gargola_pararrayos', tex: TEX.warrior, color: COLORS.gargoyleStone,
-    hp: 250, speed: 0, damage: 8, radius: 18,
+    hp: 250, speed: 0, damage: 8, radius: 36,
     movement: { type: 'static' },
     attacks: [{ type: 'nova', count: 8, every: 3200, speed: 200, telegraph: 550, stun: true }],
     modifiers: [{ type: 'shielded', reduce: 0.25 }] },
 
   // #15 — Centinela de Piedra: static homing turret. Fires spark that tracks and petrifies (root 600ms).
   centinela_piedra: { key: 'centinela_piedra', tex: TEX.warrior, color: COLORS.sentinelStone,
-    hp: 60, speed: 0, damage: 10, radius: 18,
+    hp: 60, speed: 0, damage: 10, radius: 36,
     movement: { type: 'static' },
     attacks: [{ type: 'shootHoming', projectile: 'stoneSpark', root: true, rootMs: 600, every: 2600, speed: 120, telegraph: 350 }] },
 
   // #16 — Torbellino Errante: 0-damage ambient hazard. Pushes you and briefly lifts (0.5 s) on contact.
   torbellino_errante: { key: 'torbellino_errante', tex: TEX.archer, color: COLORS.whirlGrey,
-    hp: 40, speed: 50, damage: 0, radius: 20,
+    hp: 40, speed: 50, damage: 0, radius: 36,
     movement: { type: 'erratic' },
     attacks: [],
     modifiers: [{ type: 'onHitPush', force: 220, ms: 250 }, { type: 'onHitStun', kind: 'lift', ms: 500 }] },

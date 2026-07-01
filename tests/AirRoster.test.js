@@ -180,3 +180,10 @@ test('proyectiles de casters: espíritu=plasma, centinela=stoneSpark+petrify(roo
   assert.equal(cen.rootMs, 600);
   assert.equal(AIR_ENEMIES.tronador.attacks[0].push, true);
 });
+
+// ── 12. Task 9: barrido de render — jerarquía de silueta ──────────────────────
+test('barrido de render: radios de la jerarquía de silueta', () => {
+  const R = { gargola_pararrayos: 36, centinela_piedra: 36, vampiro_alado: 32,
+              guardia_nocturno: 32, torbellino_errante: 36, arpia: 24, fuego_fatuo: 24 };
+  for (const [k, r] of Object.entries(R)) assert.equal(AIR_ENEMIES[k].radius, r, k);
+});
