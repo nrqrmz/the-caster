@@ -47,25 +47,30 @@ export const CABALLERO_SANGRE = {
 };
 
 // ─── nv5 MINIBOSS ────────────────────────────────────────────────────────────
-// Bruja del Vendaval — aerial control. Conjures lifting tornados and stunning
-// bolts. First boss-scale taste of displacement: don't stand still under the
-// tornados. Death line bridges narratively to nv6 (the storm itself).
+// Bruja del Vendaval — escurridiza. Canaliza rayos verticales, desaparece vía
+// Blink de Tormenta (4 espíritus, ~3.6s), y reaparece lejos. Invoca arpías y
+// tornados volátiles (no murciélagos). Shielded 0.15 mitiga el daño.
 export const BRUJA_VENDAVAL = {
   key: 'bruja_vendaval', tex: TEX.miniboss, color: COLORS.lightning,
-  hp: 420, speed: 75, damage: 16, radius: 26,
+  hp: 640, speed: 100, damage: 16, radius: 30,
   elite: true,
   movement: { type: 'strafe', range: 260, strafeSpeed: 55 },
+  modifiers: [{ type: 'shielded', reduce: 0.15 }],
   phases: [
     { from: 1.0, sequence: [
-      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 160, telegraph: 0, dur: 650 }, // tornado recto que eleva
-      { do: 'shootHoming', speed: 130, damage: 14, stun: true, telegraph: 420, dur: 900 },          // rayo aturdidor
-      { do: 'summon', spawnType: 'murcielago', count: 2, cap: 4, respawnMs: 12000, dur: 700 },
+      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 160, telegraph: 0, dur: 650 },
+      { do: 'shootHoming', speed: 130, damage: 14, stun: true, telegraph: 420, dur: 900 },
+      { do: 'summon', spawnType: 'arpia', count: 2, cap: 3, respawnMs: 12000, dur: 700 },
+      { do: 'summon', spawnType: 'torbellino_errante', count: 1, cap: 2, respawnMs: 14000, dur: 700 },
+      { do: 'blinkStorm', duration: 3600, spiritCount: 4, dur: 900 },
       { do: 'wait', dur: 450 },
     ] },
     { from: 0.5, speedMul: 1.15, sequence: [
-      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 170, telegraph: 0, dur: 600 }, // frenesí: tornado recto…
-      { do: 'shootHoming',   projectile: 'tornado', lift: true, damage: 12, speed: 120, telegraph: 0, dur: 600 }, // …y tornado homing (despawnea a 2.6s)
-      { do: 'shootSpread', count: 5, arc: 70, speed: 240, damage: 13, stun: true, telegraph: 320, dur: 650 }, // rayos
+      { do: 'shootStraight', projectile: 'tornado', lift: true, damage: 12, speed: 170, telegraph: 0, dur: 600 },
+      { do: 'shootHoming',   projectile: 'tornado', lift: true, damage: 12, speed: 120, telegraph: 0, dur: 600 },
+      { do: 'shootSpread', count: 5, arc: 70, speed: 240, damage: 13, stun: true, telegraph: 320, dur: 650 },
+      { do: 'summon', spawnType: 'arpia', count: 2, cap: 3, respawnMs: 10000, dur: 650 },
+      { do: 'blinkStorm', duration: 3600, spiritCount: 4, dur: 900 },
       { do: 'wait', dur: 350 },
     ] },
   ],

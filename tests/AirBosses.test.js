@@ -60,15 +60,16 @@ test('Caballero P2 summons murcielago (count 2, cap 4, respawn 12000)', () => {
   assert.equal(s.respawnMs, 12000);
 });
 
-test('Bruja del Vendaval matches spec stats + lift/stun steps', () => {
-  assert.deepEqual(
-    [BRUJA_VENDAVAL.hp, BRUJA_VENDAVAL.speed, BRUJA_VENDAVAL.damage, BRUJA_VENDAVAL.radius],
-    [420, 75, 16, 26],
-  );
-  const hasLift = BRUJA_VENDAVAL.phases.some((p) => p.sequence.some((s) => s.lift === true));
-  const hasStun = BRUJA_VENDAVAL.phases.some((p) => p.sequence.some((s) => s.stun === true));
-  assert.ok(hasLift, 'Bruja has a lift step');
-  assert.ok(hasStun, 'Bruja has a stun step');
+test('Bruja del Vendaval: escurridiza (640hp, shielded 0.15, speed 100), Blink + summons no-murciélago', () => {
+  assert.equal(BRUJA_VENDAVAL.hp, 640);
+  assert.equal(BRUJA_VENDAVAL.speed, 100);
+  assert.equal(BRUJA_VENDAVAL.radius, 30);
+  assert.equal(BRUJA_VENDAVAL.modifiers.find((m) => m.type === 'shielded').reduce, 0.15);
+  const steps = BRUJA_VENDAVAL.phases.flatMap((p) => p.sequence);
+  assert.ok(steps.some((s) => s.do === 'blinkStorm'), 'tiene Blink de Tormenta');
+  const summons = steps.filter((s) => s.do === 'summon').map((s) => s.spawnType);
+  assert.ok(!summons.includes('murcielago'), 'no invoca murciélagos');
+  assert.ok(summons.includes('arpia'), 'invoca arpías');
 });
 
 test('Elemental de Tormenta: static, big (r56), resist .20, 3 phases', () => {
