@@ -130,26 +130,23 @@ function airWaves(tier) {
 
 function airInterWaves(tier) {
   if (tier <= 2) {
-    // Nv4: introduce Guardia Nocturno (fast bruiser threat), Fuego Fatuo (stun aura flyer),
-    // Gárgola Pararrayos (stun turret). Anchor = Heraldo. Filler = Siervos/Murciélagos.
+    // Nv4 (~28, pico 15): muro (Guardia) + torretas (Gárgola/Centinela) + aura (Fuego Fatuo).
     return [
-      wave(580, [{ type: 'heraldo_rayo', count: tier }, { type: 'siervo_torre', count: ramp(3, tier) }, { type: 'guardia_nocturno', count: 1 }, { type: 'murcielago', count: ramp(2, tier) }]),
-      wave(530, [{ type: 'gargola_pararrayos', count: 1 }, { type: 'fuego_fatuo', count: tier }, { type: 'duelista_nocturno', count: 1 }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+      wave(580, [{ type: 'heraldo_rayo', count: 2 }, { type: 'siervo_torre', count: ramp(3, tier) }, { type: 'guardia_nocturno', count: 1 }, { type: 'murcielago', count: ramp(4, tier) }, { type: 'centinela_piedra', count: 1 }, { type: 'fuego_fatuo', count: 1 }]),
+      wave(530, [{ type: 'gargola_pararrayos', count: 1 }, { type: 'fuego_fatuo', count: 2 }, { type: 'duelista_nocturno', count: 1 }, { type: 'siervo_torre', count: ramp(3, tier) }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'guardia_nocturno', count: 1 }, { type: 'heraldo_rayo', count: 2 }]),
     ];
   }
   if (tier === 3) {
-    // Nv5 (spec §5 example): Hechicero del Viento (anchor: lifts you) + Murciélagos (filler/chain)
-    // + Duelista Nocturno (evasive threat). Also introduce Vástago Vampírico, Torbellino Errante.
+    // Nv5 (~33, pico 17): + Hechicero (lift), Sacerdote (healer), Vástago, Torbellino, Vampiro Alado.
     return [
-      wave(540, [{ type: 'hechicero_viento', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'duelista_nocturno', count: 1 }, { type: 'vastago_vampirico', count: tier }]),
-      wave(490, [{ type: 'sacerdote_sangre', count: 1 }, { type: 'torbellino_errante', count: 1 }, { type: 'heraldo_rayo', count: tier }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+      wave(540, [{ type: 'hechicero_viento', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'duelista_nocturno', count: 1 }, { type: 'vastago_vampirico', count: 3 }, { type: 'guardia_nocturno', count: 1 }, { type: 'fuego_fatuo', count: 2 }, { type: 'centinela_piedra', count: 1 }, { type: 'siervo_torre', count: 2 }]),
+      wave(490, [{ type: 'sacerdote_sangre', count: 1 }, { type: 'torbellino_errante', count: 1 }, { type: 'gargola_pararrayos', count: 1 }, { type: 'heraldo_rayo', count: 2 }, { type: 'siervo_torre', count: 4 }, { type: 'vampiro_alado', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'espiritu_tormenta', count: 2 }]),
     ];
   }
-  // Tier 4 (inter(4) = Nv6): introduce Vampiro Alado (heavy diver). Anchor = Hechicero + Sacerdote.
-  // Filler = Murciélagos/Siervos. Threat = Vampiro Alado + Duelista.
+  // Nv6 (~40, pico 20): clímax — doble Vampiro Alado + Hechicero + Sacerdote + enjambre + torretas.
   return [
-    wave(510, [{ type: 'hechicero_viento', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'vampiro_alado', count: 1 }, { type: 'vastago_vampirico', count: tier }]),
-    wave(460, [{ type: 'sacerdote_sangre', count: 1 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'duelista_nocturno', count: 1 }, { type: 'torbellino_errante', count: 1 }]),
+    wave(510, [{ type: 'hechicero_viento', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'vampiro_alado', count: 1 }, { type: 'vastago_vampirico', count: ramp(2, tier) }, { type: 'guardia_nocturno', count: 1 }, { type: 'fuego_fatuo', count: 2 }, { type: 'gargola_pararrayos', count: 1 }, { type: 'arpia', count: 3 }]),
+    wave(460, [{ type: 'sacerdote_sangre', count: 1 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'duelista_nocturno', count: 1 }, { type: 'torbellino_errante', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'guardia_nocturno', count: 1 }, { type: 'heraldo_rayo', count: 3 }, { type: 'vampiro_alado', count: 1 }, { type: 'fuego_fatuo', count: 1 }]),
   ];
 }
 

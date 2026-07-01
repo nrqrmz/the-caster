@@ -138,6 +138,13 @@ function levelWaveTotal(region, levelIndex) {
   return waves.map((w) => w.spawns.reduce((s, sp) => s + sp.count, 0));
 }
 
+function airTypesInLevel(region, i) {
+  const set = new Set();
+  region.levels[i].phases.filter((p) => p.type === 'wave')
+    .forEach((w) => w.spawns.forEach((s) => set.add(s.type)));
+  return set;
+}
+
 test('Air nv1-3: totales de oleada en la banda intermedia (escalando)', () => {
   const air = REGIONS.air;
   const t = (i) => levelWaveTotal(air, i).reduce((a, b) => a + b, 0);
@@ -145,6 +152,24 @@ test('Air nv1-3: totales de oleada en la banda intermedia (escalando)', () => {
   assert.ok(t(1) >= 28 && t(1) <= 33, `nv2 = ${t(1)}`);   // ~30
   assert.ok(t(2) >= 35 && t(2) <= 41, `nv3 = ${t(2)}`);   // ~38
   assert.ok(t(2) > t(1) && t(1) > t(0), 'escala creciente nv1<nv2<nv3');
+});
+
+test('Air nv4-6: totales escalando 28<33<40 (arregla la escalada plana)', () => {
+  const air = REGIONS.air;
+  const t = (i) => levelWaveTotal(air, i).reduce((a, b) => a + b, 0);
+  assert.ok(t(3) >= 25 && t(3) <= 31, `nv4 = ${t(3)}`);   // ~28
+  assert.ok(t(4) >= 30 && t(4) <= 36, `nv5 = ${t(4)}`);   // ~33
+  assert.ok(t(5) >= 37 && t(5) <= 43, `nv6 = ${t(5)}`);   // ~40
+  assert.ok(t(5) > t(4) && t(4) > t(3), 'intermedios escalan nv4<nv5<nv6');
+});
+
+test('Air: los 6 infrautilizados aparecen en >=2 niveles', () => {
+  const air = REGIONS.air;
+  const counts = {};
+  for (const k of ['guardia_nocturno','espiritu_tormenta','fuego_fatuo','vampiro_alado','gargola_pararrayos','centinela_piedra']) {
+    counts[k] = air.levels.filter((_, i) => airTypesInLevel(air, i).has(k)).length;
+    assert.ok(counts[k] >= 2, `${k} aparece en ${counts[k]} niveles`);
+  }
 });
 
 // ─── Fire regression ─────────────────────────────────────────────────────────
