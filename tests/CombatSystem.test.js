@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyDamage } from '../src/systems/CombatSystem.js';
+import { applyDamage, tryDrainBite } from '../src/systems/CombatSystem.js';
 
 test('applyDamage reduces hp and reports alive', () => {
   const r = applyDamage({ hp: 50, maxHp: 50 }, 20);
@@ -226,4 +226,13 @@ test('applyDrain heals an entity, clamped to maxHp', () => {
   assert.equal(e.hp, 38);
   applyDrain(e, 999);
   assert.equal(e.hp, 50); // clamped
+});
+
+test('tryDrainBite: primer mordisco pasa, luego bloquea hasta cumplir cooldown', () => {
+  const e = {};
+  assert.equal(tryDrainBite(e, 1000, 4000), true);   // primer mordisco
+  assert.equal(tryDrainBite(e, 2000, 4000), false);  // dentro del cooldown
+  assert.equal(tryDrainBite(e, 4999, 4000), false);  // justo antes de cumplir
+  assert.equal(tryDrainBite(e, 5000, 4000), true);   // cooldown cumplido -> muerde
+  assert.equal(tryDrainBite(e, 5001, 4000), false);  // rearmado
 });

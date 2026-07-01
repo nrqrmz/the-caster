@@ -129,6 +129,14 @@ const GALAHAD_CADAVER = [
   { name: 'cad_hair',      palette: 'blackhair' },
   { name: 'cad_head',      palette: 'vampskin' },
 ];
+// Galahad's coffin (nv7 ritual setpiece): sealed vertical stone sarcophagus.
+// Body uses the recipe baseColor (stone grey); gold trim + lid seam; blood-red gem.
+const COFFIN = [
+  { name: 'coffin_body' },
+  { name: 'coffin_trim',  palette: 'gold' },
+  { name: 'coffin_gem',   palette: 'vampglow' },
+  { name: 'coffin_crest', palette: 'gold' },
+];
 // Jellyfish: translucent bell + inner core + trailing tentacles (type color) and
 // glowing eyes. Serves both the medusa and its smaller split child.
 const JELLY = [
@@ -459,6 +467,7 @@ export const RECIPES = {
   galahad_murcielago: { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x4a148c, parts: GALAHAD_BAT }, // bespoke colossal symmetric bat — native 2:1 (64×32 → 128×64)
   galahad_cadaver:    { archetype: 'boss', gridW: 64, gridH: 32, scale: 2, baseColor: 0x1a0e12, parts: GALAHAD_CADAVER }, // prone dead count — native 2:1 (64×32 → 128×64)
   galahad_final:      { archetype: 'boss', size: 96, parts: GALAHAD_FINAL },  // Count ashen/dying: grey cloth, death-pale skin, dim eyes (true death)
+  galahad_coffin:     { archetype: 'boss', gridW: 32, gridH: 96, scale: 3, baseColor: 0x6d6a74, parts: COFFIN }, // sealed vertical stone sarcophagus (32×96 → 96×288)
 
   // --- Earth: humanos cautivos + fodder de reuso (El Jardín de Circe) ---
   // Cautivos = humanos comunes (paleta carne pálida "encantada"); su transmute a bestia es la mecánica firma.

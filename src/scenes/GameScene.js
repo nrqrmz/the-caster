@@ -21,6 +21,7 @@ import { VirtualJoystick } from '../systems/InputSystem.js';
 import {
   applyDamage, applyCasterSlow, tickCasterSlow, applyResist, tryMeleeContact,
   applyCasterCc, tickCasterCc, applyCasterPush, tickCasterPush, applyDrain,
+  tryDrainBite,
 } from '../systems/CombatSystem.js';
 import { SaveSystem } from '../systems/SaveSystem.js';
 import { levelMultiplier, difficultyContext, scaleEnemyDef } from '../systems/Difficulty.js';
@@ -168,6 +169,7 @@ export default class GameScene extends Phaser.Scene {
       this.damageCaster(shot.damage);
       if (shot.burnDps > 0) this.applyCasterBurn(shot.burnDps, shot.burnMs);
       if (shot.slowFactor) this.applyCasterSlowFx(shot.slowFactor, shot.slowMs ?? 1200);
+      if (shot.slowChance && Math.random() < shot.slowChance) this.applyCasterSlowFx(shot.slowChanceFactor, shot.slowChanceMs);
       if (shot.poisonDps > 0) this.applyCasterPoison(shot.poisonDps, shot.poisonMs);
       if (shot.stunMs) applyCasterCc(this.caster, shot.liftKind ? 'lift' : 'stun', shot.stunMs);
       if (shot.rootMs) applyCasterCc(this.caster, 'root', shot.rootMs);
@@ -201,22 +203,23 @@ export default class GameScene extends Phaser.Scene {
 
   spawnBoss(def) {
     // anchorY (0..1, fracción desde arriba) ancla a un jefe estático en su sitio
-    // (p. ej. el Kraken al 25% = 75% desde abajo). Sin ella, entra desde y=-40.
+    // (p. ej. el Kraken al 25% = 75% desde abajo, el Elemental al 37.5%). Sin ella, entra desde y=-40.
     const startY = def.anchorY != null ? GAME_HEIGHT * def.anchorY : -40;
     this.boss = new Boss(this, GAME_WIDTH / 2, startY, scaleEnemyDef(def, this.diff));
     this.enemies.add(this.boss);
     this.bosses = [this.boss];
-    // Oversized single-def bosses (e.g. Elemental de Tormenta, radius 56) need their
+    // Oversized single-def bosses (e.g. Elemental de Tormenta, radius 100) need their
     // display size set explicitly; the forms path does this in _applyBossForm, but a
     // plain (no-forms) def is not routed through there.
-    // Native 2:1 sprite (64×32 grid → 128×64 texture); uniform ×2 display, not a stretch.
-    if (def.key === 'elemental_tormenta' && def.radius) this.boss.setDisplaySize(128, 64);
+    // Giant 2:1 rendered shape (256×128 display, anchored at 3ª banda y≈320).
+    if (def.key === 'elemental_tormenta' && def.radius) this.boss.setDisplaySize(256, 128);
     // Seed the runtime untargetable flag (channeling cultist leader) + start the meter.
     if (def.untargetable) this.boss._untargetable = true;
     if (def.ritual) {
       this.boss._ritual = { filled: 0, total: RITUAL_FILL_MS };
       this.boss._ritualTauntT = RITUAL_TAUNT_EVERY;
       this.boss._ritualTaunt = 0;
+      this.setupRitualSetpiece(this.boss);
     }
     if (def.taunts && def.taunts.length) { this.boss._tauntT = BOSS_TAUNT_EVERY; this.boss._tauntI = 0; }
     if (def.forms && def.forms.length) {
@@ -242,6 +245,45 @@ export default class GameScene extends Phaser.Scene {
     return this.boss;
   }
 
+  // nv7: coloca el ataúd sólido central, ancla al líder en la cabecera, siembra 6
+  // cultistas en las ranuras laterales (exentos del cap, reemplazables) y la gárgola al pie.
+  setupRitualSetpiece(boss) {
+    const cx = GAME_WIDTH / 2;
+    // Líder en la cabecera (norte).
+    boss.x = cx; boss.y = 200;
+    // Ataúd vertical sólido: bloque de colisión que renderiza el sprite bespoke del sarcófago.
+    const coffin = new StaticBlock(this, cx, 410, 96, 300, COLORS.stoneGrey);
+    if (hasRecipe('galahad_coffin')) {
+      coffin.setTexture(spriteKey('galahad_coffin'));
+      coffin.clearTint();               // muestra los colores reales (piedra/oro/gema), no el tinte gris
+      coffin.setDisplaySize(96, 300);   // el cuerpo físico (setSize en el constructor) ya quedó en 96×300
+    }
+    this.blocks.push(coffin);
+    if (this.caster) this.physics.add.collider(this.caster, coffin);
+    // 6 ranuras: 3 izquierda (x=150) + 3 derecha (x=330), y = 300/410/520.
+    boss._ritualSlots = [];
+    for (const sx of [150, 330]) for (const sy of [300, 410, 520]) {
+      const slot = { x: sx, y: sy, guard: null };
+      slot.guard = this.spawnRitualGuard(slot);
+      boss._ritualSlots.push(slot);
+    }
+    // Gárgola al pie (sur), exenta del cap.
+    const g = this.spawnEnemy(ENEMY_TYPES['gargola_pararrayos']);
+    g.x = cx; g.y = 620; g._setpieceExempt = true;
+    if (g.body) { g.body.reset(cx, 620); g.body.moves = false; }
+    boss._ritualGargoyle = g;
+  }
+
+  // Un cultista de ranura: nace en un borde y corre a su ranura (no persigue a la princesa).
+  spawnRitualGuard(slot) {
+    const guard = this.spawnEnemy(ENEMY_TYPES['guardian_rito']);
+    // Nace en un borde aleatorio (spawnEnemy ya lo pone en un borde).
+    guard._setpieceExempt = true;   // no cuenta para el cap de oleadas
+    guard._ritualSlot = slot;       // corre a esta ranura
+    guard._atSlot = false;
+    return guard;
+  }
+
   _applyBossForm(boss, formIndex) {
     const form = boss._formSeq.forms[formIndex];
     // Each form is an elite creature; scale its hp/damage + combine resist the same
@@ -262,9 +304,9 @@ export default class GameScene extends Phaser.Scene {
     } else if (form.color) {
       boss.setTint(form.color);
     }
-    // galahad_murcielago is a native 2:1 texture (128×64); all other forms are square.
+    // galahad_murcielago: textura 2:1 gigante (forma clímax); las demás formas son cuadradas.
     if (form.key === 'galahad_murcielago') {
-      boss.setDisplaySize(128, 64);
+      boss.setDisplaySize(200, 100);
     } else if (form.radius) {
       boss.setDisplaySize(form.radius * 2, form.radius * 2);
     }
@@ -314,7 +356,7 @@ export default class GameScene extends Phaser.Scene {
       boss.setAlpha(0.3); // brief dim during transform telegraph (legacy path)
     }
 
-    this.time.delayedCall(1000, () => { // ~1000ms telegraph/invuln window
+    this.time.delayedCall(3600, () => { // yace muerto+unreachable 3600ms antes de levantarse
       if (!boss.active) return;
       boss._transforming = false;
       boss.setAlpha(1);
@@ -370,7 +412,7 @@ export default class GameScene extends Phaser.Scene {
       delay: phase.spawnDelay,
       loop: true,
       callback: () => {
-        if (this.enemies.countActive(true) >= CONCURRENCY_CAP) return; // hold; retry next tick
+        if (this.liveWaveCount() >= CONCURRENCY_CAP) return; // hold; retry next tick
         const type = this.spawnQueue.shift();
         if (type) this.spawnEnemy(ENEMY_TYPES[type]);
         if (this.spawnQueue.length === 0) {
@@ -408,7 +450,7 @@ export default class GameScene extends Phaser.Scene {
 
   promoteEnemy(enemy, toLifecycle) {
     // Respect CONCURRENCY_CAP.
-    if (this.enemies.countActive(true) >= CONCURRENCY_CAP) { enemy.destroy(); return; }
+    if (this.liveWaveCount() >= CONCURRENCY_CAP) { enemy.destroy(); return; }
     const typeKey = toLifecycle === LIFECYCLE.TADPOLE ? (enemy.def._hatchType || 'tadpole')
                                                        : (enemy._growOverride || enemy.def._growType || 'adultFrog');
     const def = ENEMY_TYPES[typeKey];
@@ -445,13 +487,20 @@ export default class GameScene extends Phaser.Scene {
   swapToBeast(captive) {
     const key = transmuteBeastKey(captive.def);
     const def = key ? ENEMY_TYPES[key] : null;
-    if (def && this.enemies.countActive(true) < CONCURRENCY_CAP) {
+    if (def && this.liveWaveCount() < CONCURRENCY_CAP) {
       const e = new Enemy(this, captive.x, captive.y, scaleEnemyDef(def, this.diff));
       this.enemies.add(e);
       if (def.radius) e.setDisplaySize(def.radius * 2, def.radius * 2);
       this.flashCircle(captive.x, captive.y, (def.radius || 20) + 12, COLORS.poison); // transform tell
     }
     captive.destroy();
+  }
+
+  // Enemigos vivos que SÍ cuentan para el cap de oleadas (excluye el setpiece del ritual).
+  liveWaveCount() {
+    let n = 0;
+    this.enemies.getChildren().forEach((e) => { if (e.active && !e._setpieceExempt) n++; });
+    return n;
   }
 
   // No enemy may ever leave the play area — for ANY reason. An escaped enemy never
@@ -497,25 +546,24 @@ export default class GameScene extends Phaser.Scene {
             enemy.setDisplaySize(128, 64);
           }
           enemy.setAlpha(1);
-          // Fire flash: instant large ring.
-          this.flashCircle(enemy.x, enemy.y, 80, COLORS.fireball);
-          // Overlay burn circle that fades out over the corpse.
-          const burn = this.add.circle(enemy.x, enemy.y, 48, COLORS.fireball, 0.65).setDepth(8);
-          this.tweens.add({ targets: burn, alpha: 0, scale: 1.9, duration: 800, onComplete: () => burn.destroy() });
-          // Fade the corpse itself to zero, then run the normal death/clear path.
-          this.tweens.add({
-            targets: enemy,
-            alpha: 0,
-            duration: 850,
-            ease: 'Quad.easeIn',
-            onComplete: () => {
-              if (!enemy.active) return; // already cleaned up
-              this.onEnemyDeath(enemy);
-              if (enemy === this.boss) this.boss = null;
-              this.bosses = this.bosses.filter((b) => b !== enemy);
-              enemy.destroy();
-              this.checkPhaseCleared();
-            },
+          // Yace muerto 3600ms IDÉNTICO a los feints; NO sabes si se levantará…
+          this.time.delayedCall(3600, () => {
+            if (!enemy.active) return;
+            // …y ENTONCES se enciende en fuego y termina el nivel.
+            this.flashCircle(enemy.x, enemy.y, 80, COLORS.fireball);
+            const burn = this.add.circle(enemy.x, enemy.y, 48, COLORS.fireball, 0.65).setDepth(8);
+            this.tweens.add({ targets: burn, alpha: 0, scale: 1.9, duration: 800, onComplete: () => burn.destroy() });
+            this.tweens.add({
+              targets: enemy, alpha: 0, duration: 850, ease: 'Quad.easeIn',
+              onComplete: () => {
+                if (!enemy.active) return;
+                this.onEnemyDeath(enemy);
+                if (enemy === this.boss) this.boss = null;
+                this.bosses = this.bosses.filter((b) => b !== enemy);
+                enemy.destroy();
+                this.checkPhaseCleared();
+              },
+            });
           });
           return;
         }
@@ -567,6 +615,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   onEnemyDeath(enemy) {
+    if (enemy._ritualSlot && this.boss && this.boss.active && this.boss._untargetable) {
+      const slot = enemy._ritualSlot;
+      slot.guard = this.spawnRitualGuard(slot); // nace en borde, corre a la ranura vacía
+    }
     if (enemy.def && enemy.def.petrifyBlock) this.spawnPetrifyBlock(enemy.x, enemy.y);
     // Si era un invocado con tope, libera su slot e inicia el cooldown del padre.
     if (enemy._summonedBy && enemy._summonedBy.active && enemy._summonCapKey) {
@@ -599,7 +651,7 @@ export default class GameScene extends Phaser.Scene {
     const split = buildSplitChildren(enemy.def);
     for (const childDef of split) {
       // Respect CONCURRENCY_CAP: only spawn if there is room.
-      if (this.enemies.countActive(true) >= CONCURRENCY_CAP) break;
+      if (this.liveWaveCount() >= CONCURRENCY_CAP) break;
       const scaled = scaleEnemyDef(childDef, this.diff);
       const e = new Enemy(this, enemy.x + Phaser.Math.Between(-20, 20), enemy.y + Phaser.Math.Between(-20, 20), scaled);
       this.enemies.add(e);
@@ -615,7 +667,7 @@ export default class GameScene extends Phaser.Scene {
           casterDps: mutate.dps,
           color: COLORS.poison, style: 'fire',
         });
-      } else if (mutate.kind === 'enemy' && this.enemies.countActive(true) < CONCURRENCY_CAP) {
+      } else if (mutate.kind === 'enemy' && this.liveWaveCount() < CONCURRENCY_CAP) {
         const def = ENEMY_TYPES[mutate.spawnType];
         if (def) {
           const e = new Enemy(this, enemy.x, enemy.y, scaleEnemyDef(def, this.diff));
@@ -815,6 +867,37 @@ export default class GameScene extends Phaser.Scene {
       shot.homingSpeed = att.speed ?? 150;
       return;
     }
+    if (att.type === 'blinkStorm') {
+      const dur = att.duration ?? 3600;
+      // Tell + desaparece en el sitio.
+      this.verticalBolt(enemy.x, enemy.y);
+      enemy._untargetable = true;
+      enemy.setVisible(false);
+      if (enemy.body) enemy.body.enable = false;
+      // Siembra espíritus de tormenta en el punto de desaparición (respeta el cap).
+      const sdef = ENEMY_TYPES['espiritu_tormenta'];
+      for (let i = 0; i < (att.spiritCount ?? 4); i++) {
+        if (!sdef || this.liveWaveCount() >= CONCURRENCY_CAP) break;
+        const s = this.spawnEnemy(sdef);
+        s.x = Phaser.Math.Clamp(enemy.x + Phaser.Math.Between(-40, 40), 20, GAME_WIDTH - 20);
+        s.y = Phaser.Math.Clamp(enemy.y + Phaser.Math.Between(-40, 40), 20, GAME_HEIGHT - 20);
+      }
+      this.time.delayedCall(dur, () => {
+        if (!enemy.active) return;
+        // Reubicar en un punto aleatorio lejos de la princesa.
+        let nx = Phaser.Math.Between(60, GAME_WIDTH - 60);
+        let ny = Phaser.Math.Between(120, GAME_HEIGHT - 200);
+        const safe = pushOutsideRing({ x: nx, y: ny }, this.caster, SPAWN_SAFE_DIST + 60);
+        nx = Phaser.Math.Clamp(safe.x, 40, GAME_WIDTH - 40);
+        ny = Phaser.Math.Clamp(safe.y, 100, GAME_HEIGHT - 180);
+        enemy.x = nx; enemy.y = ny;
+        this.verticalBolt(nx, ny);
+        enemy._untargetable = false;
+        enemy.setVisible(true);
+        if (enemy.body) enemy.body.enable = true;
+      });
+      return;
+    }
     if (att.type === 'submerge') {
       // Dive deep: vanish completely (untargetable + invisible, no fin) for a window and
       // summon a minion from the depths. A DPS-denial beat — it stays put, never moves.
@@ -869,6 +952,7 @@ export default class GameScene extends Phaser.Scene {
       else if (att.stun) { shot.stunMs = att.stunMs ?? CASTER_STUN_MS; shot.liftKind = false; }
       if (att.push) { shot.pushForce = att.pushForce ?? PUSH_FORCE; shot.pushMs = att.pushMs ?? PUSH_MS; }
       if (att.root) shot.rootMs = att.rootMs ?? CASTER_ROOT_MS;
+      if (att.slowChance) { shot.slowChance = att.slowChance; shot.slowChanceFactor = att.slowFactor ?? 0.6; shot.slowChanceMs = att.slowMs ?? 1200; }
     }
   }
 
@@ -1021,9 +1105,15 @@ export default class GameScene extends Phaser.Scene {
     return true;
   }
 
-  drawZap(points) {
+  // Pilar de rayo vertical: tell del teleport de la Bruja (cae desde arriba al punto).
+  verticalBolt(x, y) {
+    this.drawZap([{ x, y: 0 }, { x, y }], COLORS.lightning);
+    this.flashCircle(x, y, 30, COLORS.lightning);
+  }
+
+  drawZap(points, color = COLORS.lightning) {
     const g = this.add.graphics().setDepth(900);
-    g.lineStyle(3, COLORS.lightning, 1);
+    g.lineStyle(3, color, 1);
     g.beginPath();
     g.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) g.lineTo(points[i].x, points[i].y);
@@ -1134,7 +1224,9 @@ export default class GameScene extends Phaser.Scene {
     this.updateLavaRiver(delta);
     this.updateWhirlpool(delta);
     this.updateTornado(delta);
+    this.updateDrainBite(delta);
     this.updateRitual(delta);
+    this.updateRitualGuards();
     this.updateBossGates();
     this.updateGriffin(delta);
     this.updateBossTaunts(delta);
@@ -1362,6 +1454,36 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  // Air: sifón de sangre a distancia (drainBite). Cada frame, cada enemigo/jefe con
+  // el modificador muerde a la princesa si está dentro de `range` y su cooldown está
+  // listo (por instancia). Transferencia: la princesa pierde `amount`, el vampiro se
+  // cura lo mismo. Tether de rayo rojo + "−N" flotante. Un mordisco por cooldown (sin spam).
+  updateDrainBite(delta) {
+    if (!this.caster || this.caster.hp <= 0) return;
+    const now = this.time.now;
+    for (const e of this.liveEnemies()) {
+      if (!e.active || !e.def || e._untargetable || e._transforming) continue;
+      const mod = findModifier(e.def, 'drainBite');
+      if (!mod) continue;
+      const range = mod.range ?? 130;
+      const dist = Phaser.Math.Distance.Between(e.x, e.y, this.caster.x, this.caster.y);
+      if (dist > range) continue;
+      if (!tryDrainBite(e, now, mod.cooldown ?? 1800)) continue;
+      const amount = mod.amount ?? 6;
+      this.damageCaster(amount);
+      // Cura al vampiro: en Galahad, la forma activa; si no, la instancia.
+      if (e._formSeq) {
+        const cap = e._formSeq.activeForm().hp;
+        e._formSeq.currentHp = Math.min(cap, e._formSeq.currentHp + amount);
+        e.hp = e._formSeq.currentHp;
+      } else {
+        applyDrain(e, amount);
+      }
+      this.drawZap([{ x: e.x, y: e.y }, { x: this.caster.x, y: this.caster.y }], COLORS.bloodDrain);
+      this.floatText(this.caster.x, this.caster.y - 20, `-${amount}`);
+    }
+  }
+
   updateBossGates() {
     for (const b of this.bosses) {
       if (b && b.active && b._gateGuard && !b._gateGuard.active) b._untargetable = false;
@@ -1378,6 +1500,22 @@ export default class GameScene extends Phaser.Scene {
       if (g.t <= 0) {
         if (g.mode === 'ground') { g.mode = 'flight'; g.t = GRIFFIN_FLIGHT_MS; b._untargetable = true; b.setAlpha(0.6); }
         else { g.mode = 'ground'; g.t = GRIFFIN_GROUND_MS; b._untargetable = false; b.setAlpha(1); }
+      }
+    }
+  }
+
+  updateRitualGuards() {
+    const boss = this.boss;
+    if (!boss || !boss.active || !boss._ritualSlots) return;
+    for (const slot of boss._ritualSlots) {
+      const g = slot.guard;
+      if (!g || !g.active) continue;
+      if (g._atSlot) { if (g.body) g.body.setVelocity(0, 0); continue; }
+      const d = Phaser.Math.Distance.Between(g.x, g.y, slot.x, slot.y);
+      if (d < 8) { g._atSlot = true; g.x = slot.x; g.y = slot.y; if (g.body) { g.body.setVelocity(0, 0); g.body.moves = false; } }
+      else if (g.body) {
+        const a = Phaser.Math.Angle.Between(g.x, g.y, slot.x, slot.y);
+        g.body.setVelocity(Math.cos(a) * 140, Math.sin(a) * 140);
       }
     }
   }

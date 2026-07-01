@@ -34,6 +34,7 @@ export class ProjectilePool {
     p.burnMs = 0;
     p.slowFactor = 0;          // reset; solo los disparos de hielo lo setean
     p.slowMs = 0;
+    p.slowChance = 0;          // reset; solo los disparos con slowChance lo setean
     p.poisonDps = 0;           // reset; solo los disparos de veneno lo setean
     p.poisonMs = 0;
     p.homing = false;

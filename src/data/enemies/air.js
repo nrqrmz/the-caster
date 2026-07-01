@@ -11,14 +11,14 @@ export const AIR_ENEMIES = {
     hp: 24, speed: 95, damage: 9, radius: 16,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
-    modifiers: [{ type: 'drain', heal: 4 }] },
+    modifiers: [{ type: 'drainBite', amount: 6, range: 130, cooldown: 1800 }] },
 
   // #2 — Duelista Nocturno: evade movement — dashes to dodge your orbs, hit-and-run dashStrike + drain.
   duelista_nocturno: { key: 'duelista_nocturno', tex: TEX.archer, color: COLORS.duelistSteel,
     hp: 30, speed: 120, damage: 12, radius: 16,
     movement: { type: 'evade', range: 120 },
     attacks: [{ type: 'dashStrike' }],
-    modifiers: [{ type: 'drain', heal: 5 }] },
+    modifiers: [{ type: 'drainBite', amount: 6, range: 130, cooldown: 1800 }] },
 
   // #3 — Acólito del Trueno: base ranged. Kites and fires straight lightning bolts.
   acolito_trueno: { key: 'acolito_trueno', tex: TEX.archer, color: COLORS.stormGrey,
@@ -41,10 +41,10 @@ export const AIR_ENEMIES = {
 
   // #6 — Guardia Nocturno: fast shielded bruiser; charges, drains, soaks damage.
   guardia_nocturno: { key: 'guardia_nocturno', tex: TEX.warrior, color: COLORS.stormDark,
-    hp: 150, speed: 90, damage: 16, radius: 20,
+    hp: 150, speed: 90, damage: 16, radius: 32,
     movement: { type: 'charge', windup: 500, dash: 360, recover: 600, dashMul: 3.0 },
     attacks: [{ type: 'melee' }],
-    modifiers: [{ type: 'drain', heal: 6 }, { type: 'shielded', reduce: 0.4 }] },
+    modifiers: [{ type: 'drainBite', amount: 14, range: 130, cooldown: 1800 }, { type: 'shielded', reduce: 0.4 }] },
 
   // #7 — Hechicero del Viento: ranged lift. Kites and conjures a "tornadito" that lifts (0.5 s).
   hechicero_viento: { key: 'hechicero_viento', tex: TEX.archer, color: COLORS.stormDark,
@@ -57,7 +57,7 @@ export const AIR_ENEMIES = {
     hp: 42, speed: 85, damage: 11, radius: 16,
     movement: { type: 'chase' },
     attacks: [{ type: 'melee' }],
-    modifiers: [{ type: 'drain', heal: 5 }, { type: 'reviveOnce' }] },
+    modifiers: [{ type: 'drainBite', amount: 14, range: 130, cooldown: 1800 }, { type: 'reviveOnce' }] },
 
   // === Voladores (flying: inmunes al terreno, rápidos/erráticos) — nv1–6 ===
 
@@ -67,25 +67,25 @@ export const AIR_ENEMIES = {
     flying: true,
     movement: { type: 'erratic' },
     attacks: [{ type: 'melee' }],
-    modifiers: [{ type: 'drain', heal: 3 }] },
+    modifiers: [{ type: 'drainBite', amount: 6, range: 130, cooldown: 1800 }] },
 
   // #10 — Arpía: dive-bomb flyer. Charges in then dashStrikes.
   arpia: { key: 'arpia', tex: TEX.archer, color: COLORS.harpyPlum,
-    hp: 40, speed: 110, damage: 13, radius: 16,
+    hp: 40, speed: 110, damage: 13, radius: 24,
     flying: true,
     movement: { type: 'charge', windup: 450, dash: 320, recover: 500, dashMul: 3.2 },
     attacks: [{ type: 'dashStrike' }] },
 
-  // #11 — Espíritu de Tormenta: ranged flyer. Drifts erratically, fires straight lightning.
+  // #11 — Espíritu de Tormenta: ranged flyer. Drifts erratically, fires straight plasma (slow).
   espiritu_tormenta: { key: 'espiritu_tormenta', tex: TEX.archer, color: COLORS.stormGrey,
     hp: 30, speed: 80, damage: 8, radius: 16,
     flying: true,
     movement: { type: 'erratic' },
-    attacks: [{ type: 'shootStraight', every: 1800, speed: 240 }] },
+    attacks: [{ type: 'shootStraight', projectile: 'plasma', every: 1800, speed: 240 }] },
 
   // #12 — Fuego Fatuo: erratic flyer with a damage aura; brushing it stuns you (0.3 s). No direct attack.
   fuego_fatuo: { key: 'fuego_fatuo', tex: TEX.villager, color: COLORS.wispYellow,
-    hp: 26, speed: 75, damage: 8, radius: 16,
+    hp: 26, speed: 75, damage: 8, radius: 24,
     flying: true,
     movement: { type: 'erratic' },
     attacks: [],
@@ -93,39 +93,39 @@ export const AIR_ENEMIES = {
 
   // #13 — Vampiro Alado: heavy dive flyer. Charges, dashStrikes, drains hard (+8).
   vampiro_alado: { key: 'vampiro_alado', tex: TEX.archer, color: COLORS.bloodRed,
-    hp: 120, speed: 100, damage: 18, radius: 19,
+    hp: 120, speed: 100, damage: 18, radius: 32,
     flying: true,
     movement: { type: 'charge', windup: 500, dash: 340, recover: 550, dashMul: 3.0 },
     attacks: [{ type: 'dashStrike' }],
-    modifiers: [{ type: 'drain', heal: 8 }] },
+    modifiers: [{ type: 'drainBite', amount: 14, range: 130, cooldown: 1800 }] },
 
   // === Ambientales / torreta — nv3–7 ===
 
   // #14 — Gárgola Pararrayos: static turret. Lightning nova whose bolts stun (0.3 s); shielded.
   gargola_pararrayos: { key: 'gargola_pararrayos', tex: TEX.warrior, color: COLORS.gargoyleStone,
-    hp: 250, speed: 0, damage: 8, radius: 18,
+    hp: 250, speed: 0, damage: 8, radius: 36,
     movement: { type: 'static' },
     attacks: [{ type: 'nova', count: 8, every: 3200, speed: 200, telegraph: 550, stun: true }],
     modifiers: [{ type: 'shielded', reduce: 0.25 }] },
 
-  // #15 — Centinela de Piedra: static homing turret. Fixed hazard that tracks you.
+  // #15 — Centinela de Piedra: static homing turret. Fires spark that tracks and petrifies (root 600ms).
   centinela_piedra: { key: 'centinela_piedra', tex: TEX.warrior, color: COLORS.sentinelStone,
-    hp: 60, speed: 0, damage: 10, radius: 18,
+    hp: 60, speed: 0, damage: 10, radius: 36,
     movement: { type: 'static' },
-    attacks: [{ type: 'shootHoming', every: 2600, speed: 120, telegraph: 350 }] },
+    attacks: [{ type: 'shootHoming', projectile: 'stoneSpark', root: true, rootMs: 600, every: 2600, speed: 120, telegraph: 350 }] },
 
   // #16 — Torbellino Errante: 0-damage ambient hazard. Pushes you and briefly lifts (0.5 s) on contact.
   torbellino_errante: { key: 'torbellino_errante', tex: TEX.archer, color: COLORS.whirlGrey,
-    hp: 40, speed: 50, damage: 0, radius: 20,
+    hp: 40, speed: 50, damage: 0, radius: 36,
     movement: { type: 'erratic' },
     attacks: [],
     modifiers: [{ type: 'onHitPush', force: 220, ms: 250 }, { type: 'onHitStun', kind: 'lift', ms: 500 }] },
 
-  // #17 — Tronador: kite spread ranged. Area-denial — 3 lightning bolts in a 36° arc.
+  // #17 — Tronador: kite spread ranged. Area-denial — 3 lightning bolts in a 36° arc that push.
   tronador: { key: 'tronador', tex: TEX.archer, color: COLORS.stormGrey,
     hp: 30, speed: 64, damage: 8, radius: 16,
     movement: { type: 'kite', range: 230 },
-    attacks: [{ type: 'shootSpread', count: 3, arc: 36, every: 1900, speed: 230 }] },
+    attacks: [{ type: 'shootSpread', count: 3, arc: 36, push: true, every: 1900, speed: 230 }] },
 
   // === Fodder del ritual (nv7) — summoned by the cultist leader (Plan 3) ===
 

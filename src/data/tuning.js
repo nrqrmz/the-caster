@@ -95,15 +95,15 @@ export const EVADE_DODGE_MUL   = 3.0;  // dash speed = base speed × this
 
 // Tornado-ojo hazard (the eye is the trap, not the damage — inverse of the whirlpool).
 export const TORNADO_RADIUS          = 130;  // px, influence circle
-export const TORNADO_EYE_PULL        = 0.7;  // fraction of caster speed pulling toward the eye
+export const TORNADO_EYE_PULL        = 0.9;  // fracción de la velocidad del caster (base 180 px/s)
 export const TORNADO_EYE_RADIUS_FRAC = 0.18; // inner "eye" zone (calm: ~0 pull, no DoT)
 export const TORNADO_ENEMY_PULL      = 0.25; // light pull applied to NON-flying enemies (visual + makes `flying` matter)
-export const TORNADO_TELEGRAPH_MS    = 1100; // warning before the vortex activates
+export const TORNADO_TELEGRAPH_MS    = 800;  // el vórtice entra más rápido
 export const TORNADO_ACTIVE_MS       = 4500; // vortex is live for this long
 export const TORNADO_COOLDOWN_MS     = 4500; // gap before it reforms at a new spot
 
 // Ritual meter (nv7 cultist leader). Fills while the leader channels (untargetable).
-export const RITUAL_FILL_MS = 38000; // time to fill from empty to full
+export const RITUAL_FILL_MS = 180000; // 3 min — el rito es imposible de evitar
 
 // Griffin flight/ground cycle (nv7 earth levelboss El Grifo).
 export const GRIFFIN_GROUND_MS = 5000; // reachable window — generous + always returns (anti-spam)

@@ -17,7 +17,7 @@ const KNOWN_MOVEMENTS = new Set([
   'chase', 'kite', 'flee', 'charge', 'orbit', 'strafe', 'erratic', 'static', 'zigzag', 'burrow', 'evade', 'holdAt',
 ]);
 const KNOWN_MODIFIERS = new Set([
-  'drain', 'onHitStun', 'onHitPush', 'auraDamage', 'healAllies', 'shielded', 'reviveOnce',
+  'drain', 'drainBite', 'onHitStun', 'onHitPush', 'auraDamage', 'healAllies', 'shielded', 'reviveOnce',
   'onHitSlow', 'onHitBurn', 'explodesOnDeath', 'splitsOnDeath', 'resist',
 ]);
 
@@ -94,13 +94,11 @@ test('flying flag is on exactly the five flyers', () => {
   assert.deepEqual(flyers, ['arpia', 'espiritu_tormenta', 'fuego_fatuo', 'murcielago', 'vampiro_alado']);
 });
 
-// ── 4. drain modifier — exactly the six vampires/bats ─────────────────────────
-test('drain modifier is on exactly the intended six creatures', () => {
+// ── 4. drain modifier — legacy drain removed from Air (migrated to drainBite) ───
+test('drain modifier is not on any Air creature (migrated to drainBite)', () => {
   const has = (k) => (ENEMY_TYPES[k].modifiers || []).some((m) => m.type === 'drain');
   const drainers = AIR_CREATURE_KEYS.filter(has).sort();
-  assert.deepEqual(drainers, [
-    'duelista_nocturno', 'guardia_nocturno', 'murcielago', 'siervo_torre', 'vampiro_alado', 'vastago_vampirico',
-  ]);
+  assert.deepEqual(drainers, [], 'All Air creatures with drain have been migrated to drainBite');
 });
 
 // ── 5. evade movement — exactly Duelista Nocturno ─────────────────────────────
@@ -143,4 +141,49 @@ test('cultista_canalizador is plain fodder (not untargetable here)', () => {
 test('Fire/Water/generic enemy types are unaffected by the Air roster addition', () => {
   const legacy = ['villager', 'warrior', 'archer', 'acolito_brasa', 'piromante', 'ahogado', 'medusa', 'tiburon_joven'];
   for (const k of legacy) assert.ok(ENEMY_TYPES[k], `Regression: ENEMY_TYPES missing legacy key '${k}'`);
+});
+
+// ── 10. Task 5: drainBite migration — pesados 14, enjambre 6, todos @130px/1800ms ──
+function drainBiteOf(key) {
+  return (AIR_ENEMIES[key].modifiers || []).find((m) => m.type === 'drainBite');
+}
+
+test('drainBite: pesados muerden 14, enjambre 6, todos @130px/1800ms', () => {
+  for (const k of ['guardia_nocturno', 'vampiro_alado', 'vastago_vampirico']) {
+    assert.equal(drainBiteOf(k).amount, 14, `${k} pesado`);
+    assert.equal(drainBiteOf(k).range, 130);
+    assert.equal(drainBiteOf(k).cooldown, 1800);
+  }
+  for (const k of ['murcielago', 'siervo_torre']) {
+    assert.equal(drainBiteOf(k).amount, 6, `${k} enjambre`);
+    assert.equal(drainBiteOf(k).range, 130);
+    assert.equal(drainBiteOf(k).cooldown, 1800);
+  }
+  // duelista_nocturno (dasher, enjambre-ligero)
+  assert.equal(drainBiteOf('duelista_nocturno').amount, 6);
+  assert.equal(drainBiteOf('duelista_nocturno').range, 130);
+  assert.equal(drainBiteOf('duelista_nocturno').cooldown, 1800);
+});
+
+test('drainBite: ya no queda el modificador legacy "drain" en Air', () => {
+  for (const def of Object.values(AIR_ENEMIES)) {
+    assert.equal((def.modifiers || []).some((m) => m.type === 'drain'), false, def.key);
+  }
+});
+
+// ── 11. Task 8: proyectiles de casters ────────────────────────────────────────
+test('proyectiles de casters: espíritu=plasma, centinela=stoneSpark+petrify(root 600ms), tronador=push', () => {
+  assert.equal(AIR_ENEMIES.espiritu_tormenta.attacks[0].projectile, 'plasma');
+  const cen = AIR_ENEMIES.centinela_piedra.attacks[0];
+  assert.equal(cen.projectile, 'stoneSpark');
+  assert.equal(cen.root, true);
+  assert.equal(cen.rootMs, 600);
+  assert.equal(AIR_ENEMIES.tronador.attacks[0].push, true);
+});
+
+// ── 12. Task 9: barrido de render — jerarquía de silueta ──────────────────────
+test('barrido de render: radios de la jerarquía de silueta', () => {
+  const R = { gargola_pararrayos: 36, centinela_piedra: 36, vampiro_alado: 32,
+              guardia_nocturno: 32, torbellino_errante: 36, arpia: 24, fuego_fatuo: 24 };
+  for (const [k, r] of Object.entries(R)) assert.equal(AIR_ENEMIES[k].radius, r, k);
 });

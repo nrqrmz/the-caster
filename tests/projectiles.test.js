@@ -40,3 +40,9 @@ test('ELEMENT_DEFAULT_PROJECTILE cubre los mundos elementales', () => {
   assert.equal(ELEMENT_DEFAULT_PROJECTILE.water, 'ice');
   assert.equal(ELEMENT_DEFAULT_PROJECTILE.air, 'bolt');
 });
+
+test('catálogo de Air: plasma (slow), bloodDart y stoneSpark (sin efecto de catálogo)', () => {
+  assert.equal(PROJECTILES.plasma.effect.kind, 'slow');
+  assert.equal(PROJECTILES.bloodDart.effect, null);
+  assert.equal(PROJECTILES.stoneSpark.effect, null);
+});

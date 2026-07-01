@@ -48,3 +48,7 @@ test('scaleForPhase: phase 1 = 1.0, later phases stronger', () => {
   assert.equal(scaleForPhase(1), 1.0);
   assert.ok(scaleForPhase(3) > scaleForPhase(1));
 });
+
+test('scaleForPhase P3 = 1.9 (frenesí succiona más fuerte)', () => {
+  assert.equal(scaleForPhase(3), 1.9);
+});

@@ -36,13 +36,14 @@ test('minibosses have well-formed phases (>=1, each with a sequence array)', () 
   }
 });
 
-test('Caballero de Sangre matches spec stats (hp440/spd110/dmg20/r24) + drain modifier', () => {
-  assert.deepEqual(
-    [CABALLERO_SANGRE.hp, CABALLERO_SANGRE.speed, CABALLERO_SANGRE.damage, CABALLERO_SANGRE.radius],
-    [440, 110, 20, 24],
-  );
-  const drain = CABALLERO_SANGRE.modifiers.find((m) => m.type === 'drain');
-  assert.ok(drain && drain.heal === 10, 'drain heal 10');
+test('Caballero de Sangre: tanque-vampiro (640hp, shielded 0.25, speed 180, drainBite 20/150/4000)', () => {
+  assert.equal(CABALLERO_SANGRE.hp, 640);
+  assert.equal(CABALLERO_SANGRE.speed, 180);
+  assert.equal(CABALLERO_SANGRE.radius, 28);
+  const sh = CABALLERO_SANGRE.modifiers.find((m) => m.type === 'shielded');
+  const db = CABALLERO_SANGRE.modifiers.find((m) => m.type === 'drainBite');
+  assert.equal(sh.reduce, 0.25);
+  assert.deepEqual([db.amount, db.range, db.cooldown], [20, 150, 4000]);
 });
 
 test('Caballero juke decision: charge in P1, evade in P2', () => {
@@ -59,23 +60,24 @@ test('Caballero P2 summons murcielago (count 2, cap 4, respawn 12000)', () => {
   assert.equal(s.respawnMs, 12000);
 });
 
-test('Bruja del Vendaval matches spec stats + lift/stun steps', () => {
-  assert.deepEqual(
-    [BRUJA_VENDAVAL.hp, BRUJA_VENDAVAL.speed, BRUJA_VENDAVAL.damage, BRUJA_VENDAVAL.radius],
-    [420, 75, 16, 26],
-  );
-  const hasLift = BRUJA_VENDAVAL.phases.some((p) => p.sequence.some((s) => s.lift === true));
-  const hasStun = BRUJA_VENDAVAL.phases.some((p) => p.sequence.some((s) => s.stun === true));
-  assert.ok(hasLift, 'Bruja has a lift step');
-  assert.ok(hasStun, 'Bruja has a stun step');
+test('Bruja del Vendaval: escurridiza (640hp, shielded 0.15, speed 100), Blink + summons no-murciélago', () => {
+  assert.equal(BRUJA_VENDAVAL.hp, 640);
+  assert.equal(BRUJA_VENDAVAL.speed, 100);
+  assert.equal(BRUJA_VENDAVAL.radius, 30);
+  assert.equal(BRUJA_VENDAVAL.modifiers.find((m) => m.type === 'shielded').reduce, 0.15);
+  const steps = BRUJA_VENDAVAL.phases.flatMap((p) => p.sequence);
+  assert.ok(steps.some((s) => s.do === 'blinkStorm'), 'tiene Blink de Tormenta');
+  const summons = steps.filter((s) => s.do === 'summon').map((s) => s.spawnType);
+  assert.ok(!summons.includes('murcielago'), 'no invoca murciélagos');
+  assert.ok(summons.includes('arpia'), 'invoca arpías');
 });
 
-test('Elemental de Tormenta: static, big (r56), resist .20, 3 phases', () => {
-  assert.equal(ELEMENTAL_TORMENTA.movement.type, 'static');
-  assert.equal(ELEMENTAL_TORMENTA.radius, 56);
-  assert.equal(ELEMENTAL_TORMENTA.resist, 0.20);
-  assert.equal(ELEMENTAL_TORMENTA.hp, 680);
-  assert.equal(ELEMENTAL_TORMENTA.phases.length, 3);
+test('Elemental de Tormenta: esponja 2000hp, shielded 0.25, radius 100, anchorY 0.375', () => {
+  assert.equal(ELEMENTAL_TORMENTA.hp, 2000);
+  assert.equal(ELEMENTAL_TORMENTA.radius, 100);
+  assert.equal(ELEMENTAL_TORMENTA.anchorY, 0.375);
+  assert.equal(ELEMENTAL_TORMENTA.modifiers.find((m) => m.type === 'shielded').reduce, 0.25);
+  assert.equal(ELEMENTAL_TORMENTA.resist, undefined, 'resist reemplazado por shielded');
 });
 
 test('Elemental phase thresholds 1.0/0.6/0.3; P2 and P3 enter spawnTornado', () => {
@@ -115,13 +117,19 @@ test('Galahad form keys in order', () => {
 
 test('Galahad forms have ascending resist across the first four forms, final resets to 0', () => {
   const r = GALAHAD.forms.map((f) => f.resist ?? 0);
-  assert.deepEqual(r, [0, 0.10, 0.20, 0.30, 0]);
+  assert.deepEqual(r, [0.10, 0.15, 0.20, 0.30, 0]);
   for (let i = 1; i < r.length - 1; i++) assert.ok(r[i] > r[i - 1], `resist ascends at ${i}`);
   assert.equal(r[4], 0, 'final form resist resets to 0');
 });
 
-test('Galahad form hp matches spec §4.5 (340/460/560/700/90)', () => {
-  assert.deepEqual(GALAHAD.forms.map((f) => f.hp), [340, 460, 560, 700, 90]);
+test('Galahad: 5 formas, suma 3320, resist trepa 0.1->0.3, drainBite en las 4 de combate', () => {
+  const hp = GALAHAD.forms.map((f) => f.hp);
+  assert.deepEqual(hp, [640, 700, 780, 950, 250]);
+  assert.equal(hp.reduce((a, b) => a + b, 0), 3320);
+  assert.deepEqual(GALAHAD.forms.map((f) => f.speed), [150, 180, 200, 120, 55]);
+  assert.deepEqual(GALAHAD.forms.map((f) => f.resist), [0.10, 0.15, 0.20, 0.30, 0]);
+  const dbAmt = GALAHAD.forms.map((f) => (f.modifiers || []).find((m) => m.type === 'drainBite')?.amount);
+  assert.deepEqual(dbAmt, [20, 24, 28, 30, undefined]);
 });
 
 test('Galahad Humano uses evade; Murcielago is flying with a push gust nova', () => {
@@ -132,19 +140,37 @@ test('Galahad Humano uses evade; Murcielago is flying with a push gust nova', ()
   assert.ok(gust.push.force > 0, 'push has a force');
 });
 
-test('Galahad Rage ×2 doubles Rage cadence/speed (spd 150, halved windup)', () => {
+test('Galahad Rage ×2 escalates speed and windup (spd 180→200, windup 450→225)', () => {
   const rage = GALAHAD.forms[1];
   const rage2 = GALAHAD.forms[2];
-  assert.equal(rage.speed, 110);
-  assert.equal(rage2.speed, 150);
+  assert.equal(rage.speed, 180);
+  assert.equal(rage2.speed, 200);
   assert.ok(rage2.movement.windup < rage.movement.windup, 'rage2 windup is shorter (faster cadence)');
+  assert.equal(rage.movement.windup, 450);
+  assert.equal(rage2.movement.windup, 225);
 });
 
 test('last Galahad form is galahad_final with low hp + minimal kit', () => {
   const last = GALAHAD.forms.at(-1);
   assert.equal(last.key, 'galahad_final');
-  assert.ok(last.hp <= 100, `final hp low, got ${last.hp}`);
+  assert.ok(last.hp <= 300, `final hp low, got ${last.hp}`);
+  assert.equal(last.hp, 250);
   assert.equal(last.phases.length, 1, 'final has one phase (minimal kit)');
+});
+
+test('Elemental: horda escalando, SOLO no-humanoides, más tipos por fase', () => {
+  const HUMANOID = ['siervo_torre','duelista_nocturno','acolito_trueno','heraldo_rayo','sacerdote_sangre','guardia_nocturno','hechicero_viento','vastago_vampirico','cultista','cultista_canalizador','guardian_rito'];
+  const summonsByPhase = ELEMENTAL_TORMENTA.phases.map(
+    (p) => p.sequence.filter((s) => s.do === 'summon').map((s) => s.spawnType));
+  summonsByPhase.flat().forEach((t) => assert.ok(!HUMANOID.includes(t), `${t} no-humanoide`));
+  assert.ok(summonsByPhase[2].length >= summonsByPhase[0].length + 2, 'P3 tiene más tipos que P1');
+});
+
+test('Líder Cultista: el canal invoca casters humanoides variados + healer, cap alto', () => {
+  const p0 = LIDER_CULTISTA.phases[0].sequence.filter((s) => s.do === 'summon').map((s) => s.spawnType);
+  for (const k of ['acolito_trueno','heraldo_rayo','hechicero_viento','tronador','sacerdote_sangre']) {
+    assert.ok(p0.includes(k), `invoca ${k}`);
+  }
 });
 
 test('every boss summon spawnType is a registered enemy', () => {
