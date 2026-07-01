@@ -105,26 +105,26 @@ function waterInterWaves(tier) {
 // See spec §3.5 intro calendar.
 function airWaves(tier) {
   if (tier === 1) {
-    // Nv1: Siervo filler + Murciélago swarm + Acólito (ranged anchor). No threat yet.
+    // Nv1 (~22): intro — Siervo filler + Murciélago swarm + Acólito anchor.
     return [
       wave(700, [{ type: 'siervo_torre', count: ramp(4, tier) }, { type: 'acolito_trueno', count: ramp(2, tier) }]),
-      wave(650, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'murcielago', count: ramp(3, tier) }]),
-      wave(600, [{ type: 'acolito_trueno', count: ramp(2, tier) }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+      wave(650, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'murcielago', count: ramp(4, tier) }]),
+      wave(600, [{ type: 'acolito_trueno', count: ramp(3, tier) }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: ramp(2, tier) }]),
     ];
   }
   if (tier === 2) {
-    // Nv2: introduce Duelista (mobility threat), Heraldo (ranged stun), Espíritu (flyer).
+    // Nv2 (~30): + Duelista, Heraldo (stun), Espíritu (plasma volador).
     return [
-      wave(670, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'heraldo_rayo', count: tier }, { type: 'murcielago', count: ramp(2, tier) }]),
-      wave(630, [{ type: 'duelista_nocturno', count: 1 }, { type: 'acolito_trueno', count: ramp(2, tier) }, { type: 'espiritu_tormenta', count: ramp(2, tier) }]),
-      wave(580, [{ type: 'heraldo_rayo', count: tier }, { type: 'duelista_nocturno', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+      wave(670, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'heraldo_rayo', count: 2 }, { type: 'murcielago', count: ramp(2, tier) }]),
+      wave(630, [{ type: 'duelista_nocturno', count: 1 }, { type: 'acolito_trueno', count: ramp(2, tier) }, { type: 'espiritu_tormenta', count: ramp(2, tier) }, { type: 'murcielago', count: ramp(2, tier) }]),
+      wave(580, [{ type: 'heraldo_rayo', count: 2 }, { type: 'duelista_nocturno', count: 1 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: ramp(2, tier) }, { type: 'espiritu_tormenta', count: 1 }]),
     ];
   }
-  // Tier 3: Nv3 — introduce Arpía (dive-bomb), Tronador (area denial), Centinela (homing turret).
+  // Nv3 (~38): + Arpía, Tronador (push), Centinela (petrify).
   return [
-    wave(640, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'tronador', count: tier }, { type: 'arpia', count: ramp(2, tier) }]),
-    wave(600, [{ type: 'centinela_piedra', count: 1 }, { type: 'heraldo_rayo', count: tier }, { type: 'murcielago', count: ramp(3, tier) }]),
-    wave(550, [{ type: 'duelista_nocturno', count: 1 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'tronador', count: tier }, { type: 'siervo_torre', count: ramp(2, tier) }]),
+    wave(640, [{ type: 'siervo_torre', count: ramp(3, tier) }, { type: 'tronador', count: 3 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'espiritu_tormenta', count: 2 }]),
+    wave(600, [{ type: 'centinela_piedra', count: 1 }, { type: 'heraldo_rayo', count: 3 }, { type: 'murcielago', count: ramp(3, tier) }, { type: 'siervo_torre', count: 2 }]),
+    wave(550, [{ type: 'duelista_nocturno', count: 1 }, { type: 'arpia', count: ramp(2, tier) }, { type: 'tronador', count: 3 }, { type: 'siervo_torre', count: ramp(2, tier) }, { type: 'murcielago', count: 1 }]),
   ];
 }
 

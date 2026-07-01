@@ -130,6 +130,23 @@ test('water region grants freeze skill and preserves narrative', () => {
   assert.equal(mageLine.text, 'story.water.mage.0', 'mageLines[0] key preserved');
 });
 
+// ─── Air basic waves ──────────────────────────────────────────────────────────
+
+function levelWaveTotal(region, levelIndex) {
+  const lvl = region.levels[levelIndex];
+  const waves = lvl.phases.filter((p) => p.type === 'wave');
+  return waves.map((w) => w.spawns.reduce((s, sp) => s + sp.count, 0));
+}
+
+test('Air nv1-3: totales de oleada en la banda intermedia (escalando)', () => {
+  const air = REGIONS.air;
+  const t = (i) => levelWaveTotal(air, i).reduce((a, b) => a + b, 0);
+  assert.ok(t(0) >= 20 && t(0) <= 25, `nv1 = ${t(0)}`);   // ~22
+  assert.ok(t(1) >= 28 && t(1) <= 33, `nv2 = ${t(1)}`);   // ~30
+  assert.ok(t(2) >= 35 && t(2) <= 41, `nv3 = ${t(2)}`);   // ~38
+  assert.ok(t(2) > t(1) && t(1) > t(0), 'escala creciente nv1<nv2<nv3');
+});
+
 // ─── Fire regression ─────────────────────────────────────────────────────────
 
 test('fire nv4/5/6 minibosses are still pyra, vesta, favilla (regression)', () => {
