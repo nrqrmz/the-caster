@@ -9,6 +9,9 @@ export const BODY_PX = 32;
 export function displayFor(recipe, radius) {
   if (!recipe || !recipe.body) return { square: radius * 2 };
   const { gridW, gridH, body } = recipe;
+  if (typeof gridW !== 'number' || typeof gridH !== 'number') {
+    throw new Error('displayFor: recipe with body needs gridW and gridH');
+  }
   return {
     scale: (radius * 2) / BODY_PX,
     originX: (body.x + BODY_PX / 2) / gridW,

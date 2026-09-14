@@ -28,3 +28,8 @@ test('con body y radio 17: la escala crece igual en X e Y', () => {
   assert.equal(d.originY, 20 / 36);
   assert.equal(d.half, 17);
 });
+
+test('con body pero sin gridW/gridH: lanza en vez de producir NaN', () => {
+  assert.throws(() => displayFor({ body: { x: 0, y: 0 } }, 16), /needs gridW and gridH/);
+  assert.throws(() => displayFor({ gridW: 32, body: { x: 0, y: 0 } }, 16), /needs gridW and gridH/);
+});

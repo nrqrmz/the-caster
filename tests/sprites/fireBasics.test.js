@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, mkdtempSync } from 'node:fs';
+import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,7 +51,12 @@ test('fireBasicRecipe lanza con una clave sin sprite generado', () => {
 });
 
 test('el generador es reproducible (re-ejecutarlo da el mismo archivo)', () => {
-  const out = join(mkdtempSync(join(tmpdir(), 'fire-basics-')), 'parts.js');
-  execFileSync(process.execPath, [GEN, out], { stdio: 'pipe' });
-  assert.equal(readFileSync(out, 'utf8'), readFileSync(GENERATED, 'utf8'));
+  const dir = mkdtempSync(join(tmpdir(), 'fire-basics-'));
+  try {
+    const out = join(dir, 'parts.js');
+    execFileSync(process.execPath, [GEN, out], { stdio: 'pipe' });
+    assert.equal(readFileSync(out, 'utf8'), readFileSync(GENERATED, 'utf8'));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

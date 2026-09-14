@@ -490,6 +490,7 @@ export default class GameScene extends Phaser.Scene {
     if (def && this.liveWaveCount() < CONCURRENCY_CAP) {
       const e = new Enemy(this, captive.x, captive.y, scaleEnemyDef(def, this.diff));
       this.enemies.add(e);
+      // Redundante para enemigos con sprite (el constructor ya lo aplica); necesario para los geométricos sin receta.
       e.applyDisplay();
       this.flashCircle(captive.x, captive.y, (def.radius || 20) + 12, COLORS.poison); // transform tell
     }

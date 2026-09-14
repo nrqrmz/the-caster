@@ -1,5 +1,7 @@
 // src/data/sprites/recipes.js
 // PURE. Per-creature sprite recipes. key -> { archetype, size, parts, anim, palette?, accent? }
+// Also: gridW?/gridH?/scale? for non-square canvases; static? (single front frame,
+// never flipped); body? ({x,y} of a 32×32 body box inside the canvas — the rest overflows).
 import { derivePalette, NAMED_PALETTES } from './palettes.js';
 import { FIRE_BASIC_META } from './partsFireBasics.js';
 
