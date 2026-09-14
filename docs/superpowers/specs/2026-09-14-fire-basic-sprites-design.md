@@ -81,9 +81,10 @@ capucha y solo cambian de color. La referencia fija silueta, rasgos y paleta de 
 - Las 10 recetas pasan a
   `{ archetype, static: true, gridW, gridH, scale: 1, body: { x, y }, parts: [{ name: 'fb_<clave>' }] }`,
   con `gridW/gridH/body` tomados del resultado del generador.
-- Las constantes compartidas (`CULT_HOODED`, `CULT_STAFF`, `CULT_FACELESS`, `CENIZA`, `MAGE_MELEE`)
-  se conservan porque las usan enemigos de otros mundos.
-- Quedan sin uso y se eliminan: las constantes `LARVA` y `SALAMANDRA` de `recipes.js`, las
+- Las constantes compartidas (`CULT_HOODED`, `CULT_STAFF`, `CENIZA`) se conservan porque las
+  usan enemigos de otros mundos.
+- Quedan sin uso y se eliminan: las constantes `LARVA`, `SALAMANDRA`, `MAGE_MELEE` y
+  `CULT_FACELESS` de `recipes.js` (sus partes `mage_*`/`cult_*` siguen en uso), las
   partes `larva_body`, `larva_glow`, `larva_eyes`, `sala_body`, `sala_crest`, `sala_eyes` y
   `mage_club` de `parts.js`, y sus bloques en `tools/gen-beast.mjs` y `tools/gen-mage.mjs`
   (antes de borrar, `grep` confirma que nada más las referencia).
@@ -107,7 +108,7 @@ tamaño del dibujo entero.
     enemigo sea el centro del cuerpo;
   - `bodySize = 32` y `bodyOffset = { x: body.x, y: body.y }` en píxeles de textura.
   Para recetas sin `body` devuelve exactamente lo que hoy produce `setDisplaySize`.
-- Helper `applyEnemyDisplay(sprite, def)` (Phaser) que usa `displayFor` y sustituye los cuatro
+- Método `Enemy#applyDisplay()` (Phaser) que usa `displayFor` y sustituye los cuatro
   `setDisplaySize(radius*2, radius*2)` de enemigos normales. Los tamaños fijos de jefes
   (Elemental, Galahad, ataúd, formas) no se tocan.
 - `containEnemy` usa el tamaño del cuerpo (`radius`) en lugar de `displayWidth/Height` cuando la
@@ -121,16 +122,28 @@ tamaño del dibujo entero.
    `node:zlib`.
 2. **Recorte:** caja fija por criatura sobre la referencia, figura **izquierda** de cada pareja
    (pirovidente y sacerdote tienen una sola).
-3. **Reducción:** promedio por área con una escala por criatura elegida para que el cuerpo mida
-   ~32 px de alto; lo que sobresale conserva la misma escala. Se calculan `gridW`, `gridH` y
-   `body`.
-4. **Cuantizado:** paleta corta por criatura (10–16 colores muestreados de la referencia);
-   cada píxel va al color más cercano. Los píxeles de fondo (oscuros y poco saturados) y los de
-   baja cobertura quedan transparentes.
-5. **Limpieza:** contorno oscuro de 1 px alrededor de la silueta, eliminación de píxeles
-   aislados y retoques por coordenada (ojos, núcleos de fuego, halo, dagas, grietas).
-6. **Salida:** escribe `partsFireBasics.js` y muestra por consola `gridW/gridH/body` de cada
-   criatura para las recetas.
+3. **Fondo:** flood fill desde el borde del recorte sobre píxeles cercanos al color del panel
+   (tolerancia por criatura), de modo que las zonas oscuras encerradas en la figura no se
+   pierden.
+4. **Cuantizado:** paleta corta por criatura (≤16 colores, mediana determinista sobre los
+   píxeles originales de la figura).
+5. **Reducción:** escala por criatura elegida para que el cuerpo mida ~32 px de alto; lo que
+   sobresale conserva la misma escala. Cada píxel de salida toma el color de paleta **más
+   votado** de su zona (no el promedio, que embarra), y los brillos votan con más peso para
+   que ojos y llamas sobrevivan. Los píxeles de baja cobertura quedan transparentes.
+6. **Limpieza:** pelado de bordes oscuros (halos de brillo/sombra; se desactiva en criaturas
+   oscuras como la salamandra), eliminación de píxeles aislados, contorno oscuro de 1 px en
+   los bordes que no son brillo y retoques por coordenada (ojos, núcleos de fuego, halo,
+   dagas, grietas).
+7. Se calculan `gridW`, `gridH` y `body` (cuadro de 32×32 apoyado abajo y centrado en la masa
+   de las filas inferiores).
+
+La conversión vive en `tools/lib/figure.mjs` (pura, testeada con imágenes sintéticas) y el
+códec PNG en `tools/lib/png.mjs`; los recortes y parámetros por criatura, en
+`tools/fire-basics-figures.mjs`, que comparten generador y preview.
+8. **Salida:** escribe `partsFireBasics.js` con `FIRE_BASIC_PARTS` y `FIRE_BASIC_META`
+   (`gridW/gridH/body` por criatura), que las recetas consumen con el helper
+   `fireBasicRecipe(key, archetype)` en vez de copiar números a mano.
 
 `tools/preview-fire-basics.mjs` forja las recetas **reales** con SpriteForge y escribe un PNG
 con cada sprite a ×6 y a ×2 junto al recorte de la referencia.
