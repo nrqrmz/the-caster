@@ -1,7 +1,7 @@
 import { computeMovement, stepAttack } from '../systems/EnemyBrain.js';
 import { stepBoss } from '../systems/BossBrain.js';
 import { spriteKey, ACTOR_DEPTH } from '../config.js';
-import { hasRecipe } from '../data/sprites/recipes.js';
+import { hasRecipe, getRecipe } from '../data/sprites/recipes.js';
 import { FacingController } from './FacingController.js';
 
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
@@ -18,11 +18,13 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.def = def;
     this.hp = def.hp;
     this.maxHp = def.hp;
+    this.visualRecipe = useSprite ? getRecipe(visualKey) : null;
     if (useSprite) {
       const px = def.radius * 2;
       this.setDisplaySize(px, px); // visual footprint ~ old circle diameter; physics body unchanged
       this.facing = new FacingController(this, visualKey);
       this.facing.facePlayer = !!def.facePlayer;
+      this.facing.isStatic = !!this.visualRecipe.static;
     } else {
       if (def.color) this.setTint(def.color);
       this.facing = null;
