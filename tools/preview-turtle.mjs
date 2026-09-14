@@ -7,12 +7,13 @@ import { forge } from '../src/systems/SpriteForge.js';
 import { getRecipe, paletteFor } from '../src/data/sprites/recipes.js';
 import { PARTS } from '../src/data/sprites/parts.js';
 import { NAMED_PALETTES } from '../src/data/sprites/palettes.js';
+import { COLORS } from '../src/config.js';
 
 const outPath = process.argv[2];
 if (!outPath) { console.error('usage: node tools/preview-turtle.mjs <out.png>'); process.exit(1); }
 
 const partPalette = (ref) => (ref.palette ? NAMED_PALETTES[ref.palette] : null);
-const { anims } = forge(getRecipe('tortuga_acorazada'), PARTS, paletteFor('tortuga_acorazada', 0x5a9e57), partPalette);
+const { anims } = forge(getRecipe('tortuga_acorazada'), PARTS, paletteFor('tortuga_acorazada', COLORS.turtleGreen), partPalette);
 const frames = [anims['idle-down'][0], anims['idle-up'][0], anims['idle-side'][0], ...anims['walk-down'], anims['idle-down'][1]];
 
 const S = 6, PAD = 8, FW = frames[0][0].length, FH = frames[0].length;

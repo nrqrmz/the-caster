@@ -3,6 +3,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PARTS } from '../../src/data/sprites/parts.js';
 import { rot180, rotHeadRight } from '../../src/data/sprites/gridTransform.js';
+import { getRecipe, paletteFor } from '../../src/data/sprites/recipes.js';
+import { NAMED_PALETTES } from '../../src/data/sprites/palettes.js';
+import { forge } from '../../src/systems/SpriteForge.js';
+import { COLORS } from '../../src/config.js';
 
 const TURTLE = ['turtle_legs', 'turtle_claws', 'turtle_head', 'turtle_shell', 'turtle_spikes', 'turtle_rune', 'turtle_eyes'];
 
@@ -45,13 +49,9 @@ test('turtle walk frames move the legs (A and C differ from neutral and from eac
   assert.deepEqual(walk[1], PARTS.turtle_legs.down, 'frame B is the neutral pose');
 });
 
-import { getRecipe, paletteFor } from '../../src/data/sprites/recipes.js';
-import { NAMED_PALETTES } from '../../src/data/sprites/palettes.js';
-import { forge } from '../../src/systems/SpriteForge.js';
-
 // Same per-part palette resolution as spriteBaker.resolvePartPalette for named palettes.
 const partPalette = (ref) => (ref.palette ? NAMED_PALETTES[ref.palette] : null);
-const forgeTurtle = () => forge(getRecipe('tortuga_acorazada'), PARTS, paletteFor('tortuga_acorazada', 0x5a9e57), partPalette);
+const forgeTurtle = () => forge(getRecipe('tortuga_acorazada'), PARTS, paletteFor('tortuga_acorazada', COLORS.turtleGreen), partPalette);
 const grid180 = (g) => g.slice().reverse().map((row) => row.slice().reverse());
 const gridHeadRight = (g) => {
   const h = g.length, w = g[0].length;
