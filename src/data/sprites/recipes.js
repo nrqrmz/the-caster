@@ -1,6 +1,7 @@
 // src/data/sprites/recipes.js
 // PURE. Per-creature sprite recipes. key -> { archetype, size, parts, anim, palette?, accent? }
 import { derivePalette, NAMED_PALETTES } from './palettes.js';
+import { FIRE_BASIC_META } from './partsFireBasics.js';
 
 // Hooded-cultist part lists. cult_robe/cult_hood take the creature's type color
 // (no palette override); the rest use named palettes. Order = back-to-front.
@@ -310,6 +311,18 @@ const GOLEM_STONE   = [{ name: 'stone_body' }, { name: 'stone_cracks', palette: 
 const COLOSSUS      = [{ name: 'colossus_body' }, { name: 'colossus_eyes', palette: 'glow' }];
 // thorn totem: tall column, NOT humanoid — distinct body shape entirely
 const THORNTOTEM    = [{ name: 'thorntotem_body' }, { name: 'thorntotem_face', palette: 'shadow' }, { name: 'thorntotem_thorns', palette: 'bone' }, { name: 'thorntotem_eye', palette: 'sporeglow' }];
+
+// Villanos básicos de Fuego: sprite estático de frente generado desde la referencia
+// (tools/gen-fire-basics.mjs). Lienzo y cuadro del cuerpo vienen del módulo generado.
+export function fireBasicRecipe(key, archetype) {
+  const meta = FIRE_BASIC_META[key];
+  if (!meta) throw new Error(`fireBasicRecipe: no generated sprite for '${key}'`);
+  return {
+    archetype, static: true, scale: 1,
+    gridW: meta.gridW, gridH: meta.gridH, body: { ...meta.body },
+    parts: [{ name: `fb_${key}` }],
+  };
+}
 
 export const RECIPES = {
   hero: {
