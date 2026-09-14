@@ -31,3 +31,17 @@ test('NAMED_PALETTES.hero exists and is full', () => {
   assert.ok(NAMED_PALETTES.hero);
   assert.equal(typeof NAMED_PALETTES.hero.outline, 'number');
 });
+
+test('turtle palettes exist with 5 ordered roles (shade < base < highlight)', () => {
+  const lum = (c) => ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255);
+  for (const name of ['mossshell', 'oliveskin', 'hornbone', 'bloodrune', 'redeye']) {
+    const p = NAMED_PALETTES[name];
+    assert.ok(p, `missing palette ${name}`);
+    for (const role of ['outline', 'base', 'shade', 'highlight', 'accent']) {
+      assert.equal(typeof p[role], 'number', `${name}.${role}`);
+    }
+    assert.ok(lum(p.outline) < lum(p.shade), `${name}: outline darker than shade`);
+    assert.ok(lum(p.shade) < lum(p.base), `${name}: shade darker than base`);
+    assert.ok(lum(p.highlight) > lum(p.base), `${name}: highlight lighter than base`);
+  }
+});

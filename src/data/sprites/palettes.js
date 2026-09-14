@@ -85,4 +85,11 @@ export const NAMED_PALETTES = {
   sporeglow: derivePalette(0xaed581, { base: 0xaed581, highlight: 0xe6ffcc, shade: 0x689f38, outline: 0x33691e }),
   // Earth — follaje (copa del Ent, pelo/hojas de la Dríada) verde hoja distinto del cuerpo.
   leafgreen: derivePalette(0x4a8a2a, { base: 0x4a8a2a, highlight: 0x8bc34a, shade: 0x2e5a18, outline: 0x14300a }),
+  // Water — Tortuga Acorazada (tools/refs/tortuga-acorazada.png). Sampled from the
+  // reference and lifted slightly so the dark olive reads on the water background.
+  mossshell: derivePalette(0x45432f, { base: 0x45432f, highlight: 0x68664a, shade: 0x2c2a1f, outline: 0x141310, accent: 0xb3a07e }), // carapace plates; accent = pale cracks
+  oliveskin: derivePalette(0x5c5638, { base: 0x5c5638, highlight: 0x857c58, shade: 0x3b3624, outline: 0x17120d, accent: 0xa89c70 }), // head + legs
+  hornbone: derivePalette(0x9a8064, { base: 0x9a8064, highlight: 0xcdb397, shade: 0x6d5642, outline: 0x2a1e16, accent: 0xe6d3b3 }),  // spikes + claws (tan horn, not white bone)
+  bloodrune: derivePalette(0x8e2a26, { base: 0x8e2a26, highlight: 0xb4403a, shade: 0x642221, outline: 0x3a1210, accent: 0xc85a4a }), // carved rune
+  redeye: derivePalette(0xc0241c, { base: 0xc0241c, highlight: 0xff5a44, shade: 0x701311, outline: 0x3a0a08, accent: 0xffd0c0 }),    // glowing eyes
 };
