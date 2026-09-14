@@ -3,6 +3,7 @@ import { stepBoss } from '../systems/BossBrain.js';
 import { spriteKey, ACTOR_DEPTH } from '../config.js';
 import { hasRecipe, getRecipe } from '../data/sprites/recipes.js';
 import { FacingController } from './FacingController.js';
+import { displayFor } from '../systems/enemyDisplay.js';
 
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, def) {
@@ -18,10 +19,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.def = def;
     this.hp = def.hp;
     this.maxHp = def.hp;
+    this.bodyHalf = null; // medio lado del cuerpo cuando el sprite sobresale (ver applyDisplay)
     this.visualRecipe = useSprite ? getRecipe(visualKey) : null;
     if (useSprite) {
-      const px = def.radius * 2;
-      this.setDisplaySize(px, px); // visual footprint ~ old circle diameter; physics body unchanged
+      this.applyDisplay();
       this.facing = new FacingController(this, visualKey);
       this.facing.facePlayer = !!def.facePlayer;
       this.facing.isStatic = !!this.visualRecipe.static;
@@ -36,6 +37,25 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.burnDps = 0;         // burn damage/sec
     this.brainState = { move: {}, attacks: (def.attacks || []).map(() => ({})), boss: {} };
     this._formSeq = null; // set by GameScene when the boss has `forms`
+  }
+
+  // Visual size + physics body from the recipe (see systems/enemyDisplay.js). Without a
+  // recipe `body` this is the historic radius*2 square; with one, the sprite may overflow
+  // its 32×32 body box (halo/torches) while the hitbox stays on the body.
+  applyDisplay() {
+    const r = this.def.radius;
+    if (!r) return;
+    const d = displayFor(this.visualRecipe, r);
+    if (d.square) {
+      this.setDisplaySize(d.square, d.square);
+      this.bodyHalf = null;
+      return;
+    }
+    this.setScale(d.scale);
+    this.setOrigin(d.originX, d.originY);
+    this.body.setSize(d.body.w, d.body.h, false);
+    this.body.setOffset(d.body.x, d.body.y);
+    this.bodyHalf = d.half;
   }
 
   applyBurn(dps, ms) {

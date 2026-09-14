@@ -490,7 +490,7 @@ export default class GameScene extends Phaser.Scene {
     if (def && this.liveWaveCount() < CONCURRENCY_CAP) {
       const e = new Enemy(this, captive.x, captive.y, scaleEnemyDef(def, this.diff));
       this.enemies.add(e);
-      if (def.radius) e.setDisplaySize(def.radius * 2, def.radius * 2);
+      e.applyDisplay();
       this.flashCircle(captive.x, captive.y, (def.radius || 20) + 12, COLORS.poison); // transform tell
     }
     captive.destroy();
@@ -510,8 +510,9 @@ export default class GameScene extends Phaser.Scene {
   // clamp EVERY enemy to the bounds every frame (no entered-latch). Enemies spawned
   // just outside snap to the edge on their first frame — a negligible visual change.
   containEnemy(e) {
-    const halfW = (e.displayWidth  || (e.def.radius || 16) * 2) / 2;
-    const halfH = (e.displayHeight || (e.def.radius || 16) * 2) / 2;
+    // Sprites que sobresalen (halo/antorchas) se contienen por su cuerpo, no por el dibujo.
+    const halfW = e.bodyHalf ?? (e.displayWidth  || (e.def.radius || 16) * 2) / 2;
+    const halfH = e.bodyHalf ?? (e.displayHeight || (e.def.radius || 16) * 2) / 2;
     const { x, y } = clampBodyInside(e.x, e.y, halfW, halfH, GAME_WIDTH, GAME_HEIGHT, ENEMY_MARGIN);
     e.x = x;
     e.y = y;
@@ -655,7 +656,7 @@ export default class GameScene extends Phaser.Scene {
       const scaled = scaleEnemyDef(childDef, this.diff);
       const e = new Enemy(this, enemy.x + Phaser.Math.Between(-20, 20), enemy.y + Phaser.Math.Between(-20, 20), scaled);
       this.enemies.add(e);
-      if (childDef.radius) e.setDisplaySize(childDef.radius * 2, childDef.radius * 2);
+      e.applyDisplay();
     }
     const mutate = resolveMutateOnDeath(enemy.def);
     if (mutate && !enemy._mutated) {
@@ -672,7 +673,7 @@ export default class GameScene extends Phaser.Scene {
         if (def) {
           const e = new Enemy(this, enemy.x, enemy.y, scaleEnemyDef(def, this.diff));
           this.enemies.add(e);
-          if (def.radius) e.setDisplaySize(def.radius * 2, def.radius * 2);
+          e.applyDisplay();
         }
       }
     }
