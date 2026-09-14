@@ -1,14 +1,10 @@
 // High-craft FIRE beasts, each a distinct designed creature (per-creature silhouette):
-//   larva_magma  — swollen segmented molten grub (explodes on death)
-//   salamandra   — small agile lizard, 4 legs + a flame crest (spits fire)
 //   can_lava     — lean lava hound, horns + molten mane + fangs (charges)
 //   coloso_magma — massive hunched magma brute, horns + glowing core (shielded)
 // Body takes the creature's type color (recipe palette, no override); cracks/crest/
 // core use 'ember', eyes 'glow', horns 'charcoal'. Emits parts. Run: node tools/gen-beast.mjs
 const N = 32, cx = 16;
 const layers = {
-  larva_body: {}, larva_glow: {}, larva_eyes: {},
-  sala_body: {}, sala_crest: {}, sala_eyes: {},
   can_body: {}, can_glow: {}, can_horns: {}, can_eyes: {},
   coloso_body: {}, coloso_core: {}, coloso_horns: {}, coloso_eyes: {},
 };
@@ -44,29 +40,6 @@ function horn(L, bx, by, tx, ty, baseW) {
     if (w === 0) put(L, x, y, 'o');
   }
 }
-
-// ============================ LARVA_MAGMA (grub) ============================
-const segs = [[9, 5], [14, 6.4], [19, 6], [24, 4.6]];     // [cy, radius] head->tail
-for (const [cyS, r] of segs) blob('larva_body', cx, cyS, r, r * 0.92);
-// glowing cracks in the constrictions between segments + a belly seam
-for (const cyS of [11.5, 16.5, 21.5]) for (let x = cx - 4; x <= cx + 4; x++) put('larva_glow', x, Math.round(cyS), Math.abs(x - cx) <= 1 ? 'h' : 'a');
-for (let y = 8; y <= 25; y++) put('larva_glow', cx, y, 'a');   // molten core seam
-// little stubby legs along both sides
-for (const cyS of [12, 17, 22]) { put('larva_body', cx - 7, cyS, 'o'); put('larva_body', cx - 8, cyS + 1, 'o'); put('larva_body', cx + 7, cyS, 'o'); put('larva_body', cx + 8, cyS + 1, 'o'); }
-// eyes + mandibles on the head
-put('larva_eyes', cx - 2, 8, 'b'); put('larva_eyes', cx - 2, 8 - 1, 'h');
-put('larva_eyes', cx + 2, 8, 'b'); put('larva_eyes', cx + 2, 8 - 1, 'h');
-put('larva_body', cx - 3, 5, 'o'); put('larva_body', cx + 3, 5, 'o'); // mandible nubs
-
-// ============================ SALAMANDRA (lizard, top-down) ============================
-blob('sala_body', cx, 7, 3.4, 3.2);                       // head
-for (let y = 8; y <= 21; y++) { const half = 3.8 - Math.max(0, (y - 16)) * 0.4; for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) put('sala_body', x, y, (x === Math.round(cx - half) || x === Math.round(cx + half)) ? 'o' : (x < cx - 1 ? 'h' : (x > cx + 1 ? 's' : 'b'))); }
-for (let y = 21; y <= 29; y++) { const half = Math.max(0, 2.6 - (y - 21) * 0.32); for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) put('sala_body', x, y, half < 1 ? 'b' : (x === Math.round(cx - half) ? 'o' : 'b')); } // tail
-// 4 splayed legs (2px)
-for (const [bx, by, ex, ey] of [[13, 10, 8, 8], [19, 10, 24, 8], [13, 18, 8, 20], [19, 18, 24, 20]]) { line('sala_body', bx, by, ex, ey, 'o'); line('sala_body', bx, by + 1, ex, ey + 1, 'b'); }
-// bold flame crest along the spine (bright ridge with periodic wider bumps)
-for (let y = 8; y <= 19; y++) { put('sala_crest', cx, y, 'a'); if (y % 3 === 0) { put('sala_crest', cx, y, 'h'); put('sala_crest', cx - 1, y, 'a'); put('sala_crest', cx + 1, y, 'a'); put('sala_crest', cx, y - 1, 'h'); } }
-put('sala_eyes', cx - 2, 6, 'b'); put('sala_eyes', cx + 2, 6, 'b');
 
 // ============================ CAN_LAVA (lava hound, SIDE PROFILE facing left) ============================
 blob('can_body', 18, 17, 7.5, 5);                         // torso

@@ -171,3 +171,29 @@ test('elemental_tormenta forges as a native 2:1 sprite (64×32 grid → 128×64)
   const flat = (f) => f.flat().map((c) => (c == null ? -1 : c)).join(',');
   assert.notEqual(flat(idle[0]), flat(idle[1]), 'idle frames differ (lightning crackle)');
 });
+
+import { FIRE_BASIC_META } from '../../src/data/sprites/partsFireBasics.js';
+
+const FIRE_BASIC_KEYS = [
+  'acolito_brasa', 'lanzabrasas', 'piromante', 'pirovidente', 'sacerdote_llama',
+  'encapuchado_pira', 'iniciado_veloz', 'salamandra', 'larva_magma', 'espiritu_ceniza',
+];
+
+test('los 10 villanos básicos de Fuego usan su sprite generado estático', () => {
+  assert.deepEqual(Object.keys(FIRE_BASIC_META).sort(), [...FIRE_BASIC_KEYS].sort());
+  for (const key of FIRE_BASIC_KEYS) {
+    const r = getRecipe(key);
+    assert.equal(r.static, true, `${key} static`);
+    assert.deepEqual(r.parts, [{ name: `fb_${key}` }], `${key} parts`);
+    assert.deepEqual(r.body, FIRE_BASIC_META[key].body, `${key} body`);
+    const g = forge(r, PARTS, paletteFor(key, 0x888888)).anims['idle-down'][0];
+    assert.equal(g.length, r.gridH);
+    assert.equal(g[0].length, r.gridW);
+  }
+});
+
+test('el arte antiguo de larva, salamandra y garrote ya no existe', () => {
+  for (const name of ['larva_body', 'larva_glow', 'larva_eyes', 'sala_body', 'sala_crest', 'sala_eyes', 'mage_club']) {
+    assert.equal(PARTS[name], undefined, `${name} should be removed`);
+  }
+});
