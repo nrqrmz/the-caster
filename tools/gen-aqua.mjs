@@ -1,7 +1,6 @@
 // High-craft aquatic creatures, each a distinct designed creature:
 //   tiburon_joven   — streamlined shark in side profile, dorsal/tail fins + teeth (dashes)
 //   serpiente_marina — coiling sea serpent, S-curve body + fanged head (shoots)
-//   tortuga_acorazada — armored turtle, plated dome shell + head/flippers (tanky charge)
 //   cangrejo_acorazado — armored crab, wide carapace + raised pincers + eyestalks (tanky)
 // Body takes the creature's type color; belly = its own highlight; teeth/fangs = bone;
 // eyes shadow|glow. Run: node tools/gen-aqua.mjs
@@ -9,7 +8,6 @@ const N = 32, cx = 16, cy = 16;
 const layers = {
   shark_body: {}, shark_teeth: {}, shark_eye: {},
   serpent_body: {}, serpent_fangs: {}, serpent_eye: {},
-  turtle_body: {}, turtle_eye: {},
   crab_body: {}, crab_eye: {},
 };
 const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
@@ -75,16 +73,6 @@ blob('serpent_body', cx, 6, 3.4, 3);                      // head
 for (const s of [-1, 1]) { line('serpent_body', cx + s * 2, 3, cx + s * 3, 1, 'o'); }   // small horns/frills
 put('serpent_eye', cx - 2, 5, 'b'); put('serpent_eye', cx + 2, 5, 'b');
 for (const fx of [cx - 1, cx + 1]) { put('serpent_fangs', fx, 9, 'b'); put('serpent_fangs', fx, 10, 'h'); } // fangs
-
-// ============================ TORTUGA_ACORAZADA (armored turtle, top-down) ============================
-disk('turtle_body', cx, 6, 2.6, 'b');                     // head poking out (front/top)
-for (const [hx, hy] of [[8, 9], [24, 9], [8, 24], [24, 24]]) blob('turtle_body', hx, hy, 2.6, 2.2); // 4 flippers
-disk('turtle_body', cx, 28, 1.4, 'b');                    // tail
-blob('turtle_body', cx, 17, 9, 8);                        // domed shell
-// carved plate pattern (shade grooves): center hexagon + radiating seams
-disk('turtle_body', cx, 17, 3.4, 's'); disk('turtle_body', cx, 17, 2.4, 'b');
-for (const [ax, ay] of [[cx, 10], [cx, 24], [9, 13], [23, 13], [9, 21], [23, 21]]) line('turtle_body', cx, 17, ax, ay, 's');
-put('turtle_eye', cx - 1, 5, 'b'); put('turtle_eye', cx + 1, 5, 'b');
 
 // ============================ CANGREJO_ACORAZADO (armored crab, front view) ============================
 blob('crab_body', cx, 17, 9, 5);                          // wide carapace
