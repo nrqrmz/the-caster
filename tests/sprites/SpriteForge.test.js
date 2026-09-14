@@ -113,3 +113,32 @@ test('forge produces non-empty attack frames only when anim.attack is set', () =
   assert.equal(out.anims['attack-down'][0][0][0], PAL.outline);
   assert.equal(out.anims['attack-down'][1][0][0], PAL.accent);
 });
+
+test('composeColorGrid: part.colors tiene prioridad y los roles siguen funcionando', () => {
+  const parts = { c: { res: 32, w: 3, h: 1, anchor: { x: 0, y: 0 }, colors: { '1': 0xabcdef, A: 0x123456 }, down: ['1Ab'] } };
+  const g = composeColorGrid({ gridW: 3, gridH: 1, parts: ['c'] }, parts, 'down', PAL);
+  assert.deepEqual(g[0], [0xabcdef, 0x123456, PAL.base]);
+});
+
+test('composeColorGrid: part.colors admite negro (0x000000)', () => {
+  const parts = { c: { res: 32, w: 1, h: 1, anchor: { x: 0, y: 0 }, colors: { '0': 0x000000 }, down: ['0'] } };
+  const g = composeColorGrid({ gridW: 1, gridH: 1, parts: ['c'] }, parts, 'down', PAL);
+  assert.equal(g[0][0], 0x000000);
+});
+
+test('composeColorGrid: carácter que no está en colors ni en roles lanza error', () => {
+  const parts = { c: { res: 32, w: 1, h: 1, anchor: { x: 0, y: 0 }, colors: { '1': 0xabcdef }, down: ['2'] } };
+  assert.throws(() => composeColorGrid({ gridW: 1, gridH: 1, parts: ['c'] }, parts, 'down', PAL), /unknown role char/);
+});
+
+test('forge static: 1 frame idéntico (la vista down) en todas las direcciones y estados', () => {
+  const parts = { a: { res: 32, w: 2, h: 1, anchor: { x: 0, y: 0 }, colors: { '1': 0xff0000 }, down: ['1b'] } };
+  const out = forge({ static: true, gridW: 2, gridH: 1, scale: 1, parts: ['a'], anim: { idle: 2, walk: 4, attack: 2 } }, parts, PAL);
+  assert.deepEqual(Object.keys(out.anims).sort(), ['idle-down', 'idle-side', 'idle-up', 'walk-down', 'walk-side', 'walk-up']);
+  for (const key of Object.keys(out.anims)) {
+    assert.equal(out.anims[key].length, 1, `${key} frames`);
+    assert.deepEqual(out.anims[key][0], [[0xff0000, PAL.base]], `${key} grid`);
+  }
+  assert.equal(out.width, 2);
+  assert.equal(out.height, 1);
+});

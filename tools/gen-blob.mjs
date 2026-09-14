@@ -1,5 +1,7 @@
 // High-craft blobs / elementals, each a distinct designed creature:
-//   espiritu_ceniza — ghostly ash wisp with trailing tails (shoots spread)
+//   (ash-wisp parts: ceniza_body/ceniza_eyes — no longer espiritu_ceniza's own sprite,
+//    that creature now comes from tools/gen-fire-basics.mjs; these parts are still
+//    used by espiritu_tormenta via recipes.js)
 //   elemental_fuego — blazing flame elemental with a molten core (miniboss, nova)
 //   imp_brasa       — little ember imp, horns + fanged grin (fast melee)
 //   pez_globo       — spiky pufferfish, big eyes (erratic)

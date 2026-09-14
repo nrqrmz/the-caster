@@ -6,7 +6,7 @@
 const N = 32, cx = 16;
 const layers = {
   mitre: {}, hair: {}, robe: {}, head: {}, hands: {}, staff: {}, orb: {},
-  club: {}, fish: {}, bow: {},                 // melee/ranged props
+  fish: {}, bow: {},                           // ranged props
   vshirt: {}, vlegs: {}, hairshort: {},        // villager (shirt + trousers + short hair)
 };
 const put = (L, x, y, r) => { if (x >= 0 && x < N && y >= 0 && y < N) layers[L][`${x},${y}`] = r; };
@@ -100,13 +100,6 @@ for (let y = 5; y <= 10; y++) for (let x = 22; x <= 27; x++) {
   if (d <= 1) put('orb', x, y, d > 0.62 ? 'o' : (d > 0.28 ? (x >= 25 ? 's' : 'b') : 'h'));
 }
 
-// ---------- CLUB / BAT: stout cudgel raised in the right hand (iniciado melee) ----------
-for (let y = 15; y <= 23; y++) { put('club', 23, y, 'o'); put('club', 24, y, 'b'); } // handle
-for (let y = 8; y <= 16; y++) for (let x = 21; x <= 27; x++) {                         // barrel
-  const d = ((x - 24) / 2.4) ** 2 + ((y - 12) / 4) ** 2;
-  if (d <= 1) put('club', x, y, d > 0.62 ? (x >= 25 ? 's' : 'o') : (x <= 23 ? 'h' : 'b'));
-}
-
 // ---------- FISH: a dead fish swung as a weapon (ahogado melee) ----------
 for (let y = 11; y <= 16; y++) for (let x = 20; x <= 27; x++) {
   const d = ((x - 23.5) / 3.4) ** 2 + ((y - 13.5) / 2.3) ** 2;
@@ -186,7 +179,6 @@ emit('mitre', 'mage_mitre');
 emit('hair', 'mage_hair');
 emit('head', 'mage_head');
 emit('hands', 'mage_hands');
-emit('club', 'mage_club');
 emit('fish', 'mage_fish');
 emit('bow', 'mage_bow');
 emit('vshirt', 'villager_shirt');

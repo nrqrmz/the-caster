@@ -72,4 +72,5 @@ Content is declarative in `src/data/` and consumed by scenes:
 
 - Texture/color keys are centralized in `config.js` (`TEX`, `COLORS`) — reference them, never hard-code a key string or hex color in scenes/objects.
 - Tests use `node:test` + `node:assert/strict`. For storage-dependent logic, inject a fake (`SaveSystem` takes a `storage` implementing `getItem/setItem/removeItem`) rather than touching real `localStorage`.
+- Sprite recipes may declare `static: true` (a single front frame, never flipped) and `body: {x, y}` (a 32×32 body box inside a larger `gridW×gridH` canvas, so halos/torches/smoke overflow the box while the hitbox stays sized to the body). Normal enemies are sized via `Enemy#applyDisplay()` / `displayFor` (`src/systems/enemyDisplay.js`), never `setDisplaySize(radius * 2, …)`. Parts generated from reference images (e.g. `partsFireBasics.js` by `tools/gen-fire-basics.mjs`) are never hand-edited.
 - Design and implementation-plan docs live in `docs/superpowers/`. The plan doc's Task 6.2 has the GitHub Pages deploy steps (static files from repo root).

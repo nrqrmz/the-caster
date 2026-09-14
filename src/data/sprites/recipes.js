@@ -1,6 +1,9 @@
 // src/data/sprites/recipes.js
 // PURE. Per-creature sprite recipes. key -> { archetype, size, parts, anim, palette?, accent? }
+// Also: gridW?/gridH?/scale? for non-square canvases; static? (single front frame,
+// never flipped); body? ({x,y} of a 32×32 body box inside the canvas — the rest overflows).
 import { derivePalette, NAMED_PALETTES } from './palettes.js';
+import { FIRE_BASIC_META } from './partsFireBasics.js';
 
 // Hooded-cultist part lists. cult_robe/cult_hood take the creature's type color
 // (no palette override); the rest use named palettes. Order = back-to-front.
@@ -10,9 +13,6 @@ const CULT_HOODED = [
 ];
 const CULT_STAFF = [
   { name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'ember' }, ...CULT_HOODED,
-];
-const CULT_FACELESS = [
-  { name: 'cult_robe' }, { name: 'cult_hood' }, { name: 'cult_face', palette: 'shadow' },
 ];
 // Water variant: frost-cyan eyes and orb (reuses the orbblue palette).
 const CULT_HOODED_WATER = [
@@ -152,9 +152,6 @@ const VILLAGER = (hairPal) => [
   { name: 'villager_legs', palette: 'pants' }, { name: 'villager_shirt' },
   MAGE_HEAD, MAGE_HANDS, { name: 'hair_short', palette: hairPal },
 ];
-const MAGE_MELEE = (weapon) => [
-  { name: 'mage_robe' }, MAGE_HEAD, { name: 'mage_mitre' }, MAGE_HANDS, weapon,
-];
 const MAGE_DROWNED = [
   { name: 'mage_robe' }, { name: 'mage_head', palette: 'drownedskin' }, { name: 'mage_mitre' },
   { name: 'mage_hands', palette: 'drownedskin' }, { name: 'mage_fish', palette: 'deadfish' },
@@ -186,8 +183,6 @@ const DUELIST = [
 ];
 // Fire beasts. body = type color; molten cracks/crest/core = `ember`; eyes = `glow`;
 // horns = `bone` (filled ivory cow-horns).
-const LARVA = [{ name: 'larva_body' }, { name: 'larva_glow', palette: 'ember' }, { name: 'larva_eyes', palette: 'glow' }];
-const SALAMANDRA = [{ name: 'sala_body' }, { name: 'sala_crest', palette: 'ember' }, { name: 'sala_eyes', palette: 'glow' }];
 const CAN_LAVA = [{ name: 'can_body' }, { name: 'can_glow', palette: 'ember' }, { name: 'can_horns', palette: 'bone' }, { name: 'can_eyes', palette: 'glow' }];
 const COLOSO = [{ name: 'coloso_body' }, { name: 'coloso_core', palette: 'ember' }, { name: 'coloso_horns', palette: 'bone' }, { name: 'coloso_eyes', palette: 'glow' }];
 // Blobs / elementals. body = type color; cores/cracks = ember/glow; ice sheen =
@@ -317,6 +312,18 @@ const COLOSSUS      = [{ name: 'colossus_body' }, { name: 'colossus_eyes', palet
 // thorn totem: tall column, NOT humanoid — distinct body shape entirely
 const THORNTOTEM    = [{ name: 'thorntotem_body' }, { name: 'thorntotem_face', palette: 'shadow' }, { name: 'thorntotem_thorns', palette: 'bone' }, { name: 'thorntotem_eye', palette: 'sporeglow' }];
 
+// Villanos básicos de Fuego: sprite estático de frente generado desde la referencia
+// (tools/gen-fire-basics.mjs). Lienzo y cuadro del cuerpo vienen del módulo generado.
+export function fireBasicRecipe(key, archetype) {
+  const meta = FIRE_BASIC_META[key];
+  if (!meta) throw new Error(`fireBasicRecipe: no generated sprite for '${key}'`);
+  return {
+    archetype, static: true, scale: 1,
+    gridW: meta.gridW, gridH: meta.gridH, body: { ...meta.body },
+    parts: [{ name: `fb_${key}` }],
+  };
+}
+
 export const RECIPES = {
   hero: {
     // The redheaded princess. Each part composes against its own palette (per-part
@@ -346,19 +353,19 @@ export const RECIPES = {
   warrior:         { archetype: 'humanoid', size: 64, parts: KNIGHT },
   archer:          { archetype: 'humanoid', size: 32, parts: MAGE_ARCHER },
   // --- Fire cultists (humanoid) ---
-  acolito_brasa:   { archetype: 'humanoid', size: 32, parts: CULT_HOODED },
-  lanzabrasas:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
-  iniciado_veloz:  { archetype: 'humanoid', size: 32, parts: MAGE_MELEE({ name: 'mage_club', palette: 'wood' }) },
-  piromante:       { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
-  encapuchado_pira:{ archetype: 'humanoid', size: 32, parts: CULT_FACELESS },
-  pirovidente:     { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
+  acolito_brasa:   fireBasicRecipe('acolito_brasa', 'humanoid'),
+  lanzabrasas:     fireBasicRecipe('lanzabrasas', 'humanoid'),
+  iniciado_veloz:  fireBasicRecipe('iniciado_veloz', 'humanoid'),
+  piromante:       fireBasicRecipe('piromante', 'humanoid'),
+  encapuchado_pira:fireBasicRecipe('encapuchado_pira', 'humanoid'),
+  pirovidente:     fireBasicRecipe('pirovidente', 'humanoid'),
   caballero_brasa: { archetype: 'humanoid', size: 64, parts: KNIGHT },
-  sacerdote_llama: { archetype: 'humanoid', size: 32, parts: CULT_STAFF },
+  sacerdote_llama: fireBasicRecipe('sacerdote_llama', 'humanoid'),
   portaestandarte: { archetype: 'humanoid', size: 64, parts: KNIGHT_BANNER },
   // --- Fire beasts ---
-  larva_magma:     { archetype: 'beast', size: 64, parts: LARVA },
-  salamandra:      { archetype: 'beast', size: 32, parts: SALAMANDRA },
-  espiritu_ceniza: { archetype: 'blob', size: 32, parts: CENIZA },
+  larva_magma:     fireBasicRecipe('larva_magma', 'beast'),
+  salamandra:      fireBasicRecipe('salamandra', 'beast'),
+  espiritu_ceniza: fireBasicRecipe('espiritu_ceniza', 'blob'),
   can_lava:        { archetype: 'beast', size: 64, parts: CAN_LAVA, flip: true },
   elemental_fuego: { archetype: 'blob', size: 64, parts: FUEGO_ELEM },
   coloso_magma:    { archetype: 'beast', size: 64, parts: COLOSO },

@@ -9,6 +9,14 @@ function emptyGrid(w = DESIGN, h = DESIGN) {
   return Array.from({ length: h }, () => new Array(w).fill(null));
 }
 
+// A part's own `colors` map (char → 0xRRGGBB) wins; else the char is a palette role.
+function resolveColor(part, pal, ch) {
+  if (part.colors && part.colors[ch] != null) return part.colors[ch];
+  const role = ROLE_MAP[ch];
+  if (!role) throw new Error(`SpriteForge: unknown role char '${ch}'`);
+  return pal[role];
+}
+
 // Compose every part into a DESIGN×DESIGN grid of color ints (or null = transparent).
 // Each part resolves against its own palette: partPalette(ref) wins, else `palette`.
 // A part authored at res < DESIGN is nearest-neighbor upscaled by DESIGN/res (rows +
@@ -32,9 +40,7 @@ export function composeColorGrid(recipe, parts, dir, palette, partPalette = () =
       for (let c = 0; c < rows[r].length; c++) {
         const ch = rows[r][c];
         if (ch === '.') continue;
-        const role = ROLE_MAP[ch];
-        if (!role) throw new Error(`SpriteForge: unknown role char '${ch}'`);
-        const color = pal[role];
+        const color = resolveColor(part, pal, ch);
         for (let dy = 0; dy < f; dy++) {
           for (let dx = 0; dx < f; dx++) {
             const y = ay + r * f + dy, x = ax + c * f + dx;
@@ -108,6 +114,15 @@ function hasAuthored(recipe, parts, state, dir) {
 export function forge(recipe, parts, palette, partPalette = () => null) {
   const gw = recipe.gridW ?? DESIGN, gh = recipe.gridH ?? DESIGN;
   const scale = recipe.scale ?? (recipe.size ? recipe.size / DESIGN : 1);
+
+  // Static recipe: one front view, one frame, reused for every direction and state.
+  if (recipe.static) {
+    const still = scaleGrid(composeColorGrid(recipe, parts, 'down', palette, partPalette), scale);
+    const anims = {};
+    for (const dir of DIRS) for (const state of ['idle', 'walk']) anims[`${state}-${dir}`] = [still];
+    return { size: DESIGN * scale, width: gw * scale, height: gh * scale, fps: recipe.fps ?? 5, anims };
+  }
+
   const anim = recipe.anim ?? {};
   const states = ['idle', 'walk', ...(anim.attack ? ['attack'] : [])];
   const anims = {};

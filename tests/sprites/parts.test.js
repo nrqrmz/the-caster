@@ -14,15 +14,17 @@ test('every part has w/h/anchor and at least the down direction', () => {
   }
 });
 
-test('each direction grid matches declared w/h and uses only role chars', () => {
+test('each direction grid matches declared w/h and uses only role chars or its own colors', () => {
   for (const [name, p] of Object.entries(PARTS)) {
+    const own = new Set(Object.keys(p.colors ?? {}));
+    for (const ch of own) assert.match(ch, /^[0-9A-Z]$/, `${name}.colors key '${ch}' must be 0-9 or A-Z`);
     for (const dir of ['down', 'up', 'side']) {
       const rows = p[dir];
       if (rows == null) continue; // direction intentionally skipped
       assert.equal(rows.length, p.h, `${name}.${dir} row count`);
       for (const row of rows) {
         assert.equal(row.length, p.w, `${name}.${dir} row width`);
-        for (const ch of row) assert.ok(ROLE_CHARS.has(ch), `${name}.${dir} bad char '${ch}'`);
+        for (const ch of row) assert.ok(ROLE_CHARS.has(ch) || own.has(ch), `${name}.${dir} bad char '${ch}'`);
       }
     }
   }
