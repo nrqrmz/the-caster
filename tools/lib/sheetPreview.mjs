@@ -2,7 +2,7 @@
 // PURE (no fs). PNG de revisión para el usuario: por criatura, el recorte de la referencia
 // (×refScale), el sprite forjado con la receta real (×6, cuadro del cuerpo en cian) y el
 // sprite a ×2 sobre fondo oscuro y sobre suelo de lava (tamaño aproximado en móvil).
-// ref: PNG decodificado { width, height, data }. items: [{ fig, recipe, grid }].
+// ref: PNG decodificado { width, height, data }. items: [{ fig, recipe, grid, img? }] (img = imagen propia del item).
 const S = 6, PAD = 12, BACK = 0x1a1224, DARK = 0x0e0a16, LAVA = 0x4a2a1a, BODYLINE = 0x00e5ff;
 
 export function renderSheetPreview(ref, items, { refScale = 2 } = {}) {
@@ -25,10 +25,11 @@ export function renderSheetPreview(ref, items, { refScale = 2 } = {}) {
   };
 
   let ox = PAD;
-  for (const { fig, recipe, grid } of items) {
+  for (const { fig, recipe, grid, img } of items) {
+    const src = img ?? ref;
     for (let y = 0; y < refH(fig); y++) for (let x = 0; x < refW(fig); x++) {
-      const i = ((fig.rows[0] + Math.floor(y / refScale)) * ref.width + fig.slot[0] + Math.floor(x / refScale)) * 4;
-      set(ox + x, H - PAD - refH(fig) + y, (ref.data[i] << 16) | (ref.data[i + 1] << 8) | ref.data[i + 2]);
+      const i = ((fig.rows[0] + Math.floor(y / refScale)) * src.width + fig.slot[0] + Math.floor(x / refScale)) * 4;
+      set(ox + x, H - PAD - refH(fig) + y, (src.data[i] << 16) | (src.data[i + 1] << 8) | src.data[i + 2]);
     }
     ox += refW(fig) + PAD;
     const top = H - PAD - recipe.gridH * S;
