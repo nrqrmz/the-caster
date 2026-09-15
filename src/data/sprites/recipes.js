@@ -6,6 +6,7 @@
 import { derivePalette, NAMED_PALETTES } from './palettes.js';
 import { FIRE_BASIC_META } from './partsFireBasics.js';
 import { FIRE_ADVANCED_META } from './partsFireAdvanced.js';
+import { FIRE_BOSS_META } from './partsFireBosses.js';
 
 // Hooded-cultist part lists. cult_robe/cult_hood take the creature's type color
 // (no palette override); the rest use named palettes. Order = back-to-front.
@@ -321,6 +322,8 @@ export function sheetRecipe(meta, prefix, key, archetype, extra = {}) {
 export const fireBasicRecipe = (key, archetype) => sheetRecipe(FIRE_BASIC_META, 'fb_', key, archetype);
 // Enemigos restantes de Fuego, a tamaño real (tools/gen-fire-advanced.mjs).
 export const fireAdvancedRecipe = (key, archetype, extra) => sheetRecipe(FIRE_ADVANCED_META, 'fa_', key, archetype, extra);
+// Jefes de Fuego y Escolta del Templo, a tamaño real (tools/gen-fire-bosses.mjs).
+export const fireBossRecipe = (key, archetype, extra) => sheetRecipe(FIRE_BOSS_META, 'fj_', key, archetype, extra);
 
 export const RECIPES = {
   hero: {
