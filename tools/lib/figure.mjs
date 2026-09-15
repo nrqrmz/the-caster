@@ -2,7 +2,8 @@
 // PURE (no Phaser, no fs). Convierte una figura de una hoja de referencia RGBA en
 // un sprite de rejilla con colores propios: fondo por flood fill, cuantizado a
 // resolución original, reducción por voto ponderado, pelado de halos oscuros,
-// despeckle, contorno y caja del cuerpo de 32×32. Solo herramienta de desarrollo.
+// despeckle, contorno, ancho mínimo y caja del cuerpo de 32×32 centrada en la silueta.
+// Solo herramienta de desarrollo.
 
 export const BODY = 32;
 export const CHARS = '0123456789ABCDEF';
@@ -15,6 +16,7 @@ export const DEFAULTS = {
   glowWeight: 3,    // peso del voto de los brillos (ojos, llamas)
   peel: 2,          // pasadas de pelado de bordes oscuros
   peelLum: 45,      // luminancia bajo la que un borde se pela
+  minWidth: 0,      // ancho mínimo de la silueta final en px (0 = usar `scale` tal cual)
 };
 
 const lum = (c) => 0.299 * ((c >> 16) & 255) + 0.587 * ((c >> 8) & 255) + 0.114 * (c & 255);
@@ -53,7 +55,7 @@ export function medianCut(colors, n) {
 }
 
 // img: { width, height, data: RGBA }.
-// fig: { slot: [x0, x1], rows: [y0, y1], scale, ...DEFAULTS overrides, overrides: [[x, y, 0xRRGGBB | null], …] }
+// fig: { slot: [x0, x1], rows: [y0, y1], scale, minWidth?, ...DEFAULTS overrides, overrides: [[x, y, 0xRRGGBB | null], …] }
 // → { gridW, gridH, body: { x, y }, colors: { char: int }, rows: string[] }
 export function convertFigure(img, fig) {
   const o = { ...DEFAULTS, ...fig };
@@ -93,46 +95,75 @@ export function convertFigure(img, fig) {
   const pal = medianCut(samples, o.colors);
   const nearestIdx = (c) => { let bi = 0, bd = Infinity; pal.forEach((p, i) => { const d = dist2(c, p); if (d < bd) { bd = d; bi = i; } }); return bi; };
 
-  // 4. Reducción por voto: cada píxel de salida toma el color más votado; los brillos votan ×glowWeight.
-  const s = o.scale;
-  const ow = Math.ceil(bw * s), oh = Math.ceil(bh * s);
-  let grid = Array.from({ length: oh }, () => new Array(ow).fill(null));
-  for (let oy = 0; oy < oh; oy++) for (let ox = 0; ox < ow; ox++) {
-    const sx0 = Math.floor(ox / s), sx1 = Math.min(bw, Math.ceil((ox + 1) / s));
-    const sy0 = Math.floor(oy / s), sy1 = Math.min(bh, Math.ceil((oy + 1) / s));
-    let n = 0, fg = 0;
-    const votes = new Array(pal.length).fill(0);
-    for (let y = sy0; y < sy1; y++) for (let x = sx0; x < sx1; x++) {
-      n++;
-      if (bg[(minY + y) * W + (minX + x)]) continue;
-      fg++;
-      const i = nearestIdx(px(minX + x, minY + y));
-      votes[i] += lum(pal[i]) >= o.glowLum ? o.glowWeight : 1;
-    }
-    if (!n || fg / n < o.cover) continue;
-    let best = 0;
-    for (let i = 1; i < votes.length; i++) if (votes[i] > votes[best]) best = i;
-    grid[oy][ox] = pal[best];
-  }
-
-  // 5. Pelado: quita bordes oscuros (halos de brillo/sombra) `peel` veces.
-  for (let pass = 0; pass < o.peel; pass++) {
-    const prev = grid;
-    grid = prev.map((row, y) => row.map((c, x) => (c != null && lum(c) < o.peelLum && isEdge(prev, x, y) ? null : c)));
-  }
-  // 6. Despeckle: quita píxeles opacos sin vecinos opacos.
-  { const prev = grid;
-    grid = prev.map((row, y) => row.map((c, x) => (c != null && !opaqueAt(prev, x + 1, y) && !opaqueAt(prev, x - 1, y) && !opaqueAt(prev, x, y + 1) && !opaqueAt(prev, x, y - 1) ? null : c))); }
-  // 7. Contorno: los bordes de la silueta que no son brillo pasan al color más oscuro.
+  // 4–7. Rasteriza a escala `s`: reducción por voto (los brillos votan ×glowWeight), pelado de
+  // bordes oscuros, despeckle y contorno. Devuelve la rejilla ceil(bw·s)×ceil(bh·s).
   const darkest = pal.reduce((d, p) => (lum(p) < lum(d) ? p : d), pal[0]);
-  { const prev = grid;
-    grid = prev.map((row, y) => row.map((c, x) => (c != null && lum(c) < o.glowLum && isEdge(prev, x, y) ? darkest : c))); }
+  const rasterize = (s) => {
+    const ow = Math.ceil(bw * s), oh = Math.ceil(bh * s);
+    let grid = Array.from({ length: oh }, () => new Array(ow).fill(null));
+    for (let oy = 0; oy < oh; oy++) for (let ox = 0; ox < ow; ox++) {
+      const sx0 = Math.floor(ox / s), sx1 = Math.min(bw, Math.ceil((ox + 1) / s));
+      const sy0 = Math.floor(oy / s), sy1 = Math.min(bh, Math.ceil((oy + 1) / s));
+      let n = 0, fg = 0;
+      const votes = new Array(pal.length).fill(0);
+      for (let y = sy0; y < sy1; y++) for (let x = sx0; x < sx1; x++) {
+        n++;
+        if (bg[(minY + y) * W + (minX + x)]) continue;
+        fg++;
+        const i = nearestIdx(px(minX + x, minY + y));
+        votes[i] += lum(pal[i]) >= o.glowLum ? o.glowWeight : 1;
+      }
+      if (!n || fg / n < o.cover) continue;
+      let best = 0;
+      for (let i = 1; i < votes.length; i++) if (votes[i] > votes[best]) best = i;
+      grid[oy][ox] = pal[best];
+    }
+    // Pelado: quita bordes oscuros (halos de brillo/sombra) `peel` veces.
+    for (let pass = 0; pass < o.peel; pass++) {
+      const prev = grid;
+      grid = prev.map((row, y) => row.map((c, x) => (c != null && lum(c) < o.peelLum && isEdge(prev, x, y) ? null : c)));
+    }
+    // Despeckle: quita píxeles opacos sin vecinos opacos.
+    { const prev = grid;
+      grid = prev.map((row, y) => row.map((c, x) => (c != null && !opaqueAt(prev, x + 1, y) && !opaqueAt(prev, x - 1, y) && !opaqueAt(prev, x, y + 1) && !opaqueAt(prev, x, y - 1) ? null : c))); }
+    // Contorno: los bordes de la silueta que no son brillo pasan al color más oscuro.
+    { const prev = grid;
+      grid = prev.map((row, y) => row.map((c, x) => (c != null && lum(c) < o.glowLum && isEdge(prev, x, y) ? darkest : c))); }
+    return grid;
+  };
+  const widthOf = (grid) => {
+    let lo = Infinity, hi = -1;
+    for (const row of grid) for (let x = 0; x < row.length; x++) if (row[x] != null) { if (x < lo) lo = x; if (x > hi) hi = x; }
+    return hi < 0 ? 0 : hi - lo + 1;
+  };
 
-  // 8. Caja del cuerpo: 32×32 apoyada abajo y centrada en la masa de las 32 filas inferiores.
-  let sumX = 0, cnt = 0;
-  for (let y = Math.max(0, oh - BODY); y < oh; y++) for (let x = 0; x < ow; x++) if (grid[y][x] != null) { sumX += x; cnt++; }
-  const bx = Math.round((cnt ? sumX / cnt : ow / 2) + 0.5 - BODY / 2);
-  const by = oh - BODY;
+  // Escala: `scale`, subida si hace falta para que la silueta final (tras el pelado) mida
+  // ≥ minWidth. El pelado puede comerse columnas, así que se sube hasta cumplir y luego una
+  // búsqueda binaria afina a la escala más pequeña que cumple. El ratio se conserva.
+  let grid = rasterize(o.scale);
+  if (o.minWidth && widthOf(grid) < o.minWidth) {
+    let lo = o.scale, hi = Math.max(o.scale, o.minWidth / bw);
+    for (let tries = 0; widthOf(grid = rasterize(hi)) < o.minWidth; tries++) {
+      if (tries >= 40) throw new Error(`convertFigure: cannot reach minWidth ${o.minWidth}`);
+      lo = hi;
+      hi *= 1.25;
+    }
+    for (let i = 0; i < 16; i++) {
+      const mid = (lo + hi) / 2;
+      if (widthOf(rasterize(mid)) >= o.minWidth) hi = mid; else lo = mid;
+    }
+    grid = rasterize(hi);
+  }
+  const ow = grid[0].length, oh = grid.length;
+
+  // 8. Caja del cuerpo 32×32 centrada en la masa de la silueta. En un eje donde la figura mide
+  // menos de 32 el lienzo crece (en vertical, apoyada abajo); si mide más, la caja queda dentro.
+  let sumX = 0, sumY = 0, cnt = 0;
+  for (let y = 0; y < oh; y++) for (let x = 0; x < ow; x++) if (grid[y][x] != null) { sumX += x; sumY += y; cnt++; }
+  const centered = (sum, len) => Math.round((cnt ? sum / cnt : len / 2) + 0.5 - BODY / 2);
+  const clampIn = (v, len) => Math.max(0, Math.min(len - BODY, v));
+  const bx = ow >= BODY ? clampIn(centered(sumX, ow), ow) : centered(sumX, ow);
+  const by = oh >= BODY ? clampIn(centered(sumY, oh), oh) : oh - BODY;
   const cx0 = Math.min(0, bx), cy0 = Math.min(0, by);
   const gridW = Math.max(ow, bx + BODY) - cx0, gridH = Math.max(oh, by + BODY) - cy0;
   const canvas = Array.from({ length: gridH }, () => new Array(gridW).fill(null));

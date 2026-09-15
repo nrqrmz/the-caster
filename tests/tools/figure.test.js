@@ -41,14 +41,55 @@ test('convertFigure: figura pequeña → lienzo 32×32 con el cuerpo centrado y 
   assert.equal(colorAt(r, 5, 2), null);  // fuera de la figura
 });
 
-test('convertFigure: lo que sobresale por arriba amplía el lienzo y el cuerpo queda abajo', () => {
+test('convertFigure: figura más alta que 32 → el cuadro del cuerpo se centra en la masa de la silueta', () => {
+  const img = sheet(60, 90);
+  fill(img, 10, 5, 41, 84, RED);      // silueta uniforme 32×80
+  const r = convertFigure(img, { slot: [0, 59], rows: [0, 89], scale: 1, peel: 0 });
+  assert.deepEqual([r.gridW, r.gridH], [32, 80]);
+  assert.deepEqual(r.body, { x: 0, y: 24 });
+});
+
+test('convertFigure: lo que sobresale por arriba amplía el lienzo y tira del cuerpo hacia su masa', () => {
   const img = sheet(60, 70);
   fill(img, 10, 30, 41, 61, RED);     // cuerpo 32×32
   fill(img, 24, 5, 27, 29, YELLOW);   // antorcha 4×25 encima
   const r = convertFigure(img, { slot: [0, 59], rows: [0, 69], scale: 1, peel: 0 });
   assert.equal(r.gridH, 57);
-  assert.deepEqual(r.body, { x: 0, y: 25 });
+  // masa: 1024 px con y medio 40.5 + 100 px con y medio 12 → ≈37.96 → esquina 22
+  assert.deepEqual(r.body, { x: 0, y: 22 });
   assert.equal(colorAt(r, 15, 0), YELLOW);
+});
+
+const silhouetteW = (r) => {
+  let lo = Infinity, hi = -1;
+  for (const row of r.rows) for (let x = 0; x < row.length; x++) if (row[x] !== '.') { lo = Math.min(lo, x); hi = Math.max(hi, x); }
+  return hi - lo + 1;
+};
+const silhouetteH = (r) => r.rows.filter((row) => /[^.]/.test(row)).length;
+
+test('convertFigure: minWidth sube la escala hasta que la silueta mida al menos ese ancho, sin deformar', () => {
+  const img = sheet(60, 120);
+  fill(img, 10, 10, 29, 109, RED);    // silueta 20×100 (ratio 1:5)
+  const r = convertFigure(img, { slot: [0, 59], rows: [0, 119], scale: 0.4, minWidth: 32, peel: 0 });
+  const w = silhouetteW(r), h = silhouetteH(r);
+  assert.ok(w >= 32 && w <= 33, `ancho ${w}`);
+  assert.ok(Math.abs(h / w - 5) < 0.25, `ratio ${h}/${w}`);
+});
+
+test('convertFigure: minWidth no reduce una figura que ya es más ancha', () => {
+  const img = sheet(120, 60);
+  fill(img, 10, 10, 109, 49, RED);    // silueta 100×40
+  const a = convertFigure(img, { slot: [0, 119], rows: [0, 59], scale: 0.5, peel: 0 });
+  const b = convertFigure(img, { slot: [0, 119], rows: [0, 59], scale: 0.5, minWidth: 32, peel: 0 });
+  assert.deepEqual(b, a);
+});
+
+test('convertFigure: minWidth compensa el pelado de bordes', () => {
+  const img = sheet(60, 120);
+  fill(img, 10, 10, 29, 109, 0x201010);  // oscuro: el pelado se come los bordes
+  fill(img, 14, 10, 25, 109, RED);
+  const r = convertFigure(img, { slot: [0, 59], rows: [0, 119], scale: 0.4, minWidth: 32, peel: 2 });
+  assert.ok(silhouetteW(r) >= 32, `ancho ${silhouetteW(r)}`);
 });
 
 test('convertFigure: un píxel color fondo encerrado en la figura no es fondo', () => {
