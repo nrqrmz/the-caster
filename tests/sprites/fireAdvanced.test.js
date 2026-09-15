@@ -22,11 +22,11 @@ test('hay un sprite generado por cada figura configurada, y está en PARTS', () 
   for (const key of Object.keys(FIGURES)) assert.equal(PARTS[`fa_${key}`], FIRE_ADVANCED_PARTS[`fa_${key}`]);
 });
 
-test('cada figura: bodySize y minWidth = radius*2 del enemigo, y el módulo generado lo respeta', () => {
+test('cada figura: bodySize = radius*2 del enemigo, minWidth ≥ bodySize, y el módulo generado lo respeta', () => {
   for (const [key, f] of Object.entries(FIGURES)) {
     const want = ENEMY_TYPES[key].radius * 2;
     assert.equal(f.bodySize, want, `${key} bodySize`);
-    assert.equal(f.minWidth, want, `${key} minWidth`);
+    assert.ok(f.minWidth >= want, `${key} minWidth ${f.minWidth} < ${want}`);
     assert.equal(sizeOf(key), want, `${key} body.size generado`);
   }
 });

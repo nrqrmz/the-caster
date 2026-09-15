@@ -130,8 +130,10 @@ fija el radio de cada enemigo (ver Decisiones).
   todo lo que hoy usa `BODY`: el centrado y la contención del cuadro, y el crecimiento del
   lienzo cuando la figura es más pequeña que el cuadro.
 - `DEFAULTS.minWidth` sigue siendo 0 (cambiarlo alteraría las figuras de cuerpo 32). Cada figura
-  de la hoja nueva declara `minWidth` igual a su `bodySize`, así que ninguna silueta queda más
-  estrecha que su cuerpo.
+  de la hoja nueva declara `minWidth` ≥ su `bodySize` (por defecto igual), así que ninguna
+  silueta queda más estrecha que su cuerpo. *(Ajuste 2026-09-14, aprobado en el prototipo:
+  `can_lava`, de perfil, era ilegible a 34 px de ancho; usa `minWidth: 56` con el cuadro del
+  cuerpo de 34, así que cabeza y cola sobresalen del hitbox.)*
 - Nuevo campo opcional `bodyShift: [dx, dy]`, aplicado tras el centrado y antes de contener el
   cuadro en la silueta, para casos como el estandarte, donde la masa desplaza el hitbox.
 - El resultado incluye `body.size`.
