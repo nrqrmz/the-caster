@@ -33,3 +33,21 @@ test('con body pero sin gridW/gridH: lanza en vez de producir NaN', () => {
   assert.throws(() => displayFor({ body: { x: 0, y: 0 } }, 16), /needs gridW and gridH/);
   assert.throws(() => displayFor({ gridW: 32, body: { x: 0, y: 0 } }, 16), /needs gridW and gridH/);
 });
+
+test('con body.size: el cuadro del cuerpo mide ese lado y con radius*2 = size la escala es 1', () => {
+  const r = { gridW: 64, gridH: 70, body: { x: 2, y: 6, size: 60 } };
+  assert.deepEqual(displayFor(r, 30), {
+    scale: 1,
+    originX: 32 / 64,
+    originY: 36 / 70,
+    body: { w: 60, h: 60, x: 2, y: 6 },
+    half: 30,
+  });
+});
+
+test('con body.size y otro radio: la escala es radius*2/size', () => {
+  const d = displayFor({ gridW: 40, gridH: 40, body: { x: 0, y: 0, size: 40 } }, 30);
+  assert.equal(d.scale, 60 / 40);
+  assert.equal(d.originX, 0.5);
+  assert.deepEqual(d.body, { w: 40, h: 40, x: 0, y: 0 });
+});

@@ -197,3 +197,54 @@ test('el arte antiguo de larva, salamandra y garrote ya no existe', () => {
     assert.equal(PARTS[name], undefined, `${name} should be removed`);
   }
 });
+
+import { FIRE_ADVANCED_META } from '../../src/data/sprites/partsFireAdvanced.js';
+import { flipLocked } from '../../src/objects/FacingController.js';
+
+const FIRE_ADVANCED_KEYS = [
+  'caballero_brasa', 'portaestandarte', 'can_lava', 'coloso_magma', 'elemental_fuego',
+  'fenix_menor', 'totem_pira', 'avispa_brasa', 'imp_brasa', 'brasa_errante',
+];
+
+test('los 10 enemigos restantes de Fuego usan su sprite generado estático a tamaño real', () => {
+  assert.deepEqual(Object.keys(FIRE_ADVANCED_META), FIRE_ADVANCED_KEYS);
+  for (const key of FIRE_ADVANCED_KEYS) {
+    const r = getRecipe(key);
+    assert.equal(r.static, true, `${key} static`);
+    assert.deepEqual(r.parts, [{ name: `fa_${key}` }], `${key} parts`);
+    assert.deepEqual(r.body, FIRE_ADVANCED_META[key].body, `${key} body`);
+    assert.equal(r.body.size ?? 32, ENEMY_TYPES[key].radius * 2, `${key} body = radius*2`);
+    assert.equal(r.flip, undefined, `${key} sin espejado de frames`);
+    assert.equal(flipLocked(r), key !== 'can_lava', `${key} volteo`);
+    const g = forge(r, PARTS, paletteFor(key, 0x888888)).anims['idle-down'][0];
+    assert.equal(g.length, r.gridH);
+    assert.equal(g[0].length, r.gridW);
+  }
+});
+
+test('el arte antiguo de los enemigos restantes de Fuego ya no existe', () => {
+  for (const name of [
+    'banner',
+    'can_body', 'can_glow', 'can_horns', 'can_eyes',
+    'coloso_body', 'coloso_core', 'coloso_horns', 'coloso_eyes',
+    'fuego_body', 'fuego_core', 'fuego_eyes',
+    'imp_body', 'imp_horns', 'imp_eyes',
+    'fenix_body', 'fenix_crest', 'fenix_eyes',
+    'avispa_body', 'avispa_wings', 'avispa_eyes',
+  ]) {
+    assert.equal(PARTS[name], undefined, `${name} should be removed`);
+  }
+});
+
+test('las recetas de otros mundos que compartían arte con Fuego siguen forjando', () => {
+  for (const key of ['warrior', 'centinela_piedra', 'fuego_fatuo', 'fuego_fatuo_pantano']) {
+    const g = forge(getRecipe(key), PARTS, paletteFor(key, 0x888888)).anims['idle-down'][0];
+    assert.ok(g.flat().some((c) => c != null), `${key} not empty`);
+  }
+});
+
+test('toda receta con faces pertenece a un enemigo con facePlayer (sin él, el volteo sigue la velocidad y un perfil se endereza)', () => {
+  const withFaces = Object.keys(RECIPES).filter((k) => RECIPES[k].faces);
+  assert.ok(withFaces.includes('can_lava'), 'can_lava declara faces');
+  for (const key of withFaces) assert.equal(ENEMY_TYPES[key]?.facePlayer, true, `${key} necesita facePlayer`);
+});

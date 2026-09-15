@@ -2,7 +2,7 @@ import { computeMovement, stepAttack } from '../systems/EnemyBrain.js';
 import { stepBoss } from '../systems/BossBrain.js';
 import { spriteKey, ACTOR_DEPTH } from '../config.js';
 import { hasRecipe, getRecipe } from '../data/sprites/recipes.js';
-import { FacingController } from './FacingController.js';
+import { FacingController, flipLocked } from './FacingController.js';
 import { displayFor } from '../systems/enemyDisplay.js';
 
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
@@ -25,7 +25,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.applyDisplay();
       this.facing = new FacingController(this, visualKey);
       this.facing.facePlayer = !!def.facePlayer;
-      this.facing.isStatic = !!this.visualRecipe.static;
+      this.facing.lockFlip = flipLocked(this.visualRecipe);
     } else {
       if (def.color) this.setTint(def.color);
       this.facing = null;
@@ -41,7 +41,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   // Visual size + physics body from the recipe (see systems/enemyDisplay.js). Without a
   // recipe `body` this is the historic radius*2 square; with one, the sprite may overflow
-  // its 32×32 body box (halo/torches) while the hitbox stays on the body.
+  // its body box (`body.size`, default 32) (halo/torches) while the hitbox stays on the body.
   applyDisplay() {
     const r = this.def.radius;
     if (!r) return;

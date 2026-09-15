@@ -1,0 +1,29 @@
+// tools/fire-advanced-figures.mjs
+// Recortes y parámetros por criatura sobre tools/refs/fuego-avanzado.png (1536×1024): 2 filas
+// de 5 paneles, una figura por panel. slot = columnas interiores del panel [x0, x1]; rows = filas
+// entre el adorno del título y el pie "32 × 32 px". bodySize = radius*2 del enemigo (cuerpo a
+// escala 1) y minWidth = bodySize por defecto (la silueta nunca es más estrecha que su cuerpo);
+// una figura puede subirlo en extra cuando a su ancho de cuerpo no se lee (de perfil, alas,
+// estandarte). scale es la escala inicial
+// (≈ bodySize / ancho de la figura); minWidth la sube si hace falta. Lo demás
+// sobreescribe DEFAULTS de tools/lib/figure.mjs. Lo leen gen- y preview-fire-advanced.
+import { fileURLToPath } from 'node:url';
+
+export const REF_PATH = fileURLToPath(new URL('./refs/fuego-avanzado.png', import.meta.url));
+
+const TOP = [144, 428], BOTTOM = [560, 856];
+const BG = [13, 12, 15];
+const fig = (slot, rows, bodySize, scale, extra = {}) => ({ slot, rows, bodySize, minWidth: bodySize, scale, bg: BG, ...extra });
+
+export const FIGURES = {
+  caballero_brasa: fig([24, 297], TOP, 36, 0.18, { minWidth: 48, peel: 0, bgTol: 24 }),  // armadura oscura: sin pelado
+  portaestandarte: fig([322, 595], TOP, 36, 0.17, { minWidth: 48, peel: 0, bgTol: 24 }), // estandarte: más ancho que el cuerpo
+  can_lava:        fig([620, 912], TOP, 34, 0.12, { minWidth: 56, peel: 0, bgTol: 30 }), // de perfil: a 34 de ancho no se lee; hitbox 34
+  coloso_magma:    fig([937, 1219], TOP, 60, 0.24, { bgTol: 24 }),                        // bgTol: deja fuera la sombra de los pies
+  elemental_fuego: fig([1244, 1512], TOP, 52, 0.25),
+  fenix_menor:     fig([24, 297], BOTTOM, 40, 0.16, { bgTol: 24 }),
+  totem_pira:      fig([322, 595], BOTTOM, 72, 0.43, { bgTol: 24 }),
+  avispa_brasa:    fig([620, 912], BOTTOM, 32, 0.14, { minWidth: 44, peel: 0, bgTol: 24 }), // alas finas: más ancho que el cuerpo
+  imp_brasa:       fig([937, 1219], BOTTOM, 32, 0.16, { peel: 0, bgTol: 24 }),
+  brasa_errante:   fig([1244, 1512], BOTTOM, 32, 0.15),
+};

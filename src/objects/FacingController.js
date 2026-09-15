@@ -16,6 +16,13 @@ export function facePlayerFlip(spriteX, targetX, currentFlip = false, deadband =
   return currentFlip;                                             // dentro de la banda: no cambies
 }
 
+// PURE. ¿La receta bloquea el volteo? Una receta estática es una vista de frente fija que
+// nunca se voltea; `faces: true` marca una estática de perfil (dibujada mirando a la
+// derecha, la convención de 'side') que sí se voltea.
+export function flipLocked(recipe) {
+  return !!(recipe && recipe.static && !recipe.faces);
+}
+
 const MOVE_EPS = 6; // px/s below which we treat the entity as idle
 
 export class FacingController {
@@ -26,7 +33,7 @@ export class FacingController {
     this.lastDir = lastDir;
     this.attacking = false;
     this.facePlayer = false; // si true, el flipX se rige por `aim` (la princesa) cada frame
-    this.isStatic = false;   // receta estática: una sola vista de frente, nunca se voltea
+    this.lockFlip = false;   // nunca voltear (receta estática sin faces, ver flipLocked)
   }
 
   // Play the one-shot attack anim for the current facing; ignored if the creature has no
@@ -53,7 +60,7 @@ export class FacingController {
     if (this.facePlayer && aim) {
       const flipX = facePlayerFlip(this.sprite.x, aim.x, this.sprite.flipX);
       this.lastDir = 'side';
-      if (!this.isStatic) this.sprite.setFlipX(flipX);
+      if (!this.lockFlip) this.sprite.setFlipX(flipX);
       const state = moving ? 'walk' : 'idle';
       this.sprite.anims.play(`${this.key}-${state}-side`, true);
       return;
@@ -67,7 +74,7 @@ export class FacingController {
       f = { dir: this.lastDir, flipX: this.sprite.flipX };
     }
     this.lastDir = f.dir;
-    if (!this.isStatic) this.sprite.setFlipX(f.flipX);
+    if (!this.lockFlip) this.sprite.setFlipX(f.flipX);
     const state = moving ? 'walk' : 'idle';
     this.sprite.anims.play(`${this.key}-${state}-${f.dir}`, true);
   }
