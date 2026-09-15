@@ -15,7 +15,14 @@ const BG = [13, 12, 15];
 const fig = (slot, rows, bodySize, scale, extra = {}) => ({ slot, rows, bodySize, minWidth: bodySize, scale, bg: BG, ...extra });
 
 export const FIGURES = {
-  can_lava:      fig([620, 912], TOP, 34, 0.12, { minWidth: 56, peel: 0, bgTol: 30 }), // de perfil: a 34 de ancho no se lee; hitbox 34
-  coloso_magma:  fig([937, 1219], TOP, 60, 0.24, { bgTol: 24 }),                        // bgTol: deja fuera la sombra de los pies
-  brasa_errante: fig([1244, 1512], BOTTOM, 32, 0.15),
+  caballero_brasa: fig([24, 297], TOP, 36, 0.18, { minWidth: 48, peel: 0, bgTol: 24 }),  // armadura oscura: sin pelado
+  portaestandarte: fig([322, 595], TOP, 36, 0.17, { minWidth: 48, peel: 0, bgTol: 24 }), // estandarte: más ancho que el cuerpo
+  can_lava:        fig([620, 912], TOP, 34, 0.12, { minWidth: 56, peel: 0, bgTol: 30 }), // de perfil: a 34 de ancho no se lee; hitbox 34
+  coloso_magma:    fig([937, 1219], TOP, 60, 0.24, { bgTol: 24 }),                        // bgTol: deja fuera la sombra de los pies
+  elemental_fuego: fig([1244, 1512], TOP, 52, 0.25),
+  fenix_menor:     fig([24, 297], BOTTOM, 40, 0.16, { bgTol: 24 }),
+  totem_pira:      fig([322, 595], BOTTOM, 72, 0.43, { bgTol: 24 }),
+  avispa_brasa:    fig([620, 912], BOTTOM, 32, 0.14, { minWidth: 44, peel: 0, bgTol: 24 }), // alas finas: más ancho que el cuerpo
+  imp_brasa:       fig([937, 1219], BOTTOM, 32, 0.16, { peel: 0, bgTol: 24 }),
+  brasa_errante:   fig([1244, 1512], BOTTOM, 32, 0.15),
 };
