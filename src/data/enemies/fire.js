@@ -53,4 +53,8 @@ export const FIRE_ENEMIES = {
     modifiers: [{ type: 'shielded', reduce: 0.25 }, { type: 'auraDamage', dps: 8, radius: 50 }] },
   brasa_errante: { key: 'brasa_errante', tex: TEX.villager, color: COLORS.totemFire, hp: 20, speed: 60, damage: 10, radius: 16,
     movement: { type: 'erratic' }, attacks: [], modifiers: [{ type: 'auraDamage', dps: 10, radius: 40 }] },
+
+  // --- Temple escort (nv8 minions): villager stats/behavior with fire-temple art ---
+  escolta_templo: { key: 'escolta_templo', tex: TEX.warrior, color: COLORS.emberDeep, hp: 20, speed: 90, damage: 8, radius: 16,
+    movement: { type: 'chase' }, attacks: [] },
 };

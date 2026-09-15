@@ -7,11 +7,12 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FIRE_BOSS_META, FIRE_BOSS_PARTS } from '../../src/data/sprites/partsFireBosses.js';
 import { PARTS } from '../../src/data/sprites/parts.js';
-import { fireBossRecipe } from '../../src/data/sprites/recipes.js';
+import { fireBossRecipe, getRecipe } from '../../src/data/sprites/recipes.js';
 import { forge } from '../../src/systems/SpriteForge.js';
 import { derivePalette } from '../../src/data/sprites/palettes.js';
 import { PYRA, VESTA, FAVILLA, IGNATIUS } from '../../src/data/bosses/fire.js';
 import { FIGURES, SIDE, BODY } from '../../tools/fire-bosses-figures.mjs';
+import { ENEMY_TYPES } from '../../src/data/enemies/index.js';
 
 const GEN = fileURLToPath(new URL('../../tools/gen-fire-bosses.mjs', import.meta.url));
 const GENERATED = fileURLToPath(new URL('../../src/data/sprites/partsFireBosses.js', import.meta.url));
@@ -90,4 +91,15 @@ test('la escolta: cuerpo de 32 y silueta de al menos 32 de ancho', () => {
   assert.equal(FIGURES.escolta_templo.bodySize, 32);
   assert.equal(sizeOf('escolta_templo'), 32);
   assert.ok(silhouette('escolta_templo').w >= 32, `ancho ${silhouette('escolta_templo').w}`);
+});
+
+test('escolta_templo: mismos stats y comportamiento que villager, cuerpo = radius*2 y receta de hoja', () => {
+  const e = ENEMY_TYPES.escolta_templo, v = ENEMY_TYPES.villager;
+  for (const k of ['hp', 'speed', 'damage', 'radius']) assert.equal(e[k], v[k], k);
+  assert.deepEqual(e.movement, v.movement);
+  assert.deepEqual(e.attacks, v.attacks);
+  assert.equal(BODY.escolta_templo, e.radius * 2);
+  const r = getRecipe('escolta_templo');
+  assert.equal(r.static, true);
+  assert.deepEqual(r.parts, [{ name: 'fj_escolta_templo' }]);
 });

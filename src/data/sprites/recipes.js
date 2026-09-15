@@ -376,6 +376,7 @@ export const RECIPES = {
   avispa_brasa:    fireAdvancedRecipe('avispa_brasa', 'floating'),
   totem_pira:      fireAdvancedRecipe('totem_pira', 'floating'),
   brasa_errante:   fireAdvancedRecipe('brasa_errante', 'blob'),
+  escolta_templo:  fireBossRecipe('escolta_templo', 'humanoid'),
 
   // --- Fire bosses (single-form) ---
   favilla:  { archetype: 'boss', size: 96, baseColor: 0xffca28, accent: 0xffd54f, parts: FAVILLA },
