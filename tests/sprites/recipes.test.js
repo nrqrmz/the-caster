@@ -63,16 +63,20 @@ test('every fire enemy + generic has a recipe with known parts', () => {
   }
 });
 
-test('every fire boss has a recipe with known parts', () => {
+test('every fire boss uses its generated sheet sprite (fj_), static with a body box', () => {
   for (const key of ['pyra', 'vesta', 'favilla', 'ignatius']) {
     assert.ok(hasRecipe(key), `fire boss '${key}' has no recipe`);
     const r = getRecipe(key);
-    assert.equal(typeof r.baseColor, 'number', `boss '${key}' recipe must set baseColor`);
-    for (const ref of r.parts) {
-      const name = typeof ref === 'string' ? ref : ref.name;
-      assert.ok(PARTS[name], `recipe '${key}' references unknown part '${name}'`);
-    }
+    assert.equal(r.static, true, `${key} static`);
+    assert.deepEqual(r.parts, [{ name: `fj_${key}` }], `${key} parts`);
+    assert.ok(PARTS[`fj_${key}`], `${key} part exists`);
+    assert.ok(r.body && typeof r.body.x === 'number', `${key} body`);
   }
+});
+
+test('the old hand-drawn fire boss parts are gone', () => {
+  const old = Object.keys(PARTS).filter((n) => /^(pyra|vesta|favilla|ign)_/.test(n));
+  assert.deepEqual(old, []);
 });
 
 import { WATER_ENEMIES } from '../../src/data/enemies/water.js';

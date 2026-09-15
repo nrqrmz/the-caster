@@ -17,6 +17,8 @@ test('fire: includes wave enemies, bosses, and transitive summons', () => {
   // transitive summons: imp_brasa (sacerdote_llama/favilla), brasa_errante (ignatius)
   assert.ok(fire.has('imp_brasa'), 'expected transitive summon imp_brasa');
   assert.ok(fire.has('brasa_errante'), 'expected transitive summon brasa_errante');
+  // temple minions (nv8): the fire-specific escort
+  assert.ok(fire.has('escolta_templo'), 'expected fire to include temple minion escolta_templo');
 });
 
 test('fire: includes formerly-unused defs now placed in waves', () => {

@@ -246,7 +246,7 @@ const MECHANICS = {
 };
 
 // Build a standard elemental branch: 8 levels, one boss per level.
-function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, levelBoss = null, templeBoss = null, onClear = null }) {
+function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines, basic = basicWaves, inter = interWaves, minibosses = [], levelBosses = null, levelBoss = null, templeBoss = null, templeMinions = [{ type: 'villager', count: 4 }], onClear = null }) {
   // nv7 is a dedicated levelboss level (boss only): the trio (multi-boss + lava
   // triangle) when provided, else a single default level-boss blob.
   const levelBossSpec = levelBosses
@@ -264,7 +264,7 @@ function makeBranch({ id, element, name, grantsSkill, intro, mageName, mageLines
     makeLevel(`${id}_7`, id, 'levelboss', { ...levelBossSpec }),
     makeLevel(`${id}_8`, id, 'temple', {
       templeBoss: templeBoss || tb(950, 26, MECHANICS[element]),
-      minions: [{ type: 'villager', count: 4 }],
+      minions: templeMinions,
       dialogue: { onClear: onClear || mageLines.map((text, i) => ({ speaker: i === mageLines.length - 1 ? 'speaker.caster' : mageName, text })) },
     }),
   ];
@@ -302,6 +302,7 @@ export const REGIONS = {
     minibosses: [PYRA, VESTA, FAVILLA],
     levelBosses: SISTERS_TRIO,
     templeBoss: IGNATIUS,
+    templeMinions: [{ type: 'escolta_templo', count: 4 }],
     intro: [
       { speaker: 'speaker.narrator', text: 'story.fire.intro.0' },
       { speaker: 'speaker.narrator', text: 'story.fire.intro.1' },

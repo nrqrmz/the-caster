@@ -200,3 +200,10 @@ test('fire temple boss is still Ignatius (regression)', () => {
   assert.equal(tb.enemyDef.key, 'ignatius');
   assert.ok(Array.isArray(tb.enemyDef.phases));
 });
+
+test('fire temple minions are 4 escoltas; the other temples keep 4 villagers', () => {
+  assert.deepEqual(REGIONS.fire.levels[7].phases[0].minions, [{ type: 'escolta_templo', count: 4 }]);
+  for (const id of ['water', 'air', 'earth']) {
+    assert.deepEqual(REGIONS[id].levels[7].phases[0].minions, [{ type: 'villager', count: 4 }], `${id} temple minions`);
+  }
+});
