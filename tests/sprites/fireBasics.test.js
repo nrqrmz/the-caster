@@ -32,6 +32,16 @@ test('cada sprite: cuerpo 32×32 dentro del lienzo, ≤16 colores y filas del ta
   }
 });
 
+test('cada silueta mide al menos 32 px de ancho', () => {
+  for (const key of Object.keys(FIRE_BASIC_META)) {
+    let lo = Infinity, hi = -1;
+    for (const row of FIRE_BASIC_PARTS[`fb_${key}`].down) {
+      for (let x = 0; x < row.length; x++) if (row[x] !== '.') { lo = Math.min(lo, x); hi = Math.max(hi, x); }
+    }
+    assert.ok(hi - lo + 1 >= 32, `${key} ancho ${hi - lo + 1}`);
+  }
+});
+
 test('fireBasicRecipe forja un frame estático del tamaño del lienzo', () => {
   for (const key of Object.keys(FIRE_BASIC_META)) {
     const r = fireBasicRecipe(key, 'humanoid');

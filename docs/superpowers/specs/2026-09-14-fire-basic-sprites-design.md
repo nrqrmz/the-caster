@@ -128,15 +128,17 @@ tamaño del dibujo entero.
 4. **Cuantizado:** paleta corta por criatura (≤16 colores, mediana determinista sobre los
    píxeles originales de la figura).
 5. **Reducción:** escala por criatura elegida para que el cuerpo mida ~32 px de alto; lo que
-   sobresale conserva la misma escala. Cada píxel de salida toma el color de paleta **más
+   sobresale conserva la misma escala. *(Ajuste 2026-09-14: quedaban muy delgados, así que
+   la escala sube hasta que la silueta completa —con antorchas y halo— mida **≥ 32 px de
+   ancho**, `minWidth`; el alto sigue el ratio, hasta ~75 px en el espíritu de ceniza.)* Cada píxel de salida toma el color de paleta **más
    votado** de su zona (no el promedio, que embarra), y los brillos votan con más peso para
    que ojos y llamas sobrevivan. Los píxeles de baja cobertura quedan transparentes.
 6. **Limpieza:** pelado de bordes oscuros (halos de brillo/sombra; se desactiva en criaturas
    oscuras como la salamandra), eliminación de píxeles aislados, contorno oscuro de 1 px en
    los bordes que no son brillo y retoques por coordenada (ojos, núcleos de fuego, halo,
    dagas, grietas).
-7. Se calculan `gridW`, `gridH` y `body` (cuadro de 32×32 apoyado abajo y centrado en la masa
-   de las filas inferiores).
+7. Se calculan `gridW`, `gridH` y `body` (cuadro de 32×32 centrado en la masa de toda la
+   silueta y contenido en ella; solo se apoya abajo si la figura mide menos de 32 de alto).
 
 La conversión vive en `tools/lib/figure.mjs` (pura, testeada con imágenes sintéticas) y el
 códec PNG en `tools/lib/png.mjs`; los recortes y parámetros por criatura, en
