@@ -205,3 +205,15 @@ test('convertFigure: fitSide inválido o combinado con minWidth lanza error', ()
   assert.throws(() => convertFigure(img, { ...base, fitSide: -4 }), /fitSide/);
   assert.throws(() => convertFigure(img, { ...base, fitSide: 32, minWidth: 32 }), /exclusive/);
 });
+
+test('convertFigure: fitSide lanza si el lado mayor no puede medir exactamente fitSide', () => {
+  const img = sheet(30, 30);
+  // Píxeles aislados: el despeckle los elimina, dejando una silueta más pequeña.
+  // Cuatro píxeles en diagonal lejana: tras rasterizar y despeckle, quedan ~2 px,
+  // pero fitSide: 8 espera 8, lo que es imposible.
+  fill(img, 5, 5, 5, 5, RED);
+  fill(img, 10, 10, 10, 10, RED);
+  fill(img, 15, 15, 15, 15, RED);
+  fill(img, 20, 20, 20, 20, RED);
+  assert.throws(() => convertFigure(img, { slot: [0, 29], rows: [0, 29], fitSide: 8, peel: 0, bodySize: 1 }), /cannot fit exactly 8/);
+});

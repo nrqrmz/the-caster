@@ -162,6 +162,7 @@ export function convertFigure(img, fig) {
     }
     if (!lo) throw new Error(`convertFigure: cannot fit ${o.fitSide}`);
     grid = rasterize(lo);
+    if (sideOf(grid) !== o.fitSide) throw new Error(`convertFigure: cannot fit exactly ${o.fitSide} (got ${sideOf(grid)})`);
   } else {
     // Escala: `scale`, subida si hace falta para que la silueta final (tras el pelado) mida
     // ≥ minWidth. El pelado puede comerse columnas, así que se sube hasta cumplir y luego una
