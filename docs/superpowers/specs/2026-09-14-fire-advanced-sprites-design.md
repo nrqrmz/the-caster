@@ -71,9 +71,10 @@ fija el radio de cada enemigo (ver Decisiones).
 ### Estático que se voltea (`src/objects/FacingController.js`)
 
 - Nuevo flag de receta `faces: true`, válido solo junto a `static: true`.
-- `Enemy` pasa a `FacingController` si el volteo está bloqueado: `static && !faces`. Hoy
-  `isStatic` bloquea `setFlipX` en las dos ramas (`facePlayer` y velocidad); pasa a hacerlo
-  solo cuando la receta no tiene `faces`.
+- Función pura `flipLocked(recipe)` en `FacingController.js`: `true` si la receta es `static`
+  y no tiene `faces`. El campo `isStatic` del controlador se renombra a `lockFlip` (bloquea
+  `setFlipX` en las dos ramas, `facePlayer` y velocidad) y `Enemy` lo asigna con
+  `flipLocked(this.visualRecipe)`.
 - El can de la referencia mira a la derecha, que es la convención de la vista lateral
   (`flipX` = mirar a la izquierda), así que sus frames no se espejan y su receta pierde el
   `flip: true` antiguo.
@@ -113,9 +114,9 @@ fija el radio de cada enemigo (ver Decisiones).
 
 ### Código compartido (`tools/lib/`)
 
-- `tools/lib/sheetParts.mjs`: `renderSheetParts(results, { file, generator, prefix, metaName, partsName, header })`
-  devuelve el texto del archivo de partes (cabecera, `META` con `body.size` cuando no es 32 y
-  `PARTS`). El generador lo escribe a disco.
+- `tools/lib/sheetParts.mjs`: `renderSheetParts(results, { header, prefix, metaName, partsName })`
+  devuelve el texto del archivo de partes (`header` = líneas de comentario literales, `META` con
+  `body.size` solo cuando no es 32, y `PARTS`). El generador lo escribe a disco.
 - `tools/lib/sheetPreview.mjs`: compone el PNG de revisión. Por criatura: el recorte de la
   referencia, el sprite forjado con la receta real a ×6 con el cuadro del cuerpo marcado en
   cian (del lado `size`), y el sprite a ×2 sobre fondo oscuro y sobre suelo de lava. Si el
@@ -128,7 +129,8 @@ fija el radio de cada enemigo (ver Decisiones).
 - `convertFigure` acepta `bodySize` (por defecto 32, la constante `BODY` actual) y lo usa en
   todo lo que hoy usa `BODY`: el centrado y la contención del cuadro, y el crecimiento del
   lienzo cuando la figura es más pequeña que el cuadro.
-- Si la figura no fija `minWidth`, el ancho mínimo es `bodySize`: ninguna silueta queda más
+- `DEFAULTS.minWidth` sigue siendo 0 (cambiarlo alteraría las figuras de cuerpo 32). Cada figura
+  de la hoja nueva declara `minWidth` igual a su `bodySize`, así que ninguna silueta queda más
   estrecha que su cuerpo.
 - Nuevo campo opcional `bodyShift: [dx, dy]`, aplicado tras el centrado y antes de contener el
   cuadro en la silueta, para casos como el estandarte, donde la masa desplaza el hitbox.
