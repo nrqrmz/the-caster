@@ -1,9 +1,11 @@
 // src/data/sprites/recipes.js
 // PURE. Per-creature sprite recipes. key -> { archetype, size, parts, anim, palette?, accent? }
 // Also: gridW?/gridH?/scale? for non-square canvases; static? (single front frame,
-// never flipped); body? ({x,y} of a 32×32 body box inside the canvas — the rest overflows).
+// never flipped unless faces: true); body? ({x,y,size?} of the body box inside the
+// canvas, size defaults to 32 — the rest overflows).
 import { derivePalette, NAMED_PALETTES } from './palettes.js';
 import { FIRE_BASIC_META } from './partsFireBasics.js';
+import { FIRE_ADVANCED_META } from './partsFireAdvanced.js';
 
 // Hooded-cultist part lists. cult_robe/cult_hood take the creature's type color
 // (no palette override); the rest use named palettes. Order = back-to-front.
@@ -312,17 +314,23 @@ const COLOSSUS      = [{ name: 'colossus_body' }, { name: 'colossus_eyes', palet
 // thorn totem: tall column, NOT humanoid — distinct body shape entirely
 const THORNTOTEM    = [{ name: 'thorntotem_body' }, { name: 'thorntotem_face', palette: 'shadow' }, { name: 'thorntotem_thorns', palette: 'bone' }, { name: 'thorntotem_eye', palette: 'sporeglow' }];
 
-// Villanos básicos de Fuego: sprite estático de frente generado desde la referencia
-// (tools/gen-fire-basics.mjs). Lienzo y cuadro del cuerpo vienen del módulo generado.
-export function fireBasicRecipe(key, archetype) {
-  const meta = FIRE_BASIC_META[key];
-  if (!meta) throw new Error(`fireBasicRecipe: no generated sprite for '${key}'`);
+// Sprite estático de frente generado desde una hoja de referencia (tools/gen-fire-*.mjs).
+// Lienzo y cuadro del cuerpo ({x, y, size?}) vienen del módulo generado; `extra` añade
+// flags de receta (p. ej. faces: true para una estática de perfil que se voltea).
+export function sheetRecipe(meta, prefix, key, archetype, extra = {}) {
+  const m = meta[key];
+  if (!m) throw new Error(`sheetRecipe: no generated sprite for '${key}' (${prefix})`);
   return {
     archetype, static: true, scale: 1,
-    gridW: meta.gridW, gridH: meta.gridH, body: { ...meta.body },
-    parts: [{ name: `fb_${key}` }],
+    gridW: m.gridW, gridH: m.gridH, body: { ...m.body },
+    parts: [{ name: `${prefix}${key}` }],
+    ...extra,
   };
 }
+// Villanos básicos de Fuego (tools/gen-fire-basics.mjs).
+export const fireBasicRecipe = (key, archetype) => sheetRecipe(FIRE_BASIC_META, 'fb_', key, archetype);
+// Enemigos restantes de Fuego, a tamaño real (tools/gen-fire-advanced.mjs).
+export const fireAdvancedRecipe = (key, archetype, extra) => sheetRecipe(FIRE_ADVANCED_META, 'fa_', key, archetype, extra);
 
 export const RECIPES = {
   hero: {
