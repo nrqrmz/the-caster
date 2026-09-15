@@ -156,3 +156,52 @@ test('convertFigure: bodySize inválido lanza error', () => {
   assert.throws(() => convertFigure(img, { slot: [0, 39], rows: [0, 39], scale: 1, bodySize: 0 }), /bodySize/);
   assert.throws(() => convertFigure(img, { slot: [0, 39], rows: [0, 39], scale: 1, bodySize: 33.5 }), /bodySize/);
 });
+
+test('convertFigure: fitSide ajusta el lado mayor (alto) de la silueta, sin deformar', () => {
+  const img = sheet(60, 120);
+  fill(img, 10, 10, 29, 109, RED);    // silueta 20×100 (ratio 1:5)
+  const r = convertFigure(img, { slot: [0, 59], rows: [0, 119], fitSide: 48, peel: 0 });
+  assert.equal(silhouetteH(r), 48);
+  assert.equal(silhouetteW(r), 10);   // ceil(20 × 0.48)
+});
+
+test('convertFigure: fitSide ajusta el lado mayor (ancho) de una figura apaisada', () => {
+  const img = sheet(120, 60);
+  fill(img, 10, 10, 109, 49, RED);    // silueta 100×40
+  const r = convertFigure(img, { slot: [0, 119], rows: [0, 59], fitSide: 64, peel: 0 });
+  assert.equal(silhouetteW(r), 64);
+  assert.equal(silhouetteH(r), 26);   // ceil(40 × 0.64)
+});
+
+test('convertFigure: fitSide ignora scale', () => {
+  const img = sheet(60, 120);
+  fill(img, 10, 10, 29, 109, RED);
+  const a = convertFigure(img, { slot: [0, 59], rows: [0, 119], fitSide: 48, peel: 0 });
+  const b = convertFigure(img, { slot: [0, 59], rows: [0, 119], fitSide: 48, scale: 3, peel: 0 });
+  assert.deepEqual(b, a);
+});
+
+test('convertFigure: fitSide con cuerpo más ancho que la silueta → el lienzo crece hasta el cuadro', () => {
+  const img = sheet(60, 120);
+  fill(img, 10, 10, 29, 109, RED);    // → silueta 10×48
+  const r = convertFigure(img, { slot: [0, 59], rows: [0, 119], fitSide: 48, bodySize: 48, peel: 0 });
+  assert.deepEqual([r.gridW, r.gridH], [48, 48]);
+  assert.deepEqual(r.body, { x: 0, y: 0, size: 48 });
+});
+
+test('convertFigure: fitSide compensa el pelado de bordes', () => {
+  const img = sheet(60, 120);
+  fill(img, 10, 10, 29, 109, 0x201010);  // borde oscuro que el pelado se come
+  fill(img, 10, 14, 29, 105, RED);
+  const r = convertFigure(img, { slot: [0, 59], rows: [0, 119], fitSide: 48, peel: 2 });
+  assert.equal(silhouetteH(r), 48);
+});
+
+test('convertFigure: fitSide inválido o combinado con minWidth lanza error', () => {
+  const img = sheet(40, 40);
+  fill(img, 5, 5, 34, 34, RED);
+  const base = { slot: [0, 39], rows: [0, 39], scale: 1 };
+  assert.throws(() => convertFigure(img, { ...base, fitSide: 12.5 }), /fitSide/);
+  assert.throws(() => convertFigure(img, { ...base, fitSide: -4 }), /fitSide/);
+  assert.throws(() => convertFigure(img, { ...base, fitSide: 32, minWidth: 32 }), /exclusive/);
+});

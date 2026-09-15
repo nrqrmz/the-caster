@@ -2,7 +2,7 @@
 // PURE (no Phaser, no fs). Convierte una figura de una hoja de referencia RGBA en
 // un sprite de rejilla con colores propios: fondo por flood fill, cuantizado a
 // resolución original, reducción por voto ponderado, pelado de halos oscuros,
-// despeckle, contorno, ancho mínimo y caja del cuerpo (bodySize×bodySize) centrada en la silueta.
+// despeckle, contorno, ancho mínimo o lado mayor fijo, y caja del cuerpo (bodySize×bodySize) centrada en la silueta.
 // Solo herramienta de desarrollo.
 
 export const BODY = 32;
@@ -17,6 +17,7 @@ export const DEFAULTS = {
   peel: 2,          // pasadas de pelado de bordes oscuros
   peelLum: 45,      // luminancia bajo la que un borde se pela
   minWidth: 0,      // ancho mínimo de la silueta final en px (0 = usar `scale` tal cual)
+  fitSide: 0,       // lado mayor exacto de la silueta final en px (0 = sin efecto; excluye minWidth e ignora scale)
   bodySize: 32,     // lado del cuadro del cuerpo (radius*2 del enemigo; 32 = básicos)
   bodyShift: [0, 0], // desplazamiento del cuadro tras centrarlo (se contiene en la silueta)
 };
@@ -57,12 +58,14 @@ export function medianCut(colors, n) {
 }
 
 // img: { width, height, data: RGBA }.
-// fig: { slot: [x0, x1], rows: [y0, y1], scale, minWidth?, bodySize?, bodyShift?, ...DEFAULTS overrides, overrides: [[x, y, 0xRRGGBB | null], …] }
+// fig: { slot: [x0, x1], rows: [y0, y1], scale, minWidth? | fitSide?, bodySize?, bodyShift?, ...DEFAULTS overrides, overrides: [[x, y, 0xRRGGBB | null], …] }
 // → { gridW, gridH, body: { x, y, size }, colors: { char: int }, rows: string[] }
 export function convertFigure(img, fig) {
   const o = { ...DEFAULTS, ...fig };
   if (o.colors > CHARS.length) throw new Error(`convertFigure: colors ${o.colors} > ${CHARS.length}`);
   if (!Number.isInteger(o.bodySize) || o.bodySize < 1) throw new Error(`convertFigure: bodySize ${o.bodySize} must be a positive integer`);
+  if (!Number.isInteger(o.fitSide) || o.fitSide < 0) throw new Error(`convertFigure: fitSide ${o.fitSide} must be a non-negative integer`);
+  if (o.fitSide && o.minWidth) throw new Error('convertFigure: fitSide and minWidth are exclusive');
   const [x0, x1] = o.slot, [y0, y1] = o.rows;
   const W = x1 - x0 + 1, H = y1 - y0 + 1;
   const px = (x, y) => { const i = ((y0 + y) * img.width + (x0 + x)) * 4; return rgbInt(img.data[i], img.data[i + 1], img.data[i + 2]); };
@@ -140,22 +143,43 @@ export function convertFigure(img, fig) {
     return hi < 0 ? 0 : hi - lo + 1;
   };
 
-  // Escala: `scale`, subida si hace falta para que la silueta final (tras el pelado) mida
-  // ≥ minWidth. El pelado puede comerse columnas, así que se sube hasta cumplir y luego una
-  // búsqueda binaria afina a la escala más pequeña que cumple. El ratio se conserva.
-  let grid = rasterize(o.scale);
-  if (o.minWidth && widthOf(grid) < o.minWidth) {
-    let lo = o.scale, hi = Math.max(o.scale, o.minWidth / bw);
-    for (let tries = 0; widthOf(grid = rasterize(hi)) < o.minWidth; tries++) {
-      if (tries >= 40) throw new Error(`convertFigure: cannot reach minWidth ${o.minWidth}`);
+  const heightOf = (grid) => grid.filter((row) => row.some((c) => c != null)).length;
+  const sideOf = (grid) => Math.max(widthOf(grid), heightOf(grid));
+
+  let grid;
+  if (o.fitSide) {
+    // Lado mayor fijo: la escala más grande cuya silueta final (tras el pelado) mide ≤ fitSide
+    // en su lado mayor. Se sube hasta pasarse y una búsqueda binaria afina. El ratio se conserva.
+    let lo = 0, hi = o.fitSide / Math.max(bw, bh);
+    for (let tries = 0; sideOf(rasterize(hi)) <= o.fitSide; tries++) {
+      if (tries >= 40) throw new Error(`convertFigure: cannot reach fitSide ${o.fitSide}`);
       lo = hi;
       hi *= 1.25;
     }
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 20; i++) {
       const mid = (lo + hi) / 2;
-      if (widthOf(rasterize(mid)) >= o.minWidth) hi = mid; else lo = mid;
+      if (sideOf(rasterize(mid)) <= o.fitSide) lo = mid; else hi = mid;
     }
-    grid = rasterize(hi);
+    if (!lo) throw new Error(`convertFigure: cannot fit ${o.fitSide}`);
+    grid = rasterize(lo);
+  } else {
+    // Escala: `scale`, subida si hace falta para que la silueta final (tras el pelado) mida
+    // ≥ minWidth. El pelado puede comerse columnas, así que se sube hasta cumplir y luego una
+    // búsqueda binaria afina a la escala más pequeña que cumple. El ratio se conserva.
+    grid = rasterize(o.scale);
+    if (o.minWidth && widthOf(grid) < o.minWidth) {
+      let lo = o.scale, hi = Math.max(o.scale, o.minWidth / bw);
+      for (let tries = 0; widthOf(grid = rasterize(hi)) < o.minWidth; tries++) {
+        if (tries >= 40) throw new Error(`convertFigure: cannot reach minWidth ${o.minWidth}`);
+        lo = hi;
+        hi *= 1.25;
+      }
+      for (let i = 0; i < 16; i++) {
+        const mid = (lo + hi) / 2;
+        if (widthOf(rasterize(mid)) >= o.minWidth) hi = mid; else lo = mid;
+      }
+      grid = rasterize(hi);
+    }
   }
   const ow = grid[0].length, oh = grid.length;
 
