@@ -2,8 +2,6 @@
 //   (ash-wisp parts: ceniza_body/ceniza_eyes — no longer espiritu_ceniza's own sprite,
 //    that creature now comes from tools/gen-fire-basics.mjs; these parts are still
 //    used by espiritu_tormenta via recipes.js)
-//   elemental_fuego — blazing flame elemental with a molten core (miniboss, nova)
-//   imp_brasa       — little ember imp, horns + fanged grin (fast melee)
 //   pez_globo       — spiky pufferfish, big eyes (erratic)
 //   brasa_errante   — pure molten ember coal, cracks + core, NO face (damage aura)
 //   burbuja_gelida  — translucent ice bubble, sheen + crystals, NO face (damage 0)
@@ -12,8 +10,6 @@
 const N = 32, cx = 16;
 const layers = {
   ceniza_body: {}, ceniza_eyes: {},
-  fuego_body: {}, fuego_core: {}, fuego_eyes: {},
-  imp_body: {}, imp_horns: {}, imp_eyes: {},
   globo_body: {}, globo_spikes: {}, globo_eyes: {},
   brasa_body: {}, brasa_glow: {},
   burbuja_body: {}, burbuja_sheen: {}, burbuja_eyes: {},
@@ -40,7 +36,6 @@ const line = (L, x0, y0, x1, y1, r) => {
   let err = dx - dy, x = x0, y = y0;
   for (;;) { put(L, x, y, r); if (x === x1 && y === y1) break; const e2 = 2 * err; if (e2 > -dy) { err -= dy; x += sx; } if (e2 < dx) { err += dx; y += sy; } }
 };
-const disk = (L, cx0, cy0, r, role) => { for (let y = Math.floor(cy0 - r); y <= Math.ceil(cy0 + r); y++) for (let x = Math.floor(cx0 - r); x <= Math.ceil(cx0 + r); x++) if (((x - cx0) / r) ** 2 + ((y - cy0) / r) ** 2 <= 1) put(L, x, y, role); };
 
 // ============================ ESPIRITU_CENIZA (ash ghost; smoke RISES upward) ============================
 orb('ceniza_body', cx, 21, 6.5, 6);                       // body sits low
@@ -55,34 +50,6 @@ for (let y = 15; y >= 2; y--) {                           // 3 smoke tendrils ri
 }
 put('ceniza_eyes', cx - 3, 20, 'b'); put('ceniza_eyes', cx + 3, 20, 'b'); // hollow glowing eyes
 for (let x = cx - 2; x <= cx + 2; x++) put('ceniza_eyes', x, 24, 'b');     // open ghost mouth
-
-// ============================ ELEMENTAL_FUEGO (TERRIFYING flame demon) ============================
-orb('fuego_body', cx, 19, 8, 7.5);                        // molten body
-// tall SHARP flame spikes/horns clawing upward (jagged, menacing)
-for (const [bx, ty] of [[cx - 7, 11], [cx - 4, 7], [cx - 1, 3], [cx + 2, 6], [cx + 5, 8], [cx + 7, 12]]) {
-  for (let y = ty; y <= 14; y++) { const xx = bx + Math.round((y - ty) * 0.25 * Math.sign(cx - bx)); put('fuego_body', xx, y, y - ty < 2 ? 'h' : 'b'); put('fuego_body', xx + 1, y, 's'); }
-}
-// flickering jagged base (lapping flames at the bottom)
-for (const x of [cx - 6, cx - 3, cx, cx + 3, cx + 6]) { put('fuego_body', x, 27, '.'); put('fuego_body', x, 26, 'h'); }
-disk('fuego_core', cx, 23, 3.2, 'b'); disk('fuego_core', cx, 23, 1.6, 'h'); // white-hot glowing maw
-// angry slanted brows + eyes (V-shaped scowl), dark with a hot glint
-line('fuego_eyes', cx - 6, 13, cx - 2, 16, 'b'); line('fuego_eyes', cx - 6, 14, cx - 2, 17, 'b');
-line('fuego_eyes', cx + 6, 13, cx + 2, 16, 'b'); line('fuego_eyes', cx + 6, 14, cx + 2, 17, 'b');
-put('fuego_eyes', cx - 4, 15, 'h'); put('fuego_eyes', cx + 4, 15, 'h');   // burning pupils
-// dark fanged maw biting down over the bright core glow
-for (let x = cx - 4; x <= cx + 4; x++) put('fuego_eyes', x, 20, 'b');     // dark upper lip
-for (const fx of [cx - 3, cx - 1, cx + 1, cx + 3]) { put('fuego_eyes', fx, 21, 'b'); put('fuego_eyes', fx, 22, 'b'); } // hanging fangs
-
-// ============================ IMP_BRASA (ember imp) ============================
-orb('imp_body', cx, 17, 6.5, 6);                          // round impish body
-for (let y = 22; y <= 27; y++) for (const lx of [cx - 4, cx + 2]) for (let x = lx; x <= lx + 1; x++) put('imp_body', x, y, (y === 27 || x === lx) ? 'o' : 'b'); // stubby legs
-for (const [sx, sy] of [[cx - 7, 16], [cx + 6, 16]]) for (let y = sy; y <= sy + 3; y++) put('imp_body', sx, y, 'o'); // little arms
-// small horns
-line('imp_horns', cx - 3, 12, cx - 4, 8, 'o'); line('imp_horns', cx - 2, 12, cx - 3, 9, 'b');
-line('imp_horns', cx + 3, 12, cx + 4, 8, 'o'); line('imp_horns', cx + 2, 12, cx + 3, 9, 'b');
-put('imp_eyes', cx - 3, 16, 'b'); put('imp_eyes', cx + 3, 16, 'b');       // glowing eyes
-for (let x = cx - 2; x <= cx + 2; x++) put('imp_eyes', x, 19, 'b');        // fanged grin
-put('imp_eyes', cx - 2, 20, 'h'); put('imp_eyes', cx + 2, 20, 'h');       // fangs
 
 // ============================ PEZ_GLOBO (pufferfish, SIDE PROFILE facing left) ============================
 orb('globo_body', 16, 16, 7, 7);                          // puffed sphere body

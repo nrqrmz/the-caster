@@ -131,9 +131,11 @@ fija el radio de cada enemigo (ver Decisiones).
   lienzo cuando la figura es más pequeña que el cuadro.
 - `DEFAULTS.minWidth` sigue siendo 0 (cambiarlo alteraría las figuras de cuerpo 32). Cada figura
   de la hoja nueva declara `minWidth` ≥ su `bodySize` (por defecto igual), así que ninguna
-  silueta queda más estrecha que su cuerpo. *(Ajuste 2026-09-14, aprobado en el prototipo:
-  `can_lava`, de perfil, era ilegible a 34 px de ancho; usa `minWidth: 56` con el cuadro del
-  cuerpo de 34, así que cabeza y cola sobresalen del hitbox.)*
+  silueta queda más estrecha que su cuerpo. *(Ajuste 2026-09-14, aprobado por el usuario en la
+  revisión: las figuras que a su ancho de cuerpo no se leían suben `minWidth` con el cuadro del
+  cuerpo intacto — `can_lava` 56 (de perfil), `caballero_brasa` y `portaestandarte` 48,
+  `avispa_brasa` 44 — así que partes de la silueta sobresalen del hitbox. El tótem queda en
+  82×137.)*
 - Nuevo campo opcional `bodyShift: [dx, dy]`, aplicado tras el centrado y antes de contener el
   cuadro en la silueta, para casos como el estandarte, donde la masa desplaza el hitbox.
 - El resultado incluye `body.size`.

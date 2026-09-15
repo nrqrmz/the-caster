@@ -35,7 +35,6 @@ const KNIGHT_WATER = [
   { name: 'knight_visor', palette: 'shadow' }, { name: 'knight_eyes', palette: 'orbblue' },
 ];
 const KNIGHT_VAMP = [...KNIGHT.slice(0, 5), { name: 'knight_eyes', palette: 'vampglow' }];
-const KNIGHT_BANNER = [{ name: 'banner' }, ...KNIGHT];
 // Air caster pair A: acolito (light grey hood, yellow ember) vs heraldo (dark steel-blue, cyan ember)
 const ACOLITO = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'glow' }, ...CULT_HOODED];
 const HERALDO = [{ name: 'cult_staff', palette: 'wood' }, { name: 'cult_ember', palette: 'orbblue' }, ...CULT_HOODED];
@@ -183,23 +182,14 @@ const DUELIST = [
   { name: 'hair_short', palette: 'blackhair' },
   { name: 'duelist_blade', palette: 'steel' },
 ];
-// Fire beasts. body = type color; molten cracks/crest/core = `ember`; eyes = `glow`;
-// horns = `bone` (filled ivory cow-horns).
-const CAN_LAVA = [{ name: 'can_body' }, { name: 'can_glow', palette: 'ember' }, { name: 'can_horns', palette: 'bone' }, { name: 'can_eyes', palette: 'glow' }];
-const COLOSO = [{ name: 'coloso_body' }, { name: 'coloso_core', palette: 'ember' }, { name: 'coloso_horns', palette: 'bone' }, { name: 'coloso_eyes', palette: 'glow' }];
 // Blobs / elementals. body = type color; cores/cracks = ember/glow; ice sheen =
 // orbblue; eyes glow/shadow/eyes_living. brasa & burbuja keep no eyes / a frosty face.
 const CENIZA = [{ name: 'ceniza_body' }, { name: 'ceniza_eyes', palette: 'glow' }];
-const FUEGO_ELEM = [{ name: 'fuego_core', palette: 'glow' }, { name: 'fuego_body' }, { name: 'fuego_eyes', palette: 'shadow' }];
-const IMP = [{ name: 'imp_body' }, { name: 'imp_horns' }, { name: 'imp_eyes', palette: 'glow' }];
 const PEZ_GLOBO = [{ name: 'globo_body' }, { name: 'globo_spikes' }, { name: 'globo_eyes', palette: 'eyes_living' }];
 const BRASA = [{ name: 'brasa_body' }, { name: 'brasa_glow', palette: 'ember' }];
 const BURBUJA = [{ name: 'burbuja_body' }, { name: 'burbuja_sheen', palette: 'orbblue' }, { name: 'burbuja_eyes', palette: 'shadow' }];
-// Winged / floating. body/wings = type color; phoenix crest/tail = ember, wasp wings
-// = bone membrane; totem is a columnar pole with a recessed `shadow` face + a glowing
-// eye (glow for fire, orbblue for frost) — one body serves both variants.
-const FENIX = [{ name: 'fenix_crest', palette: 'ember' }, { name: 'fenix_body' }, { name: 'fenix_eyes', palette: 'glow' }];
-const AVISPA = [{ name: 'avispa_wings', palette: 'bone' }, { name: 'avispa_body' }, { name: 'avispa_eyes', palette: 'shadow' }];
+// Totem: a columnar pole with a recessed `shadow` face + a glowing eye (glow for the
+// stone sentinel, orbblue for frost) — one body serves both variants.
 const TOTEM_FIRE = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'glow' }];
 const TOTEM_FROST = [{ name: 'totem_body' }, { name: 'totem_face', palette: 'shadow' }, { name: 'totem_eye', palette: 'orbblue' }];
 // Bat: membranous wings + small furred body + ears + glowing eyes. Serves the swarm
@@ -367,22 +357,22 @@ export const RECIPES = {
   piromante:       fireBasicRecipe('piromante', 'humanoid'),
   encapuchado_pira:fireBasicRecipe('encapuchado_pira', 'humanoid'),
   pirovidente:     fireBasicRecipe('pirovidente', 'humanoid'),
-  caballero_brasa: { archetype: 'humanoid', size: 64, parts: KNIGHT },
+  caballero_brasa: fireAdvancedRecipe('caballero_brasa', 'humanoid'),
   sacerdote_llama: fireBasicRecipe('sacerdote_llama', 'humanoid'),
-  portaestandarte: { archetype: 'humanoid', size: 64, parts: KNIGHT_BANNER },
+  portaestandarte: fireAdvancedRecipe('portaestandarte', 'humanoid'),
   // --- Fire beasts ---
   larva_magma:     fireBasicRecipe('larva_magma', 'beast'),
   salamandra:      fireBasicRecipe('salamandra', 'beast'),
   espiritu_ceniza: fireBasicRecipe('espiritu_ceniza', 'blob'),
-  can_lava:        { archetype: 'beast', size: 64, parts: CAN_LAVA, flip: true },
-  elemental_fuego: { archetype: 'blob', size: 64, parts: FUEGO_ELEM },
-  coloso_magma:    { archetype: 'beast', size: 64, parts: COLOSO },
-  fenix_menor:     { archetype: 'floating', size: 64, parts: FENIX },
+  can_lava:        fireAdvancedRecipe('can_lava', 'beast', { faces: true }),
+  elemental_fuego: fireAdvancedRecipe('elemental_fuego', 'blob'),
+  coloso_magma:    fireAdvancedRecipe('coloso_magma', 'beast'),
+  fenix_menor:     fireAdvancedRecipe('fenix_menor', 'floating'),
   // --- Summoned / ambient ---
-  imp_brasa:       { archetype: 'blob', size: 32, parts: IMP },
-  avispa_brasa:    { archetype: 'floating', size: 32, parts: AVISPA },
-  totem_pira:      { archetype: 'floating', size: 64, parts: TOTEM_FIRE },
-  brasa_errante:   { archetype: 'blob', size: 32, parts: BRASA },
+  imp_brasa:       fireAdvancedRecipe('imp_brasa', 'blob'),
+  avispa_brasa:    fireAdvancedRecipe('avispa_brasa', 'floating'),
+  totem_pira:      fireAdvancedRecipe('totem_pira', 'floating'),
+  brasa_errante:   fireAdvancedRecipe('brasa_errante', 'blob'),
 
   // --- Fire bosses (single-form) ---
   favilla:  { archetype: 'boss', size: 96, baseColor: 0xffca28, accent: 0xffd54f, parts: FAVILLA },
