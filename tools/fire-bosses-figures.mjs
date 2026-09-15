@@ -19,7 +19,12 @@ const ROWS = [103, 474];
 const BG_JEFES = [13, 12, 17];
 const boss = (key, slot, extra = {}) => ({ ref: JEFES, slot, rows: ROWS, bodySize: BODY[key], fitSide: SIDE[key], bg: BG_JEFES, bgTol: 24, ...extra });
 
+const BG_ESCOLTA = [15, 13, 16];
+
 export const FIGURES = {
   pyra:     boss('pyra', [12, 378]),
+  vesta:    boss('vesta', [400, 766], { peel: 0 }),              // coleta y armadura oscuras: sin pelado
+  favilla:  boss('favilla', [788, 1154]),
   ignatius: boss('ignatius', [1176, 1542]),
+  escolta_templo: { ref: ESCOLTA, slot: [110, 610], rows: [112, 630], bodySize: BODY.escolta_templo, minWidth: 32, scale: 0.1, bg: BG_ESCOLTA, bgTol: 24, peel: 0 }, // armadura oscura: sin pelado
 };

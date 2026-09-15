@@ -85,3 +85,9 @@ test('el generador es reproducible (re-ejecutarlo da el mismo archivo)', () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('la escolta: cuerpo de 32 y silueta de al menos 32 de ancho', () => {
+  assert.equal(FIGURES.escolta_templo.bodySize, 32);
+  assert.equal(sizeOf('escolta_templo'), 32);
+  assert.ok(silhouette('escolta_templo').w >= 32, `ancho ${silhouette('escolta_templo').w}`);
+});
