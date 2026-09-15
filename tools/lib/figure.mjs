@@ -2,7 +2,7 @@
 // PURE (no Phaser, no fs). Convierte una figura de una hoja de referencia RGBA en
 // un sprite de rejilla con colores propios: fondo por flood fill, cuantizado a
 // resolución original, reducción por voto ponderado, pelado de halos oscuros,
-// despeckle, contorno, ancho mínimo y caja del cuerpo de 32×32 centrada en la silueta.
+// despeckle, contorno, ancho mínimo y caja del cuerpo (bodySize×bodySize) centrada en la silueta.
 // Solo herramienta de desarrollo.
 
 export const BODY = 32;
@@ -17,6 +17,8 @@ export const DEFAULTS = {
   peel: 2,          // pasadas de pelado de bordes oscuros
   peelLum: 45,      // luminancia bajo la que un borde se pela
   minWidth: 0,      // ancho mínimo de la silueta final en px (0 = usar `scale` tal cual)
+  bodySize: 32,     // lado del cuadro del cuerpo (radius*2 del enemigo; 32 = básicos)
+  bodyShift: [0, 0], // desplazamiento del cuadro tras centrarlo (se contiene en la silueta)
 };
 
 const lum = (c) => 0.299 * ((c >> 16) & 255) + 0.587 * ((c >> 8) & 255) + 0.114 * (c & 255);
@@ -55,11 +57,12 @@ export function medianCut(colors, n) {
 }
 
 // img: { width, height, data: RGBA }.
-// fig: { slot: [x0, x1], rows: [y0, y1], scale, minWidth?, ...DEFAULTS overrides, overrides: [[x, y, 0xRRGGBB | null], …] }
-// → { gridW, gridH, body: { x, y }, colors: { char: int }, rows: string[] }
+// fig: { slot: [x0, x1], rows: [y0, y1], scale, minWidth?, bodySize?, bodyShift?, ...DEFAULTS overrides, overrides: [[x, y, 0xRRGGBB | null], …] }
+// → { gridW, gridH, body: { x, y, size }, colors: { char: int }, rows: string[] }
 export function convertFigure(img, fig) {
   const o = { ...DEFAULTS, ...fig };
   if (o.colors > CHARS.length) throw new Error(`convertFigure: colors ${o.colors} > ${CHARS.length}`);
+  if (!Number.isInteger(o.bodySize) || o.bodySize < 1) throw new Error(`convertFigure: bodySize ${o.bodySize} must be a positive integer`);
   const [x0, x1] = o.slot, [y0, y1] = o.rows;
   const W = x1 - x0 + 1, H = y1 - y0 + 1;
   const px = (x, y) => { const i = ((y0 + y) * img.width + (x0 + x)) * 4; return rgbInt(img.data[i], img.data[i + 1], img.data[i + 2]); };
@@ -156,16 +159,18 @@ export function convertFigure(img, fig) {
   }
   const ow = grid[0].length, oh = grid.length;
 
-  // 8. Caja del cuerpo 32×32 centrada en la masa de la silueta. En un eje donde la figura mide
-  // menos de 32 el lienzo crece (en vertical, apoyada abajo); si mide más, la caja queda dentro.
+  // 8. Caja del cuerpo B×B (B = bodySize) centrada en la masa de la silueta, desplazada por
+  // bodyShift. En un eje donde la figura mide menos de B el lienzo crece (en vertical, apoyada
+  // abajo) y el desplazamiento se ignora; si mide más, la caja queda dentro.
+  const B = o.bodySize, [shiftX, shiftY] = o.bodyShift;
   let sumX = 0, sumY = 0, cnt = 0;
   for (let y = 0; y < oh; y++) for (let x = 0; x < ow; x++) if (grid[y][x] != null) { sumX += x; sumY += y; cnt++; }
-  const centered = (sum, len) => Math.round((cnt ? sum / cnt : len / 2) + 0.5 - BODY / 2);
-  const clampIn = (v, len) => Math.max(0, Math.min(len - BODY, v));
-  const bx = ow >= BODY ? clampIn(centered(sumX, ow), ow) : centered(sumX, ow);
-  const by = oh >= BODY ? clampIn(centered(sumY, oh), oh) : oh - BODY;
+  const centered = (sum, len) => Math.round((cnt ? sum / cnt : len / 2) + 0.5 - B / 2);
+  const clampIn = (v, len) => Math.max(0, Math.min(len - B, v));
+  const bx = ow >= B ? clampIn(centered(sumX, ow) + shiftX, ow) : centered(sumX, ow);
+  const by = oh >= B ? clampIn(centered(sumY, oh) + shiftY, oh) : oh - B;
   const cx0 = Math.min(0, bx), cy0 = Math.min(0, by);
-  const gridW = Math.max(ow, bx + BODY) - cx0, gridH = Math.max(oh, by + BODY) - cy0;
+  const gridW = Math.max(ow, bx + B) - cx0, gridH = Math.max(oh, by + B) - cy0;
   const canvas = Array.from({ length: gridH }, () => new Array(gridW).fill(null));
   for (let y = 0; y < oh; y++) for (let x = 0; x < ow; x++) canvas[y - cy0][x - cx0] = grid[y][x];
 
@@ -181,7 +186,7 @@ export function convertFigure(img, fig) {
   const charOf = new Map(used.map((c, i) => [c, CHARS[i]]));
   return {
     gridW, gridH,
-    body: { x: bx - cx0, y: by - cy0 },
+    body: { x: bx - cx0, y: by - cy0, size: B },
     colors: Object.fromEntries(used.map((c, i) => [CHARS[i], c])),
     rows: canvas.map((row) => row.map((c) => (c == null ? '.' : charOf.get(c))).join('')),
   };

@@ -32,7 +32,7 @@ test('convertFigure: figura pequeña → lienzo 32×32 con el cuerpo centrado y 
   const r = convertFigure(img, { slot: [0, 39], rows: [0, 39], scale: 1, peel: 0 });
   assert.equal(r.gridW, BODY);
   assert.equal(r.gridH, BODY);
-  assert.deepEqual(r.body, { x: 0, y: 0 });
+  assert.deepEqual(r.body, { x: 0, y: 0, size: 32 });
   assert.equal(r.rows.length, 32);
   assert.ok(r.rows.every((row) => row.length === 32));
   // bbox (10,5) → salida (8..11,13..16) → lienzo desplazado (+6,+2)
@@ -46,7 +46,7 @@ test('convertFigure: figura más alta que 32 → el cuadro del cuerpo se centra 
   fill(img, 10, 5, 41, 84, RED);      // silueta uniforme 32×80
   const r = convertFigure(img, { slot: [0, 59], rows: [0, 89], scale: 1, peel: 0 });
   assert.deepEqual([r.gridW, r.gridH], [32, 80]);
-  assert.deepEqual(r.body, { x: 0, y: 24 });
+  assert.deepEqual(r.body, { x: 0, y: 24, size: 32 });
 });
 
 test('convertFigure: lo que sobresale por arriba amplía el lienzo y tira del cuerpo hacia su masa', () => {
@@ -56,7 +56,7 @@ test('convertFigure: lo que sobresale por arriba amplía el lienzo y tira del cu
   const r = convertFigure(img, { slot: [0, 59], rows: [0, 69], scale: 1, peel: 0 });
   assert.equal(r.gridH, 57);
   // masa: 1024 px con y medio 40.5 + 100 px con y medio 12 → ≈37.96 → esquina 22
-  assert.deepEqual(r.body, { x: 0, y: 22 });
+  assert.deepEqual(r.body, { x: 0, y: 22, size: 32 });
   assert.equal(colorAt(r, 15, 0), YELLOW);
 });
 
@@ -122,4 +122,37 @@ test('convertFigure: scale 0.5 reduce a la mitad', () => {
 
 test('convertFigure: slot vacío lanza error', () => {
   assert.throws(() => convertFigure(sheet(10, 10), { slot: [0, 9], rows: [0, 9], scale: 1 }), /empty slot/);
+});
+
+test('convertFigure: bodySize fija el lado del cuadro del cuerpo, centrado en la masa', () => {
+  const img = sheet(80, 100);
+  fill(img, 10, 5, 69, 94, RED);      // silueta uniforme 60×90, masa en (29.5, 44.5)
+  const r = convertFigure(img, { slot: [0, 79], rows: [0, 99], scale: 1, peel: 0, bodySize: 48 });
+  assert.deepEqual([r.gridW, r.gridH], [60, 90]);
+  assert.deepEqual(r.body, { x: 6, y: 21, size: 48 });
+});
+
+test('convertFigure: figura menor que bodySize → el lienzo crece hasta el cuadro', () => {
+  const img = sheet(40, 40);
+  fill(img, 10, 5, 29, 34, RED);      // silueta 20×30
+  const r = convertFigure(img, { slot: [0, 39], rows: [0, 39], scale: 1, peel: 0, bodySize: 48 });
+  assert.deepEqual([r.gridW, r.gridH], [48, 48]);
+  assert.deepEqual(r.body, { x: 0, y: 0, size: 48 });
+  assert.equal(r.rows.length, 48);
+  assert.ok(r.rows.every((row) => row.length === 48));
+});
+
+test('convertFigure: bodyShift desplaza el cuadro tras centrarlo y lo mantiene dentro de la silueta', () => {
+  const img = sheet(60, 90);
+  fill(img, 10, 5, 41, 84, RED);      // silueta 32×80: sin desplazar, body y = 24
+  const base = { slot: [0, 59], rows: [0, 89], scale: 1, peel: 0 };
+  assert.deepEqual(convertFigure(img, { ...base, bodyShift: [0, -10] }).body, { x: 0, y: 14, size: 32 });
+  assert.deepEqual(convertFigure(img, { ...base, bodyShift: [5, -100] }).body, { x: 0, y: 0, size: 32 });
+});
+
+test('convertFigure: bodySize inválido lanza error', () => {
+  const img = sheet(40, 40);
+  fill(img, 5, 5, 34, 34, RED);
+  assert.throws(() => convertFigure(img, { slot: [0, 39], rows: [0, 39], scale: 1, bodySize: 0 }), /bodySize/);
+  assert.throws(() => convertFigure(img, { slot: [0, 39], rows: [0, 39], scale: 1, bodySize: 33.5 }), /bodySize/);
 });
