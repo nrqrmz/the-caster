@@ -18,4 +18,6 @@ const items = keys.map((key) => {
   const recipe = fireBasicRecipe(key, 'humanoid');
   return { fig: FIGURES[key], recipe, grid: forge(recipe, PARTS, derivePalette(0x888888)).anims['idle-down'][0] };
 });
-writeFileSync(outPath, encodePng(renderSheetPreview(decodePng(readFileSync(REF_PATH)), items, { refScale: 2 })));
+const preview = renderSheetPreview(decodePng(readFileSync(REF_PATH)), items, { refScale: 2 });
+writeFileSync(outPath, encodePng(preview));
+console.log('preview', outPath, `${preview.width}×${preview.height}`, keys.join(', '));
