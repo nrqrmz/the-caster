@@ -242,3 +242,9 @@ test('las recetas de otros mundos que compartían arte con Fuego siguen forjando
     assert.ok(g.flat().some((c) => c != null), `${key} not empty`);
   }
 });
+
+test('toda receta con faces pertenece a un enemigo con facePlayer (sin él, el volteo sigue la velocidad y un perfil se endereza)', () => {
+  const withFaces = Object.keys(RECIPES).filter((k) => RECIPES[k].faces);
+  assert.ok(withFaces.includes('can_lava'), 'can_lava declara faces');
+  for (const key of withFaces) assert.equal(ENEMY_TYPES[key]?.facePlayer, true, `${key} necesita facePlayer`);
+});

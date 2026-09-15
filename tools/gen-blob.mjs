@@ -3,7 +3,9 @@
 //    that creature now comes from tools/gen-fire-basics.mjs; these parts are still
 //    used by espiritu_tormenta via recipes.js)
 //   pez_globo       — spiky pufferfish, big eyes (erratic)
-//   brasa_errante   — pure molten ember coal, cracks + core, NO face (damage aura)
+//   (brasa_* parts: pure molten ember coal, cracks + core, NO face (damage aura) — no longer
+//    brasa_errante's own sprite, that creature now comes from tools/gen-fire-advanced.mjs;
+//    these parts now serve fuego_fatuo / fuego_fatuo_pantano via recipes.js)
 //   burbuja_gelida  — translucent ice bubble, sheen + crystals, NO face (damage 0)
 // Body takes the creature's type color; cores/cracks use ember/glow, ice sheen
 // orbblue, eyes glow/shadow/eyes_living. Emits parts. Run: node tools/gen-blob.mjs

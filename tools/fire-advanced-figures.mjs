@@ -3,7 +3,8 @@
 // de 5 paneles, una figura por panel. slot = columnas interiores del panel [x0, x1]; rows = filas
 // entre el adorno del título y el pie "32 × 32 px". bodySize = radius*2 del enemigo (cuerpo a
 // escala 1) y minWidth = bodySize por defecto (la silueta nunca es más estrecha que su cuerpo);
-// una figura puede subirlo en extra (can_lava, de perfil). scale es la escala inicial
+// una figura puede subirlo en extra cuando a su ancho de cuerpo no se lee (de perfil, alas,
+// estandarte). scale es la escala inicial
 // (≈ bodySize / ancho de la figura); minWidth la sube si hace falta. Lo demás
 // sobreescribe DEFAULTS de tools/lib/figure.mjs. Lo leen gen- y preview-fire-advanced.
 import { fileURLToPath } from 'node:url';

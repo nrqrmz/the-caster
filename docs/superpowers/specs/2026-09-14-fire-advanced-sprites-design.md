@@ -119,8 +119,9 @@ fija el radio de cada enemigo (ver Decisiones).
   `body.size` solo cuando no es 32, y `PARTS`). El generador lo escribe a disco.
 - `tools/lib/sheetPreview.mjs`: compone el PNG de revisión. Por criatura: el recorte de la
   referencia, el sprite forjado con la receta real a ×6 con el cuadro del cuerpo marcado en
-  cian (del lado `size`), y el sprite a ×2 sobre fondo oscuro y sobre suelo de lava. Si el
-  recorte es muy alto, se reduce para que quepa junto al sprite.
+  cian (del lado `size`), y el sprite a ×2 sobre fondo oscuro y sobre suelo de lava. La escala
+  del recorte es la opción `refScale` (2 en los básicos, 1 en la hoja nueva, cuyas figuras ya
+  miden ~280 px).
 - `gen-fire-basics.mjs` y `preview-fire-basics.mjs` pasan a usar estos módulos. Al regenerar,
   `partsFireBasics.js` debe salir byte a byte idéntico.
 

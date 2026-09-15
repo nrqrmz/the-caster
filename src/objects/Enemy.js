@@ -41,7 +41,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   // Visual size + physics body from the recipe (see systems/enemyDisplay.js). Without a
   // recipe `body` this is the historic radius*2 square; with one, the sprite may overflow
-  // its 32×32 body box (halo/torches) while the hitbox stays on the body.
+  // its body box (`body.size`, default 32) (halo/torches) while the hitbox stays on the body.
   applyDisplay() {
     const r = this.def.radius;
     if (!r) return;
